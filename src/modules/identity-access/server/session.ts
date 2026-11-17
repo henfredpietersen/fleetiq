@@ -58,13 +58,14 @@ export async function getSessionContext(): Promise<SessionContext | null> {
 
 export function stepFor(ctx: SessionContext): NextStep {
   return nextAuthStep({
+    userType: ctx.profile.userType,
     mustChangePin: ctx.profile.mustChangePin,
     requiresMfa: ctx.requiresMfa,
     aal: ctx.aal,
   });
 }
 
-export type RequiredStage = "change-pin" | "mfa" | "full";
+export type RequiredStage = "change-pin" | "change-password" | "mfa" | "full";
 
 /**
  * Server-side route guard. A session is only "full" once any forced PIN change is done and — for
@@ -79,7 +80,13 @@ export async function requireSession(
   if (ctx.profile.status !== "active") redirect("/sign-in?reason=inactive");
   const step = stepFor(ctx);
   const wanted: NextStep =
-    stage === "change-pin" ? "/change-pin" : stage === "mfa" ? "/mfa" : "/home";
+    stage === "change-pin"
+      ? "/change-pin"
+      : stage === "change-password"
+        ? "/change-password"
+        : stage === "mfa"
+          ? "/mfa"
+          : "/home";
   if (step !== wanted) redirect(step);
   return ctx;
 }

@@ -55,6 +55,7 @@ export async function staffSignIn(
   return {
     ok: true,
     next: nextAuthStep({
+      userType: "staff",
       mustChangePin: profile.must_change_pin,
       requiresMfa: requiresMfa === true,
       aal: claims?.claims.aal === "aal2" ? "aal2" : "aal1",

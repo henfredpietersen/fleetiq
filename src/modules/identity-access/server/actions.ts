@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadAuthConfig } from "../domain/auth-config";
 import { clientIpFromHeaders } from "../domain/identifiers";
 import { describePinViolations } from "../domain/pin-rules";
+import { describeStaffPasswordViolations } from "../domain/staff-password-policy";
 import { formatRetry } from "../domain/lockout";
 import {
   createSessionStartValue,
@@ -14,7 +15,7 @@ import {
   type SessionKind,
 } from "../domain/session-policy";
 import type { ActionState } from "../ui/action-state";
-import { authSecret, createDriverAuth } from "./factory";
+import { authSecret, createDriverAuth, createStaffAccounts } from "./factory";
 import { startTotpEnrolment, verifiedTotpFactorId, verifyTotp } from "./mfa";
 import { getSessionContext, stepFor } from "./session";
 import { staffSignIn } from "./staff-auth";
@@ -186,6 +187,41 @@ export async function verifyMfaAction(
           ? "That code is not correct. Check the code and try again."
           : SERVICE_ERROR,
     };
+  }
+  const after = await getSessionContext();
+  redirect(after ? stepFor(after) : "/sign-in");
+}
+
+/** Staff forced password change (DEC-34): after an administrator created or reset the account. */
+export async function changePasswordAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const newPassword = text(formData, "newPassword");
+  if (newPassword !== text(formData, "confirmPassword"))
+    return { status: "error", message: "The two passwords do not match." };
+  const ctx = await getSessionContext();
+  if (!ctx) redirect("/sign-in");
+  const result = await (
+    await createStaffAccounts()
+  ).changeOwnPassword({
+    newPassword,
+  });
+  if (!result.ok) {
+    if (result.code === "weak_password") {
+      const rules = loadAuthConfig().staffPassword;
+      return {
+        status: "error",
+        message: "That password is not allowed.",
+        details: describeStaffPasswordViolations(result.violations, rules),
+      };
+    }
+    if (result.code === "same_password")
+      return {
+        status: "error",
+        message: "Choose a password different from your current one.",
+      };
+    return { status: "error", message: SERVICE_ERROR };
   }
   const after = await getSessionContext();
   redirect(after ? stepFor(after) : "/sign-in");

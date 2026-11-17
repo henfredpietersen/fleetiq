@@ -5,6 +5,22 @@ describe("loadAuthConfig", () => {
   it("returns the proposed defaults when nothing is set", () => {
     expect(loadAuthConfig({})).toEqual(DEFAULT_AUTH_CONFIG);
     expect(DEFAULT_AUTH_CONFIG.pin.length).toBe(6);
+    expect(DEFAULT_AUTH_CONFIG.staffPassword.minLength).toBe(12);
+  });
+
+  it("staff password minimum is configurable but can never drop below 12", () => {
+    expect(
+      loadAuthConfig({ AUTH_STAFF_PASSWORD_MIN_LENGTH: "16" }).staffPassword,
+    ).toEqual({ minLength: 16 });
+    expect(() =>
+      loadAuthConfig({ AUTH_STAFF_PASSWORD_MIN_LENGTH: "11" }),
+    ).toThrow(/AUTH_STAFF_PASSWORD_MIN_LENGTH/);
+    expect(() =>
+      loadAuthConfig({ AUTH_STAFF_PASSWORD_MIN_LENGTH: "6" }),
+    ).toThrow(/AUTH_STAFF_PASSWORD_MIN_LENGTH/);
+    expect(() =>
+      loadAuthConfig({ AUTH_STAFF_PASSWORD_MIN_LENGTH: "abc" }),
+    ).toThrow();
   });
 
   it("reads overrides from env", () => {

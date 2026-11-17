@@ -22,5 +22,5 @@ Role: principal architect + senior engineer. Correctness, security, auditability
 Migrations/files added (grouped), what each test proves, real check + CI results, deviations from the docs (with reason), open questions.
 
 ## Carry-over fixes from review (do these first in the slice named, own migration, with tests)
-- OPEN — slice 2B: staff password policy enforced server-side wherever a staff password is set (create, reset, change): minimum 12 characters, configurable. Supabase's global minimum stays 6 only because driver PINs share it; never rely on it for staff. (from PR #3)
+- Done (slice 2B): staff password policy enforced server-side on create, reset and change (minimum 12, configurable via AUTH_STAFF_PASSWORD_MIN_LENGTH with a floor of 12) through `StaffAccounts`. Supabase's global minimum stays 6 only because driver PINs share it; never rely on it for staff. (from PR #3) Also done in 2B: C1 trigger-function EXECUTE revokes (migration 016) and C2 CI pins supabase/setup-cli to 3.2.0 (from PR #5/#6). Closed by migration 017: the database refuses any staff password-hash change without a single-use server authorisation, so direct Auth `updateUser` and recovery links fail for staff.
 - Done: PR #2 items 1–3 (fixed in 1B), PR #3 item 5 (fixed in 1C).

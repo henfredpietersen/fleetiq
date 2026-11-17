@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { loadAuthConfig } from "../domain/auth-config";
 import type { DriverAuth } from "../domain/driver-auth";
+import { DriverAccounts } from "./driver-accounts";
+import { StaffAccounts } from "./staff-accounts";
 import { SupabaseDriverAuth } from "./supabase-driver-auth";
 
 function required(name: string): string {
@@ -24,4 +26,23 @@ export async function createDriverAuth(): Promise<DriverAuth> {
 
 export function authSecret(): string {
   return required("AUTH_SERVER_SECRET");
+}
+
+/** Staff create / reset / change-password: the only route to Auth's password APIs for staff (carry-over C3). */
+export async function createStaffAccounts(): Promise<StaffAccounts> {
+  return new StaffAccounts({
+    admin: createAdminClient(),
+    userClient: await createSupabaseServerClient(),
+    config: loadAuthConfig(),
+  });
+}
+
+/** Driver account creation (Auth user + profile + driver + role): reviewed admin function, server-only. */
+export async function createDriverAccounts(): Promise<DriverAccounts> {
+  return new DriverAccounts({
+    admin: createAdminClient(),
+    userClient: await createSupabaseServerClient(),
+    config: loadAuthConfig(),
+    secret: required("AUTH_SERVER_SECRET"),
+  });
 }
