@@ -25,3 +25,4 @@ Migrations/files added (grouped), what each test proves, real check + CI results
 - From PR #2 (1A), fix in slice 1B:
   1. `user_roles` update policy: a manager may only END a grant (set `effective_to` to a time ≤ now() and never later than an existing `effective_to`). Re-activating or extending an ended grant must require a new grant row. Add pgTAP tests for both.
   2. `audit_row_change()`: `current_user` inside SECURITY DEFINER is always the owner, so `metadata.db_role` is meaningless. Record `session_user` (or drop the field).
+  3. (Codex finding on PR #2) `audit_row_change()` on `role_permissions`: resolve `company_id` via the related role (`roles.company_id`), keeping NULL only for system roles, so company `audit.view` users can see changes to their own custom roles. Add a pgTAP test.
