@@ -464,7 +464,7 @@ export type Database = {
           p_emp_hash: string;
           p_ip_hash: string;
           p_profile_id?: string;
-          p_window: unknown;
+          p_window: string;
         };
         Returns: {
           account_failures: number;
