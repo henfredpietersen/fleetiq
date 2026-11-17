@@ -1,8 +1,8 @@
 # FleetIQ — Working Context (digest)
 
 Read this first. Open the full docs only for the section you need (cite § numbers):
-PRD = docs/01-FleetIQ-PRD-v1.6.md · ARCH = docs/02-FleetIQ-Technical-Architecture-v1.6.md · DB = docs/03-FleetIQ-Database-Design-v1.4.md.
-PRD/ARCH v1.6, DB v1.4; all Approved 2026-11-17. If this digest and a full doc disagree, the full doc wins.
+PRD = docs/01-FleetIQ-PRD-v1.7.md · ARCH = docs/02-FleetIQ-Technical-Architecture-v1.7.md · DB = docs/03-FleetIQ-Database-Design-v1.5.md.
+PRD/ARCH v1.7, DB v1.5; all Approved 2026-11-17. If this digest and a full doc disagree, the full doc wins.
 
 ## Product
 Internal (not SaaS) fleet platform, one SA company, 50–200 vehicles, multi-branch, multi-shift (incl. across midnight), TZ Africa/Johannesburg. Mobile-first driver portal (mid-range phones, weak signal), desktop management app.
@@ -16,13 +16,16 @@ Next.js App Router · React · TypeScript strict · Tailwind · shadcn/ui · Sup
 - DEC-32: "Operations manager" = Branch manager.
 - DEC-34: office/management users sign in with email + password; MFA required for administrators and anyone with approval permissions.
 - DEC-23: permission matrix = PRD §4.2 table, seeded as config. Key points: corrections approved by fleet admin (all) or branch manager (own branch); supervisors approve standard exceptions in own branch; senior management view-only; system admin manages users/settings and sees the audit log but has no access to evidence, reports or licence data.
+- DEC-19: service config precedence vehicle → make/model → category → company default (effective-dated, audited).
+- DEC-20: go-live baselines need an invoice/job card/service-book photo, verified by the maintenance admin (verifier ≠ creator); none = baseline_required.
+- DEC-31: branch transfers approved by a fleet admin; branch history kept.
 - AD-01: background jobs = Postgres `background_jobs` table + scheduled worker (pg_cron trigger + Node worker on the server).
 - AD-05: `user_roles` (branch_id nullable = company-wide) is the only branch-scope source.
 - DEC-12/14/16/17/18 (configurable defaults in `odometer_validation_settings`): whole km; OCR–driver tolerance 0 km; unaccounted tolerance 5 km; late pre-shift +30 min, post-shift +60 min; stale after 7 days. DEC-13 (OCR confidence) and DEC-15 (max km/allocation) have no default: while unset, no auto-acceptance and the implausible check reports `not_configured`.
 Everything else in PRD §12 / ARCH §17 is Proposed/Open → configurable, cite the ID.
 
 ## Phase 1 blockers (pending)
-None for building Phase 1 locally with synthetic data (approved exception). Before real data: RSAWEB servers provisioned, POPIA operator agreement, manager/Information Officer informed, business inputs (PRD §10). Also open before go-live: POPIA position, business inputs (PRD §10).
+None for building Phases 1–2 locally with synthetic data (approved exception). Before real data: RSAWEB servers provisioned, POPIA operator agreement, manager/Information Officer informed, business inputs (PRD §10). Also open before go-live: POPIA position, business inputs (PRD §10).
 
 ## Roadmap (PRD §9)
 0 Setup → 1 Foundation (auth, org/branches, roles/permissions, RLS, audit triggers, private evidence storage) → 2 Registers → 3 Shifts & allocations → 4 Inspections (mobile) → 5 Odometer manual path → 6 OCR → 7 Mileage → 8 Service monitoring & alerts → 9 Incidents, dashboard, reports → 10 Pilot. Never build ahead of the current phase.
@@ -47,7 +50,7 @@ None for building Phase 1 locally with synthetic data (approved exception). Befo
 - OCR/AI is assistive only; manual path must work without it; AI never decides liability.
 
 ## Service monitoring (PRD §5.10, ARCH §8)
-Default 15,000 km interval, ±1,500 km tolerance. next = last VERIFIED service odometer + interval (never rounded). Bands: <13,500 normal · 13,500–14,999 approaching · 15,000–16,500 due · >16,500 overdue · no verified record = baseline_required. Optional time basis; effective status = more severe of km and time. Only a verified service record (verifier ≠ creator) sets the baseline; never invent one. Config precedence (proposed DEC-19): vehicle → make/model → category → company default.
+Default 15,000 km interval, ±1,500 km tolerance. next = last VERIFIED service odometer + interval (never rounded). Bands: <13,500 normal · 13,500–14,999 approaching · 15,000–16,500 due · >16,500 overdue · no verified record = baseline_required. Optional time basis; effective status = more severe of km and time. Only a verified service record (verifier ≠ creator) sets the baseline; never invent one. Config precedence (DEC-19, approved): vehicle → make/model → category → company default.
 
 ## Allocation lifecycle (PRD §5.5)
 planned → pre_inspection_pending → in_use → post_inspection_pending → closed | closed_with_exceptions; plus cancelled, no_show. No overlapping active allocations per vehicle (DB exclusion constraint). One non-void inspection per allocation + stage.

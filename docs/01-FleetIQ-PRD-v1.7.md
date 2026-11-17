@@ -1,10 +1,10 @@
 # FleetIQ — Product Requirements Document (PRD)
 
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Approved (2026-11-17)
 **Product:** FleetIQ
 **Product type:** Internal fleet-management and operational intelligence platform
-**Companion documents:** Technical Architecture v1.6, Database Design Specification v1.4
+**Companion documents:** Technical Architecture v1.7, Database Design Specification v1.5
 
 ---
 
@@ -20,6 +20,7 @@
 | 1.4 | 2026-11-17 | Decisions approved: DEC-34 (office users: email + password, MFA for administrators and approvers); DEC-12, DEC-14, DEC-16, DEC-17, DEC-18 approved as configurable default values; DEC-13 and DEC-15 explicitly deferred to configuration (no default until set from operational data). AD-01 and AD-05 approved (Technical Architecture v1.4). Pre-development gate updated. |
 | 1.5 | 2026-11-17 | DEC-23 permission matrix approved as proposed (§4.2), including: odometer corrections approved by fleet admin (company-wide) or branch manager (own branch); supervisors approve standard exceptions in their own branch; system administrator has no access to operational data (evidence, reports, licence details) but can view the audit log. All grants subject to DEC-24. |
 | 1.6 | 2026-11-17 | DEC-25 approved: all personal data and evidence stay in South Africa; self-hosted Supabase and the Next.js app on RSAWEB cloud servers (South African data centres); production address fleetiq.outview.co.za; company-owned accounts with at least two administrators. Added POPIA operator agreement (Outview as operator) and in-country rule for later providers (DEC-26, DEC-28). Approved exception: Phase 1 may be built on local/CI Supabase with synthetic data before servers are provisioned. |
+| 1.7 | 2026-11-17 | Approved: DEC-19 (service configuration precedence: vehicle → make/model → category → company default), DEC-20 (baseline evidence: invoice, job card or service-book photo, verified by the maintenance administrator), DEC-31 (fleet administrator approves branch transfers; history kept). Local/CI synthetic-data exception extended to Phase 2. |
 
 **Notation.** Items marked **[DEC-xx]** depend on a decision in the Decision Register (§12). Until a decision is approved, the stated value is a **proposed default** and must be implemented as configurable, not hard-coded.
 
@@ -191,7 +192,7 @@ The system must support:
 - Optional departments.
 - Branch-specific vehicle assignment with history.
 - Branch-specific users and permissions.
-- Controlled vehicle transfers between branches, approved per [DEC-31] and kept as history.
+- Controlled vehicle transfers between branches, approved by the fleet administrator [DEC-31 — Approved] and kept as history.
 - Consolidated management reporting.
 
 A user must not access another branch's restricted records without explicit permission. Historical records keep the branch that applied at the time.
@@ -491,10 +492,10 @@ Where a time interval applies:
 - The time status uses the same band keys.
 - The **effective status is the more severe** of the kilometre status and the time status.
 
-#### 5.10.5 Configuration and precedence [DEC-19]
+#### 5.10.5 Configuration and precedence [DEC-19 — Approved]
 
 - Support vehicle-specific, manufacturer/model, category and company-default configurations.
-- Proposed precedence: vehicle-specific → manufacturer/model → category → company default.
+- Precedence (approved): vehicle-specific → manufacturer/model → category → company default.
 - The configuration in effect today applies to the current service cycle; changes are effective-dated and audited.
 - Every override records vehicle, previous setting, new setting, reason, authorised user, approver, timestamp and supporting evidence where required.
 - Tracking of alternating minor/major service types is a later-phase item [DEC-11].
@@ -508,11 +509,11 @@ The MVP includes minimal service record capture:
 - Only a verified record sets or resets the baseline. A booking, quotation or driver report never does.
 - The service odometer is cross-checked against accepted readings around the service date; inconsistencies are flagged.
 
-#### 5.10.7 Initial baseline onboarding (MVP) [DEC-20]
+#### 5.10.7 Initial baseline onboarding (MVP) [DEC-20 — Approved]
 
 At go-live, each vehicle needs:
 - An opening odometer reading (from its first accepted pre-shift reading, or an onboarding reading with photo).
-- Its last service date and odometer, with evidence (proposed: invoice, job card or service-book photograph), recorded with source `historical_import` and verified by a maintenance administrator.
+- Its last service date and odometer, with evidence (invoice, job card or service-book photograph), recorded with source `historical_import` and verified by a maintenance administrator.
 
 Vehicles without acceptable evidence show **Baseline required** until a verified service record exists. Baselines are never invented.
 
@@ -789,7 +790,7 @@ Development (Phase 1) does not start until:
 - [x] DEC-34, AD-01, AD-05 approved (2026-11-17).
 - [x] DEC-23 permission matrix approved (2026-11-17).
 - [x] DEC-25 hosting approved: RSAWEB, South Africa only (2026-11-17).
-- [x] Exception approved 2026-11-17: Phase 1 may be built and tested on local/CI Supabase with synthetic data only before the RSAWEB servers exist. No real company data until every remaining gate item is complete.
+- [x] Exception approved 2026-11-17: Phase 1 may be built and tested on local/CI Supabase with synthetic data only before the RSAWEB servers exist. Extended to Phase 2 (2026-11-17). No real company data until every remaining gate item is complete.
 - [x] Validation threshold defaults approved (DEC-12, 14, 16–18) or explicitly deferred to configuration (DEC-13, DEC-15) (2026-11-17).
 - [ ] Every other decision has an owner and a "needed by" phase.
 
@@ -814,7 +815,7 @@ Development (Phase 1) does not start until:
 
 ## 11. Approval and change control
 
-This document is the approved version 1.6 product baseline (v1.3 approved by the user on 2026-11-17; v1.4–v1.6 record decisions approved the same day).
+This document is the approved version 1.7 product baseline (v1.3 approved by the user on 2026-11-17; v1.4–v1.7 record decisions approved the same day).
 
 Approval of this document does not approve any Decision Register item still marked Proposed or Open; those remain configurable proposed defaults until decided individually.
 
@@ -846,8 +847,8 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-16 | Unaccounted distance tolerance | 5 km | **Approved** as configurable default (2026-11-17) | Phase 7 |
 | DEC-17 | Late inspection windows | Pre-shift +30 min after start; post-shift +60 min after end | **Approved** as configurable default (2026-11-17) | Phase 4 |
 | DEC-18 | Stale reading age | 7 days on an active vehicle | **Approved** as configurable default (2026-11-17) | Phase 8 |
-| DEC-19 | Service configuration precedence | Vehicle → manufacturer/model → category → company default; current config applies to current cycle | Proposed | Phase 2 |
-| DEC-20 | Baseline onboarding evidence and verifier | Invoice, job card or service-book photo; verified by maintenance administrator | Proposed | Phase 2 |
+| DEC-19 | Service configuration precedence | Vehicle → manufacturer/model → category → company default; current config applies to current cycle | **Approved** (2026-11-17) | Phase 2 |
+| DEC-20 | Baseline onboarding evidence and verifier | Invoice, job card or service-book photo; verified by maintenance administrator | **Approved** (2026-11-17) | Phase 2 |
 | DEC-21 | Mandatory checklist items per vehicle category | Business to supply current checklists | Open | Phase 4 |
 | DEC-22 | Licence validity at allocation | Block expired/unverified; warn + override on class mismatch | Proposed | Phase 3 |
 | DEC-23 | Permission matrix | As in §4.2 | **Approved** (2026-11-17) | Phase 1 |
@@ -858,7 +859,7 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-28 | Notification channels and escalation periods | In-app for MVP; email when an in-country provider is approved (DEC-25); escalation delays to be set | Proposed | Phase 8 |
 | DEC-29 | EXIF GPS in photos | Strip on upload for MVP | Proposed | Phase 4 |
 | DEC-30 | KPI definitions and targets | MVP operational metrics only; catalogue later | Proposed | Phase 9 |
-| DEC-31 | Branch transfer approval | Fleet administrator approves; history kept | Proposed | Phase 2 |
+| DEC-31 | Branch transfer approval | Fleet administrator approves; history kept | **Approved** (2026-11-17) | Phase 2 |
 | DEC-32 | "Operations manager" role | Same as Branch manager; no separate role | **Approved** (2026-11-12) | Phase 1 |
 | DEC-33 | Fuel data source | Later phase | Deferred | Later |
 | DEC-34 | Office and management user login | Email + password; multi-factor authentication for administrators and approvers | **Approved** (2026-11-17) | Phase 1 |

@@ -1,9 +1,9 @@
 # FleetIQ — Database Design Specification
 
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Approved (2026-11-17)
 **Database:** PostgreSQL / Supabase PostgreSQL
-**Companion documents:** PRD v1.4 (requirements, Decision Register DEC-xx), Technical Architecture v1.4 (AD-xx)
+**Companion documents:** PRD v1.7 (requirements, Decision Register DEC-xx), Technical Architecture v1.7 (AD-xx)
 
 ---
 
@@ -17,6 +17,7 @@
 | 1.3 | 2026-11-12 | Applied approved DEC-08: `drivers.profile_id` required; driver sign-in fields on `profiles`; added `auth_login_attempts`. Added proposed `company_devices` and `evidence_files.device_id` (DEC-35). Segregation of duties (DEC-24) marked approved. |
 | 1.3 | 2026-11-17 | **Approved by the user as the logical database baseline.** Items marked Proposed, Open, Pending or [DEC-xx] remain configurable/nullable until their decisions are approved individually. |
 | 1.4 | 2026-11-17 | AD-01, AD-05 and DEC-34 approved. `profiles.email` required for staff users. Default values documented for `odometer_validation_settings` (DEC-12, 14, 16–18); DEC-13 and DEC-15 have no default until set. |
+| 1.5 | 2026-11-17 | DEC-19 (config precedence), DEC-20 (baseline evidence + maintenance-admin verification) and DEC-31 (fleet-admin transfer approval) approved. Companion versions aligned. |
 
 **Notation.** **[MVP]** = required for the MVP. **[Later]** = planned phase; the table may be created later. Items marked **[DEC-xx]** depend on a pending decision and must be configurable or nullable until approved.
 
@@ -198,7 +199,7 @@ Operational status (allocated / in use / awaiting post-shift inspection) is **de
 - branch_id
 - effective_from
 - effective_to, nullable
-- approval_id, nullable (DEC-31)
+- approval_id, nullable — required for transfers after initial assignment; approved by a fleet administrator (DEC-31, Approved)
 - created_by
 - created_at
 
@@ -699,7 +700,7 @@ Constraints:
 
 Default company configuration: `service_interval_km = 15000`, `early_tolerance_km = 1500`, `late_tolerance_km = 1500`.
 
-Precedence (DEC-19, proposed): vehicle → make_model → category → company_default. Implemented in one function, `resolve_service_config(vehicle_id, at timestamptz)`, with tests.
+Precedence (DEC-19, Approved): vehicle → make_model → category → company_default. Implemented in one function, `resolve_service_config(vehicle_id, at timestamptz)`, with tests.
 
 ### service_records [MVP — minimal]
 - id
@@ -1139,7 +1140,7 @@ The design is acceptable when:
 | OCR provider metadata to retain | Pending | DEC-26 |
 | `drivers.profile_id` required | Approved | DEC-08 |
 | Company device register | Proposed | DEC-35 |
-| Service config precedence | Proposed | DEC-19 |
+| Service config precedence | Approved | DEC-19 |
 | `vehicle_service_status` view vs snapshot | Proposed view | AD-04 |
 | Branch scope source | Approved: `user_roles` only | AD-05 |
 | Retention classes | Pending | DEC-27 |
@@ -1147,4 +1148,4 @@ The design is acceptable when:
 
 ---
 
-**Important implementation rule:** This specification (v1.4, approved 2026-11-17) defines the intended logical database design. Do not create production tables or migrations from it until the pre-development gate in PRD §10 is passed and the actual application repository and database have been inspected.
+**Important implementation rule:** This specification (v1.5, approved 2026-11-17) defines the intended logical database design. Do not create production tables or migrations from it until the pre-development gate in PRD §10 is passed and the actual application repository and database have been inspected.

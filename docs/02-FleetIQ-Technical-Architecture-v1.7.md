@@ -1,9 +1,9 @@
 # FleetIQ — Technical Architecture
 
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Approved (2026-11-17)
 **Product:** Internal fleet-management and operational intelligence platform
-**Companion documents:** PRD v1.6 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
+**Companion documents:** PRD v1.7 (requirements and Decision Register DEC-xx), Database Design Specification v1.5
 
 ---
 
@@ -19,6 +19,7 @@
 | 1.4 | 2026-11-17 | Approved: AD-01 (Postgres job table + scheduled worker), AD-05 (`user_roles` is the only branch-scope source), DEC-34 (office login). Validation threshold defaults per PRD v1.4. |
 | 1.5 | 2026-11-17 | DEC-23 permission matrix approved (PRD v1.5 §4.2). |
 | 1.6 | 2026-11-17 | DEC-25 approved: self-hosted Supabase and Next.js on RSAWEB cloud servers in South Africa (AD-09); Vercel removed. Deployment, backups, secrets and scheduler updated. |
+| 1.7 | 2026-11-17 | DEC-19, DEC-20, DEC-31 approved (PRD v1.7). |
 
 ---
 
@@ -356,7 +357,7 @@ Default configuration:
 - Target: 15,000 km after the last verified service.
 - Maximum tolerance: 16,500 km after the last verified service.
 
-Precedence (DEC-19, proposed): vehicle → manufacturer/model → category → company default. The configuration in effect now is applied to the last verified baseline. Changes are effective-dated and audited.
+Precedence (DEC-19, Approved): vehicle → manufacturer/model → category → company default. The configuration in effect now is applied to the last verified baseline. Changes are effective-dated and audited.
 
 ### 8.2 Calculation
 
@@ -399,7 +400,7 @@ The engine is a pure domain function with exhaustive boundary tests (exactly 13,
 - Verification must be by a different user from the creator (DEC-24), enforced in the database.
 - Only a verified record updates the baseline. A booking, quotation or driver report never does.
 - The service odometer is cross-checked against accepted readings near the service date; inconsistencies raise a data-quality flag.
-- Initial baselines are loaded by a reviewed import with source `historical_import` and verified per DEC-20.
+- Initial baselines are loaded by a reviewed import with source `historical_import` and verified by the maintenance administrator per DEC-20 (Approved): evidence is an invoice, job card or service-book photo; no evidence = Baseline required.
 
 ## 9. Notification architecture
 
