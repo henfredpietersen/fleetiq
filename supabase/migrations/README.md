@@ -9,3 +9,17 @@ Migrations only: every schema change is a new, reviewed migration file here — 
 5. `…05_seed_roles_permissions` — 7 roles + DEC-23 matrix (PRD §4.2) as data.
 
 Tests: `supabase/tests/database/*.test.sql` (pgTAP, `supabase test db`). Types: `npm run db:types`.
+
+## Phase 1B
+
+6. `…06_carryover_1a_review_fixes` — end-only role grants, `audit_row_change()` fixes.
+7. `…07_auth_signin` — MFA/PIN gating inside `has_permission()`, `auth_login_attempts`, sign-in functions.
+
+## Phase 1C (private evidence storage)
+
+8. `…08_carryover_1b_review_fixes` — a manager may cancel a future-dated grant (zero-length, never deleted).
+9. `…09_background_jobs` — AD-01 job table + enqueue/claim/complete/fail (service role only).
+10. `…10_evidence_storage` — `evidence_upload_slots`, `evidence_files` (insert-only), `evidence_access_log` (append-only), RLS, request/register/issue-access/cleanup functions.
+11. `…11_evidence_bucket` — private `evidence` bucket (size + MIME backstop) and storage policies tied to the evidence tables.
+
+Manual job run (no scheduler yet): `npm run job:evidence-cleanup` (needs the server-side env, see `.env.example`).
