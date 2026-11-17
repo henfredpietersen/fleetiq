@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 // Staff (office/management) password policy. DEC-34: staff sign in with email + password.
 // Supabase Auth's global minimum stays at 6 only because driver PINs share it (AD-08), so it is NEVER relied on
 // for staff: every path that sets a staff password validates here first (see server/staff-accounts.ts).
@@ -38,4 +40,24 @@ export function describeStaffPasswordViolations(
       ? `Use at least ${rules.minLength} characters.`
       : `Use at most ${STAFF_PASSWORD_MAX_LENGTH} characters.`,
   );
+}
+
+// Unambiguous characters only (no 0/O, 1/l/I) so a temporary password read out or copied from a screen is not
+// mistyped. 56 symbols x 16 characters is far beyond the policy minimum.
+const TEMP_ALPHABET =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+/** Random temporary password that always satisfies the configured staff policy. */
+export function generateStaffPassword(
+  rules: StaffPasswordRules,
+  random: (maxExclusive: number) => number = (n) => randomInt(n),
+): string {
+  const length = Math.min(
+    Math.max(16, rules.minLength),
+    STAFF_PASSWORD_MAX_LENGTH,
+  );
+  let out = "";
+  for (let i = 0; i < length; i++)
+    out += TEMP_ALPHABET[random(TEMP_ALPHABET.length)];
+  return out;
 }

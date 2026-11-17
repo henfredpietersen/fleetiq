@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database.types";
 import type { AuthConfig } from "../domain/auth-config";
 import { isInternalIdentifier } from "../domain/identifiers";
 import {
+  generateStaffPassword,
   validateStaffPassword,
   type StaffPasswordViolation,
 } from "../domain/staff-password-policy";
@@ -23,10 +24,14 @@ export type StaffPasswordFailure =
   | { ok: false; code: "weak_password"; violations: StaffPasswordViolation[] }
   | { ok: false; code: "unauthenticated" | "forbidden" | "mfa_required" }
   | { ok: false; code: "not_found" | "self_reset" | "same_password" }
-  | { ok: false; code: "invalid_email" | "email_taken" | "service_error" };
+  | { ok: false; code: "invalid_email" | "email_taken" | "service_error" }
+  // The profile step failed AND the Auth user could not be removed again: an operator must delete it.
+  | { ok: false; code: "rollback_failed"; orphanUserId: string };
 
 export type CreateStaffUserResult =
-  { ok: true; userId: string } | StaffPasswordFailure;
+  // temporaryPassword is returned exactly once, only when the server generated it; never stored or logged.
+  | { ok: true; userId: string; temporaryPassword?: string }
+  | StaffPasswordFailure;
 export type SetStaffPasswordResult = { ok: true } | StaffPasswordFailure;
 
 export type StaffAccountsDeps = {
@@ -79,15 +84,26 @@ export class StaffAccounts {
     return { ok: true, callerId: caller.id };
   }
 
-  /** CREATE: a manager creates a staff login. Profile + role rows are the caller's job (account management). */
+  /**
+   * CREATE: a manager creates a staff account — Auth user, then profile, in one flow (DEC-34).
+   * The password is temporary: the profile is created with the forced-change flag, so the person must choose
+   * their own before any access, and then enrol MFA at /mfa if their roles require it. If the profile step fails
+   * the Auth user is deleted again, so no orphan account is left behind.
+   */
   async createStaffUser(input: {
     email: string;
-    password: string;
+    displayName: string;
+    /** Omit to have the server generate one (returned once). Supplied passwords face the same policy. */
+    password?: string;
   }): Promise<CreateStaffUserResult> {
-    const weak = this.weak(input.password);
+    const generated = input.password === undefined;
+    const password =
+      input.password ?? generateStaffPassword(this.d.config.staffPassword);
+    const weak = this.weak(password);
     if (weak) return weak;
     const email = input.email.trim().toLowerCase();
-    if (!email.includes("@") || isInternalIdentifier(email))
+    const displayName = input.displayName.trim();
+    if (!email.includes("@") || isInternalIdentifier(email) || !displayName)
       return { ok: false, code: "invalid_email" };
 
     const auth = await this.authoriseManager();
@@ -95,7 +111,7 @@ export class StaffAccounts {
 
     const { data, error } = await this.d.admin.auth.admin.createUser({
       email,
-      password: input.password,
+      password,
       email_confirm: true,
     });
     if (error || !data.user) {
@@ -105,7 +121,31 @@ export class StaffAccounts {
         return { ok: false, code: "weak_password", violations: ["too_short"] };
       return { ok: false, code: "service_error" };
     }
-    return { ok: true, userId: data.user.id };
+    const userId = data.user.id;
+
+    const { error: profileError } = await this.d.admin.rpc(
+      "admin_create_staff",
+      {
+        p_actor: auth.callerId,
+        p_user_id: userId,
+        p_email: email,
+        p_display_name: displayName,
+      },
+    );
+    if (profileError) {
+      const { error: deleteError } =
+        await this.d.admin.auth.admin.deleteUser(userId);
+      if (deleteError)
+        return { ok: false, code: "rollback_failed", orphanUserId: userId };
+      if (profileError.code === "42501")
+        return { ok: false, code: "forbidden" };
+      if (profileError.code === "23505")
+        return { ok: false, code: "email_taken" };
+      return { ok: false, code: "service_error" };
+    }
+    return generated
+      ? { ok: true, userId, temporaryPassword: password }
+      : { ok: true, userId };
   }
 
   /** RESET: a manager sets another staff member's password. Nobody resets their own (DEC-24). */
@@ -145,6 +185,13 @@ export class StaffAccounts {
       { p_user: target.id, p_actor: auth.callerId },
     );
     if (authError) return { ok: false, code: "service_error" };
+
+    // The reset password is temporary: the person must choose their own at next sign-in (audited, DEC-24).
+    const { error: flagError } = await this.d.admin.rpc(
+      "auth_issue_staff_password_flags",
+      { p_target: target.id, p_actor: auth.callerId },
+    );
+    if (flagError) return { ok: false, code: "service_error" };
 
     const { error } = await this.d.admin.auth.admin.updateUserById(target.id, {
       password: input.newPassword,
@@ -187,6 +234,11 @@ export class StaffAccounts {
         return { ok: false, code: "weak_password", violations: ["too_short"] };
       return { ok: false, code: "service_error" };
     }
-    return { ok: true };
+    // Only now (after Auth accepted the new password) is the forced-change flag cleared, by the server.
+    const { error: flagError } = await this.d.admin.rpc(
+      "auth_complete_password_change",
+      { p_profile: user.id },
+    );
+    return flagError ? { ok: false, code: "service_error" } : { ok: true };
   }
 }

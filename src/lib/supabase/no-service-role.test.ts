@@ -106,9 +106,35 @@ describe("service-role key hygiene", () => {
       );
       for (const i of imports) {
         expect(i, rel(f)).not.toMatch(
-          /supabase\/admin|\/server\/(?!actions$)|supabase\/server/,
+          /supabase\/admin|\/server\/(?![a-z-]*actions$)|supabase\/server/,
         );
       }
+    }
+  });
+
+  it("the only server files a client component may import are real 'use server' action files", () => {
+    const actionFiles = files.filter((f) =>
+      /\/server\/[a-z-]*actions\.ts$/.test(f),
+    );
+    expect(actionFiles.length).toBeGreaterThan(0);
+    for (const f of actionFiles) {
+      expect(read(f), rel(f)).toMatch(/^\s*["']use server["']/m);
+    }
+  });
+
+  it("account-administration entry points (service-role paths) are server-only and never client-invocable", () => {
+    for (const name of [
+      "admin-accounts.ts",
+      "admin-pin.ts",
+      "driver-accounts.ts",
+      "staff-accounts.ts",
+      "role-assignments.ts",
+      "admin-queries.ts",
+      "factory.ts",
+    ]) {
+      const src = read(path.join(SRC, "modules/identity-access/server", name));
+      expect(src, name).toMatch(/^import "server-only";/m);
+      expect(src, name).not.toMatch(/^\s*["']use server["']/m);
     }
   });
 

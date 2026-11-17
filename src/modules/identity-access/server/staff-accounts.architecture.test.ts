@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 const ALLOWED = new Set([
   "src/modules/identity-access/server/staff-accounts.ts",
   "src/modules/identity-access/server/supabase-driver-auth.ts",
+  //   - driver-accounts.ts         creates the driver Auth user with a generated PIN that follows the PIN rules
+  "src/modules/identity-access/server/driver-accounts.ts",
 ]);
 const PASSWORD_SETTERS = [
   /\.admin\.createUser\s*\(/,

@@ -22,6 +22,9 @@ type Opts = {
   updateError?: { code?: string } | null;
   userUpdateError?: { code?: string } | null;
   authoriseError?: { code?: string } | null;
+  profileError?: { code?: string } | null; // admin_create_staff
+  deleteError?: { message: string } | null; // auth.admin.deleteUser
+  flagError?: { code?: string } | null; // auth_issue_staff_password_flags / auth_complete_password_change
 };
 
 /** In-memory stand-in for the two Supabase clients; `authCalls` records every Auth password write. */
@@ -29,6 +32,8 @@ function fake(o: Opts = {}) {
   const authCalls: { api: string; password: string }[] = [];
   const events: string[] = []; // order of authorisations and Auth writes
   const authorisations: { p_user: string; p_actor: string }[] = [];
+  const rpcLog: { name: string; args: Record<string, unknown> }[] = [];
+  const deleted: string[] = [];
   const o2 = {
     caller: CALLER as string | null,
     allowed: true,
@@ -45,15 +50,33 @@ function fake(o: Opts = {}) {
     updateError: null,
     userUpdateError: null,
     authoriseError: null,
+    profileError: null,
+    deleteError: null,
+    flagError: null,
     ...o,
   };
   const admin = {
-    rpc: async (name: string, args: { p_user: string; p_actor: string }) => {
-      if (name !== "authorise_staff_password_change")
-        throw new Error(`unexpected admin rpc ${name}`);
-      events.push("authorise");
-      authorisations.push(args);
-      return { error: o2.authoriseError };
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      rpcLog.push({ name, args });
+      if (name === "authorise_staff_password_change") {
+        events.push("authorise");
+        authorisations.push(args as { p_user: string; p_actor: string });
+        return { error: o2.authoriseError };
+      }
+      if (name === "admin_create_staff") {
+        events.push("profile");
+        return { error: o2.profileError };
+      }
+      if (
+        name === "auth_issue_staff_password_flags" ||
+        name === "auth_complete_password_change"
+      ) {
+        events.push(
+          name === "auth_complete_password_change" ? "clear_flag" : "set_flag",
+        );
+        return { error: o2.flagError };
+      }
+      throw new Error(`unexpected admin rpc ${name}`);
     },
     auth: {
       admin: {
@@ -63,6 +86,11 @@ function fake(o: Opts = {}) {
           return o2.createError
             ? { data: { user: null }, error: o2.createError }
             : { data: { user: { id: "new-user" } }, error: null };
+        },
+        deleteUser: async (id: string) => {
+          events.push("deleteUser");
+          deleted.push(id);
+          return { error: o2.deleteError };
         },
         updateUserById: async (_id: string, a: { password: string }) => {
           events.push("updateUserById");
@@ -112,7 +140,7 @@ function fake(o: Opts = {}) {
     userClient,
     config: DEFAULT_AUTH_CONFIG,
   } as unknown as StaffAccountsDeps);
-  return { svc, authCalls, events, authorisations };
+  return { svc, authCalls, events, authorisations, rpcLog, deleted };
 }
 
 describe("default policy", () => {
@@ -127,6 +155,7 @@ describe("CREATE staff user", () => {
       const { svc, authCalls } = fake();
       const r = await svc.createStaffUser({
         email: "a@example.test",
+        displayName: "Synthetic Staff",
         password: weak,
       });
       expect(r).toEqual({
@@ -142,6 +171,7 @@ describe("CREATE staff user", () => {
     const { svc, authCalls } = fake();
     const r = await svc.createStaffUser({
       email: " A@Example.test ",
+      displayName: "Synthetic Staff",
       password: STRONG,
     });
     expect(r).toEqual({ ok: true, userId: "new-user" });
@@ -152,6 +182,7 @@ describe("CREATE staff user", () => {
     const { svc } = fake();
     const r = await svc.createStaffUser({
       email: "a@example.test",
+      displayName: "Synthetic Staff",
       password: "a".repeat(12),
     });
     expect(r.ok).toBe(true);
@@ -161,6 +192,7 @@ describe("CREATE staff user", () => {
     const { svc, authCalls } = fake();
     const r = await svc.createStaffUser({
       email: "e1001@drivers.fleetiq.invalid",
+      displayName: "Synthetic Staff",
       password: STRONG,
     });
     expect(r).toEqual({ ok: false, code: "invalid_email" });
@@ -176,6 +208,7 @@ describe("CREATE staff user", () => {
       const { svc, authCalls } = fake(opts);
       const r = await svc.createStaffUser({
         email: "a@example.test",
+        displayName: "Synthetic Staff",
         password: STRONG,
       });
       expect(r).toEqual({ ok: false, code });
@@ -188,6 +221,7 @@ describe("CREATE staff user", () => {
       await fake({ createError: { code: "email_exists" } }).svc.createStaffUser(
         {
           email: "a@example.test",
+          displayName: "Synthetic Staff",
           password: STRONG,
         },
       ),
@@ -195,6 +229,7 @@ describe("CREATE staff user", () => {
     expect(
       await fake({ createError: { code: "unexpected" } }).svc.createStaffUser({
         email: "a@example.test",
+        displayName: "Synthetic Staff",
         password: STRONG,
       }),
     ).toEqual({ ok: false, code: "service_error" });
@@ -347,14 +382,14 @@ describe("database authorisation for staff password changes (migration 017)", ()
   it("RESET records one authorisation for the target, before the Auth write", async () => {
     const { svc, events, authorisations } = fake();
     await svc.resetStaffPassword({ targetUserId: TARGET, newPassword: STRONG });
-    expect(events).toEqual(["authorise", "updateUserById"]);
+    expect(events).toEqual(["authorise", "set_flag", "updateUserById"]);
     expect(authorisations).toEqual([{ p_user: TARGET, p_actor: CALLER }]);
   });
 
   it("CHANGE records one authorisation for the caller, before the Auth write", async () => {
     const { svc, events, authorisations } = fake();
     await svc.changeOwnPassword({ newPassword: STRONG });
-    expect(events).toEqual(["authorise", "updateUser"]);
+    expect(events).toEqual(["authorise", "updateUser", "clear_flag"]);
     expect(authorisations).toEqual([{ p_user: CALLER, p_actor: CALLER }]);
   });
 
@@ -407,8 +442,136 @@ describe("database authorisation for staff password changes (migration 017)", ()
 
   it("CREATE needs no authorisation (inserting a user is not a password update)", async () => {
     const { svc, authorisations } = fake();
-    await svc.createStaffUser({ email: "a@example.test", password: STRONG });
+    await svc.createStaffUser({
+      email: "a@example.test",
+      displayName: "Synthetic Staff",
+      password: STRONG,
+    });
     expect(authorisations).toEqual([]);
+  });
+});
+
+describe("staff account creation is one flow with no orphan Auth user", () => {
+  it("creates the Auth user, then the profile (attributed to the caller), and returns a generated temporary password once", async () => {
+    const { svc, events, rpcLog, authCalls } = fake();
+    const r = await svc.createStaffUser({
+      email: "New@Example.test",
+      displayName: " Synthetic New ",
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.temporaryPassword).toBeDefined();
+    expect([...(r.temporaryPassword ?? "")].length).toBeGreaterThanOrEqual(12);
+    expect(authCalls).toEqual([
+      { api: "createUser", password: r.temporaryPassword },
+    ]);
+    expect(events).toEqual(["createUser", "profile"]);
+    expect(rpcLog).toEqual([
+      {
+        name: "admin_create_staff",
+        args: {
+          p_actor: CALLER,
+          p_user_id: "new-user",
+          p_email: "new@example.test",
+          p_display_name: "Synthetic New",
+        },
+      },
+    ]);
+  });
+
+  it("does not return a password when the caller supplied one", async () => {
+    const r = await fake().svc.createStaffUser({
+      email: "a@example.test",
+      displayName: "S",
+      password: STRONG,
+    });
+    expect(r).toEqual({ ok: true, userId: "new-user" });
+  });
+
+  it("deletes the Auth user when the profile step fails (no orphan) and reports the failure", async () => {
+    const { svc, events, deleted } = fake({ profileError: { code: "XX000" } });
+    const r = await svc.createStaffUser({
+      email: "a@example.test",
+      displayName: "S",
+    });
+    expect(r).toEqual({ ok: false, code: "service_error" });
+    expect(events).toEqual(["createUser", "profile", "deleteUser"]);
+    expect(deleted).toEqual(["new-user"]);
+  });
+
+  it("maps a database refusal after rollback, and a duplicate email", async () => {
+    expect(
+      await fake({ profileError: { code: "42501" } }).svc.createStaffUser({
+        email: "a@example.test",
+        displayName: "S",
+      }),
+    ).toEqual({ ok: false, code: "forbidden" });
+    expect(
+      await fake({ profileError: { code: "23505" } }).svc.createStaffUser({
+        email: "a@example.test",
+        displayName: "S",
+      }),
+    ).toEqual({ ok: false, code: "email_taken" });
+  });
+
+  it("says so loudly when the rollback itself fails, naming the orphan", async () => {
+    const { svc } = fake({
+      profileError: { code: "XX000" },
+      deleteError: { message: "down" },
+    });
+    expect(
+      await svc.createStaffUser({ email: "a@example.test", displayName: "S" }),
+    ).toEqual({
+      ok: false,
+      code: "rollback_failed",
+      orphanUserId: "new-user",
+    });
+  });
+
+  it("never creates an Auth user for a weak supplied password, a bad email or an unauthorised caller", async () => {
+    for (const [input, opts] of [
+      [{ email: "a@example.test", displayName: "S", password: ELEVEN }, {}],
+      [{ email: "not-an-email", displayName: "S" }, {}],
+      [{ email: "a@example.test", displayName: " " }, {}],
+      [{ email: "a@example.test", displayName: "S" }, { allowed: false }],
+    ] as const) {
+      const { svc, events } = fake(opts);
+      const r = await svc.createStaffUser(input);
+      expect(r.ok).toBe(false);
+      expect(events).toEqual([]);
+    }
+  });
+});
+
+describe("forced change flags", () => {
+  it("RESET marks the password as temporary before changing it", async () => {
+    const { svc, rpcLog } = fake();
+    await svc.resetStaffPassword({ targetUserId: TARGET, newPassword: STRONG });
+    expect(rpcLog.map((c) => c.name)).toEqual([
+      "authorise_staff_password_change",
+      "auth_issue_staff_password_flags",
+    ]);
+    expect(rpcLog[1].args).toEqual({ p_target: TARGET, p_actor: CALLER });
+  });
+
+  it("if the flag cannot be set, the password is not changed", async () => {
+    const { svc, authCalls } = fake({ flagError: { code: "42501" } });
+    expect(
+      await svc.resetStaffPassword({
+        targetUserId: TARGET,
+        newPassword: STRONG,
+      }),
+    ).toEqual({ ok: false, code: "service_error" });
+    expect(authCalls).toEqual([]);
+  });
+
+  it("CHANGE clears the forced-change flag only after Auth accepted the password", async () => {
+    const ok = fake();
+    await ok.svc.changeOwnPassword({ newPassword: STRONG });
+    expect(ok.events.at(-1)).toBe("clear_flag");
+    const rejected = fake({ userUpdateError: { code: "same_password" } });
+    await rejected.svc.changeOwnPassword({ newPassword: STRONG });
+    expect(rejected.events).not.toContain("clear_flag");
   });
 });
 
@@ -425,7 +588,11 @@ describe("configurable minimum", () => {
     const svc = mk();
     const weak = "a".repeat(15);
     expect(
-      await svc.createStaffUser({ email: "a@example.test", password: weak }),
+      await svc.createStaffUser({
+        email: "a@example.test",
+        displayName: "Synthetic Staff",
+        password: weak,
+      }),
     ).toMatchObject({ code: "weak_password" });
     expect(
       await svc.resetStaffPassword({ targetUserId: TARGET, newPassword: weak }),
