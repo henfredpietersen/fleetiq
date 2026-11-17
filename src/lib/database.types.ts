@@ -460,6 +460,13 @@ export type Database = {
             foreignKeyName: "driver_licences_driver_id_company_id_fkey";
             columns: ["driver_id", "company_id"];
             isOneToOne: false;
+            referencedRelation: "driver_register";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
             referencedRelation: "drivers";
             referencedColumns: ["id", "company_id"];
           },
@@ -1309,20 +1316,61 @@ export type Database = {
       };
     };
     Views: {
+      driver_licences_safe: {
+        Row: {
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          driver_id: string;
+          expiry_date: string;
+          has_evidence: boolean | null;
+          id: string;
+          issue_date: string;
+          licence_code: string;
+          prdp_expiry_date: string | null;
+          prdp_required: boolean;
+          verification_status: string;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "driver_licences_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "driver_register";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       driver_register: {
         Row: {
-          active_status: string | null;
-          branch_id: string | null;
-          company_id: string | null;
-          display_name: string | null;
-          employee_number: string | null;
-          id: string | null;
+          active_status: string;
+          branch_id: string;
+          company_id: string;
+          display_name: string;
+          employee_number: string;
+          id: string;
           licence_expiry_date: string | null;
           licence_verification_status: string | null;
           phone: string | null;
           pin_change_pending: boolean | null;
           prdp_expiry_date: string | null;
         };
+        ComputedFields: never;
         Relationships: [
           {
             foreignKeyName: "drivers_branch_id_company_id_fkey";
@@ -1337,45 +1385,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "companies";
             referencedColumns: ["id"];
-          },
-        ];
-      };
-      driver_licences_safe: {
-        Row: {
-          branch_id: string | null;
-          company_id: string | null;
-          created_at: string | null;
-          driver_id: string | null;
-          expiry_date: string | null;
-          has_evidence: boolean | null;
-          id: string | null;
-          issue_date: string | null;
-          licence_code: string | null;
-          prdp_expiry_date: string | null;
-          prdp_required: boolean | null;
-          verification_status: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "drivers_branch_id_company_id_fkey";
-            columns: ["branch_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "branches";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "driver_licences_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "drivers";
-            referencedColumns: ["id", "company_id"];
           },
         ];
       };
@@ -1785,7 +1794,6 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
       set_driver_status: {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
         Returns: undefined;
@@ -1798,6 +1806,7 @@ export type Database = {
         Args: { p_branch_id: string; p_permission_key: string; p_user: string };
         Returns: boolean;
       };
+      user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
       verify_driver_licence: {
         Args: { p_decision: string; p_licence_id: string; p_reason?: string };
         Returns: undefined;
