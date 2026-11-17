@@ -26,6 +26,12 @@ export function AppShell({
           Drivers
         </Link>
         <Link
+          href="/service/verification"
+          className="text-sm font-medium hover:underline"
+        >
+          Service
+        </Link>
+        <Link
           href="/admin/users"
           className="text-sm font-medium hover:underline"
         >

@@ -11,6 +11,7 @@ Source: docs/CONTEXT.md; detail in PRD §12 / ARCH §17. Proposed/Open items are
 | AD-05 | Branch scope source: `user_roles` only | Approved 2026-11-17 |
 | DEC-12, 14, 16–18 | Validation thresholds (configurable defaults) | Approved 2026-11-17 |
 | DEC-19, DEC-20, DEC-31 | Phase 2: config precedence, baseline evidence, transfer approval | Approved 2026-11-17 |
+| DEC-37 | Driver-register visibility (supervisor, fleet admin, branch manager, senior management within scope; driver own record; maintenance and system admin none) | Approved 2026-11-17 |
 | DEC-13, DEC-15 | OCR confidence; max km per allocation | Deferred to configuration (no default) |
 
 Approved and fixed: DEC-08, DEC-23, DEC-24, DEC-25, DEC-32, DEC-34, AD-01, AD-05 (see docs/CONTEXT.md).

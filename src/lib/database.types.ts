@@ -460,13 +460,6 @@ export type Database = {
             foreignKeyName: "driver_licences_driver_id_company_id_fkey";
             columns: ["driver_id", "company_id"];
             isOneToOne: false;
-            referencedRelation: "driver_register";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
             referencedRelation: "drivers";
             referencedColumns: ["id", "company_id"];
           },
@@ -935,6 +928,287 @@ export type Database = {
           },
         ];
       };
+      service_import_batches: {
+        Row: {
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          filename: string;
+          id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          filename: string;
+          id?: string;
+        };
+        Update: {
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          filename?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_import_batches_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_import_batches_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      service_import_rows: {
+        Row: {
+          batch_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          errors: string[];
+          id: string;
+          invoice_reference: string | null;
+          job_reference: string | null;
+          odometer_km: number | null;
+          odometer_raw: string | null;
+          registration_number: string | null;
+          row_number: number;
+          row_status: string;
+          service_date: string | null;
+          service_date_raw: string | null;
+          service_record_id: string | null;
+          service_type: string | null;
+          supplier_name: string | null;
+          vehicle_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          batch_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          errors?: string[];
+          id?: string;
+          invoice_reference?: string | null;
+          job_reference?: string | null;
+          odometer_km?: number | null;
+          odometer_raw?: string | null;
+          registration_number?: string | null;
+          row_number: number;
+          row_status: string;
+          service_date?: string | null;
+          service_date_raw?: string | null;
+          service_record_id?: string | null;
+          service_type?: string | null;
+          supplier_name?: string | null;
+          vehicle_id?: string | null;
+        };
+        Update: {
+          batch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          errors?: string[];
+          id?: string;
+          invoice_reference?: string | null;
+          job_reference?: string | null;
+          odometer_km?: number | null;
+          odometer_raw?: string | null;
+          registration_number?: string | null;
+          row_number?: number;
+          row_status?: string;
+          service_date?: string | null;
+          service_date_raw?: string | null;
+          service_record_id?: string | null;
+          service_type?: string | null;
+          supplier_name?: string | null;
+          vehicle_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_import_rows_batch_id_company_id_fkey";
+            columns: ["batch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "service_import_batches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_import_rows_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_import_rows_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_import_rows_service_record_id_company_id_fkey";
+            columns: ["service_record_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "service_records";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_import_rows_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      service_records: {
+        Row: {
+          actual_service_lifetime_km: number | null;
+          actual_service_odometer_km: number;
+          branch_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          evidence_file_id: string | null;
+          id: string;
+          invoice_reference: string | null;
+          job_reference: string | null;
+          labour_cost: number | null;
+          parts_cost: number | null;
+          rejected_at: string | null;
+          rejected_by: string | null;
+          rejection_reason: string | null;
+          service_date: string;
+          service_type: string;
+          source: string;
+          supplier_name: string | null;
+          total_cost: number | null;
+          vehicle_id: string;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_service_lifetime_km?: number | null;
+          actual_service_odometer_km: number;
+          branch_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          evidence_file_id?: string | null;
+          id?: string;
+          invoice_reference?: string | null;
+          job_reference?: string | null;
+          labour_cost?: number | null;
+          parts_cost?: number | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          service_date: string;
+          service_type: string;
+          source: string;
+          supplier_name?: string | null;
+          total_cost?: number | null;
+          vehicle_id: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          actual_service_lifetime_km?: number | null;
+          actual_service_odometer_km?: number;
+          branch_id?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          evidence_file_id?: string | null;
+          id?: string;
+          invoice_reference?: string | null;
+          job_reference?: string | null;
+          labour_cost?: number | null;
+          parts_cost?: number | null;
+          rejected_at?: string | null;
+          rejected_by?: string | null;
+          rejection_reason?: string | null;
+          service_date?: string;
+          service_type?: string;
+          source?: string;
+          supplier_name?: string | null;
+          total_cost?: number | null;
+          vehicle_id?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_records_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_records_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_records_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_records_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_records_rejected_by_company_id_fkey";
+            columns: ["rejected_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_records_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "service_records_verified_by_company_id_fkey";
+            columns: ["verified_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       staff_password_authorisations: {
         Row: {
           actor_id: string;
@@ -1219,6 +1493,115 @@ export type Database = {
           },
         ];
       };
+      vehicle_service_configs: {
+        Row: {
+          approval_id: string | null;
+          approved_by: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          early_tolerance_days: number | null;
+          early_tolerance_km: number;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          late_tolerance_days: number | null;
+          late_tolerance_km: number;
+          make: string | null;
+          manufacturer_reference: string | null;
+          model: string | null;
+          reason: string;
+          scope: string;
+          service_interval_days: number | null;
+          service_interval_km: number;
+          vehicle_category: string | null;
+          vehicle_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_id?: string | null;
+          approved_by?: string | null;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          early_tolerance_days?: number | null;
+          early_tolerance_km: number;
+          effective_from: string;
+          effective_to?: string | null;
+          id?: string;
+          late_tolerance_days?: number | null;
+          late_tolerance_km: number;
+          make?: string | null;
+          manufacturer_reference?: string | null;
+          model?: string | null;
+          reason: string;
+          scope: string;
+          service_interval_days?: number | null;
+          service_interval_km: number;
+          vehicle_category?: string | null;
+          vehicle_id?: string | null;
+        };
+        Update: {
+          approval_id?: string | null;
+          approved_by?: string | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          early_tolerance_days?: number | null;
+          early_tolerance_km?: number;
+          effective_from?: string;
+          effective_to?: string | null;
+          id?: string;
+          late_tolerance_days?: number | null;
+          late_tolerance_km?: number;
+          make?: string | null;
+          manufacturer_reference?: string | null;
+          model?: string | null;
+          reason?: string;
+          scope?: string;
+          service_interval_days?: number | null;
+          service_interval_km?: number;
+          vehicle_category?: string | null;
+          vehicle_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_service_configs_approval_id_company_id_fkey";
+            columns: ["approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_service_configs_approved_by_company_id_fkey";
+            columns: ["approved_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_service_configs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_service_configs_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_service_configs_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       vehicles: {
         Row: {
           administrative_status: string;
@@ -1318,52 +1701,30 @@ export type Database = {
     Views: {
       driver_licences_safe: {
         Row: {
-          branch_id: string;
-          company_id: string;
-          created_at: string;
-          driver_id: string;
-          expiry_date: string;
+          branch_id: string | null;
+          company_id: string | null;
+          created_at: string | null;
+          driver_id: string | null;
+          expiry_date: string | null;
           has_evidence: boolean | null;
-          id: string;
-          issue_date: string;
-          licence_code: string;
+          id: string | null;
+          issue_date: string | null;
+          licence_code: string | null;
           prdp_expiry_date: string | null;
-          prdp_required: boolean;
-          verification_status: string;
+          prdp_required: boolean | null;
+          verification_status: string | null;
         };
         ComputedFields: never;
-        Relationships: [
-          {
-            foreignKeyName: "driver_licences_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "driver_register";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "drivers";
-            referencedColumns: ["id", "company_id"];
-          },
-        ];
+        Relationships: [];
       };
       driver_register: {
         Row: {
-          active_status: string;
-          branch_id: string;
-          company_id: string;
-          display_name: string;
-          employee_number: string;
-          id: string;
+          active_status: string | null;
+          branch_id: string | null;
+          company_id: string | null;
+          display_name: string | null;
+          employee_number: string | null;
+          id: string | null;
           licence_expiry_date: string | null;
           licence_verification_status: string | null;
           phone: string | null;
@@ -1371,22 +1732,33 @@ export type Database = {
           prdp_expiry_date: string | null;
         };
         ComputedFields: never;
-        Relationships: [
-          {
-            foreignKeyName: "drivers_branch_id_company_id_fkey";
-            columns: ["branch_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "branches";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "drivers_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
+      };
+      vehicle_service_status: {
+        Row: {
+          awaiting_verification: boolean | null;
+          baseline_required: boolean | null;
+          early_tolerance_days: number | null;
+          early_tolerance_km: number | null;
+          early_warning_date: string | null;
+          early_warning_odometer_km: number | null;
+          last_verified_service_date: string | null;
+          last_verified_service_odometer_km: number | null;
+          last_verified_service_record_id: string | null;
+          late_tolerance_date: string | null;
+          late_tolerance_days: number | null;
+          late_tolerance_km: number | null;
+          late_tolerance_odometer_km: number | null;
+          next_service_odometer_km: number | null;
+          service_config_id: string | null;
+          service_config_scope: string | null;
+          service_due_date: string | null;
+          service_interval_days: number | null;
+          service_interval_km: number | null;
+          vehicle_id: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [];
       };
     };
     Functions: {
@@ -1420,7 +1792,19 @@ export type Database = {
         Args: { p_approval_id: string };
         Returns: undefined;
       };
+      apply_service_config_override: {
+        Args: { p_approval_id: string };
+        Returns: undefined;
+      };
       approval_decide_permission: { Args: { p_type: string }; Returns: string };
+      attach_import_row_evidence: {
+        Args: {
+          p_client_submission_id: string;
+          p_evidence_file_id: string;
+          p_row_id: string;
+        };
+        Returns: string;
+      };
       auth_complete_password_change: {
         Args: { p_profile: string };
         Returns: undefined;
@@ -1509,6 +1893,47 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      change_company_default_service_config: {
+        Args: {
+          p_early_days: number;
+          p_early_km: number;
+          p_interval_days: number;
+          p_interval_km: number;
+          p_late_days: number;
+          p_late_km: number;
+          p_manufacturer_reference: string;
+          p_reason: string;
+        };
+        Returns: {
+          approval_id: string | null;
+          approved_by: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          early_tolerance_days: number | null;
+          early_tolerance_km: number;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          late_tolerance_days: number | null;
+          late_tolerance_km: number;
+          make: string | null;
+          manufacturer_reference: string | null;
+          model: string | null;
+          reason: string;
+          scope: string;
+          service_interval_days: number | null;
+          service_interval_km: number;
+          vehicle_category: string | null;
+          vehicle_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "vehicle_service_configs";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       claim_abandoned_evidence_slots: {
         Args: { p_grace_minutes: number; p_limit?: number };
         Returns: {
@@ -1551,6 +1976,24 @@ export type Database = {
       complete_background_job: {
         Args: { p_id: string; p_result?: Json; p_worker: string };
         Returns: boolean;
+      };
+      create_service_record: {
+        Args: {
+          p_client_submission_id: string;
+          p_evidence_file_id: string;
+          p_invoice_reference: string;
+          p_job_reference: string;
+          p_labour_cost: number;
+          p_odometer_km: number;
+          p_parts_cost: number;
+          p_service_date: string;
+          p_service_type: string;
+          p_source: string;
+          p_supplier_name: string;
+          p_total_cost: number;
+          p_vehicle_id: string;
+        };
+        Returns: string;
       };
       create_vehicle: {
         Args: {
@@ -1631,6 +2074,39 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      driver_licences_safe_rows: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          driver_id: string;
+          expiry_date: string;
+          has_evidence: boolean;
+          id: string;
+          issue_date: string;
+          licence_code: string;
+          prdp_expiry_date: string;
+          prdp_required: boolean;
+          verification_status: string;
+        }[];
+      };
+      driver_register_rows: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          active_status: string;
+          branch_id: string;
+          company_id: string;
+          display_name: string;
+          employee_number: string;
+          id: string;
+          licence_expiry_date: string;
+          licence_verification_status: string;
+          phone: string;
+          pin_change_pending: boolean;
+          prdp_expiry_date: string;
+        }[];
+      };
       driver_register_visible: {
         Args: { p_branch_id: string; p_profile_id: string };
         Returns: boolean;
@@ -1676,6 +2152,7 @@ export type Database = {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
       };
+      is_staff_member: { Args: Record<PropertyKey, never>; Returns: boolean };
       issue_evidence_access: {
         Args: {
           p_evidence_file_id: string;
@@ -1762,6 +2239,48 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_service_config_override: {
+        Args: {
+          p_client_submission_id: string;
+          p_early_days: number;
+          p_early_km: number;
+          p_interval_days: number;
+          p_interval_km: number;
+          p_late_days: number;
+          p_late_km: number;
+          p_make: string;
+          p_manufacturer_reference: string;
+          p_model: string;
+          p_reason: string;
+          p_scope: string;
+          p_vehicle_category: string;
+          p_vehicle_id: string;
+        };
+        Returns: {
+          approval_type: string;
+          assigned_approver: string | null;
+          branch_id: string | null;
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_notes: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          payload: NonNullable<Json>;
+          reason: string | null;
+          requested_by: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "approvals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       request_vehicle_transfer: {
         Args: {
           p_client_submission_id: string;
@@ -1794,9 +2313,121 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      resolve_service_config: {
+        Args: { p_at?: string; p_vehicle_id: string };
+        Returns: {
+          approval_id: string | null;
+          approved_by: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          early_tolerance_days: number | null;
+          early_tolerance_km: number;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          late_tolerance_days: number | null;
+          late_tolerance_km: number;
+          make: string | null;
+          manufacturer_reference: string | null;
+          model: string | null;
+          reason: string;
+          scope: string;
+          service_interval_days: number | null;
+          service_interval_km: number;
+          vehicle_category: string | null;
+          vehicle_id: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "vehicle_service_configs";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      reverse_service_verification: {
+        Args: { p_reason: string; p_record_id: string };
+        Returns: undefined;
+      };
+      service_config_lookup: {
+        Args: { p_at: string; p_vehicle_id: string };
+        Returns: {
+          approval_id: string | null;
+          approved_by: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          early_tolerance_days: number | null;
+          early_tolerance_km: number;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          late_tolerance_days: number | null;
+          late_tolerance_km: number;
+          make: string | null;
+          manufacturer_reference: string | null;
+          model: string | null;
+          reason: string;
+          scope: string;
+          service_interval_days: number | null;
+          service_interval_km: number;
+          vehicle_category: string | null;
+          vehicle_id: string | null;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "vehicle_service_configs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      service_config_validate: {
+        Args: {
+          p_category: string;
+          p_early_days: number;
+          p_early_km: number;
+          p_interval_days: number;
+          p_interval_km: number;
+          p_late_days: number;
+          p_late_km: number;
+          p_make: string;
+          p_model: string;
+          p_scope: string;
+          p_vehicle_id: string;
+        };
+        Returns: undefined;
+      };
+      service_record_insert: {
+        Args: {
+          p_client_submission_id: string;
+          p_company_id: string;
+          p_evidence_file_id: string;
+          p_invoice_reference: string;
+          p_job_reference: string;
+          p_labour_cost: number;
+          p_odometer_km: number;
+          p_parts_cost: number;
+          p_service_date: string;
+          p_service_type: string;
+          p_source: string;
+          p_supplier_name: string;
+          p_total_cost: number;
+          p_user: string;
+          p_vehicle_id: string;
+        };
+        Returns: string;
+      };
       set_driver_status: {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
         Returns: undefined;
+      };
+      stage_service_import: {
+        Args: {
+          p_client_submission_id: string;
+          p_filename: string;
+          p_rows: Json;
+        };
+        Returns: string;
       };
       update_driver_details: {
         Args: { p_display_name: string; p_driver_id: string; p_phone?: string };
@@ -1807,8 +2438,37 @@ export type Database = {
         Returns: boolean;
       };
       user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
+      vehicle_service_status_rows: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          awaiting_verification: boolean;
+          baseline_required: boolean;
+          early_tolerance_days: number;
+          early_tolerance_km: number;
+          early_warning_date: string;
+          early_warning_odometer_km: number;
+          last_verified_service_date: string;
+          last_verified_service_odometer_km: number;
+          last_verified_service_record_id: string;
+          late_tolerance_date: string;
+          late_tolerance_days: number;
+          late_tolerance_km: number;
+          late_tolerance_odometer_km: number;
+          next_service_odometer_km: number;
+          service_config_id: string;
+          service_config_scope: string;
+          service_due_date: string;
+          service_interval_days: number;
+          service_interval_km: number;
+          vehicle_id: string;
+        }[];
+      };
       verify_driver_licence: {
         Args: { p_decision: string; p_licence_id: string; p_reason?: string };
+        Returns: undefined;
+      };
+      verify_service_record: {
+        Args: { p_decision: string; p_reason?: string; p_record_id: string };
         Returns: undefined;
       };
     };

@@ -76,11 +76,22 @@ describe("driver lockout (AD-08)", () => {
     expect(JSON.stringify(rows)).not.toContain("L1001");
 
     // admin reset restarts the count and clears the lock
-    await w.sa.rpc("auth_issue_pin_flags", {
+    // C2 (migration 021): the actor must hold driver.manage in the driver's branch, so a driver manager resets it
+    const mgr = await makeStaff(w, "pinmgr", "fleet_admin", null);
+    await grant(w, mgr.id, "fleet_admin", null, boot.id);
+    const reset = await w.sa.rpc("auth_issue_pin_flags", {
+      p_target: d.id,
+      p_actor: mgr.id,
+      p_mode: "reset",
+    });
+    expect(reset.error).toBeNull();
+    // and an actor without driver.manage (the bootstrap system admin) is refused by the database itself
+    const refused = await w.sa.rpc("auth_issue_pin_flags", {
       p_target: d.id,
       p_actor: boot.id,
       p_mode: "reset",
     });
+    expect(refused.error?.code).toBe("42501");
     await w.sa.auth.admin.updateUserById(d.id, { password: "073519" });
     expect(
       await auth.signIn({

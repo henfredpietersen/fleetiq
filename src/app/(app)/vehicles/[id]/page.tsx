@@ -36,6 +36,11 @@ import {
   RequestTransferForm,
 } from "@/modules/fleet-vehicles/ui/transfer-forms";
 import { VehicleForm } from "@/modules/fleet-vehicles/ui/vehicle-form";
+import {
+  getVehicleServiceStatus,
+  hasPermission,
+} from "@/modules/service-monitoring/server/queries";
+import { BaselinePanel } from "@/modules/service-monitoring/ui/baseline-panel";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -53,9 +58,10 @@ async function Content({
   if (!uuidField.safeParse(id).success) return <NotFound />;
 
   const db = await createSupabaseServerClient();
-  const [res, branchRes] = await Promise.all([
+  const [res, branchRes, serviceStatus] = await Promise.all([
     getVehicle(db, id),
     listBranches(db),
+    getVehicleServiceStatus(db, id),
   ]);
   if (!res.ok) {
     return res.reason === "not_found" ? (
@@ -76,6 +82,11 @@ async function Content({
     (b) => manageable.has(b.id) && b.id !== vehicle.current_branch_id,
   );
   const submissionId = randomUUID();
+  const canRecordService = await hasPermission(
+    db,
+    "service.record.create",
+    vehicle.current_branch_id,
+  );
 
   return (
     <>
@@ -120,6 +131,12 @@ async function Content({
           />
         </CardContent>
       </Card>
+
+      <BaselinePanel
+        status={serviceStatus.ok ? serviceStatus.status : null}
+        failed={!serviceStatus.ok}
+        canRecord={canRecordService}
+      />
 
       {canManage ? (
         <Card>

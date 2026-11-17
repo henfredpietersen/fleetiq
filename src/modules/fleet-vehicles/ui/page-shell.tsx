@@ -31,6 +31,12 @@ export function PageShell({
           Transfers
         </Link>
         <Link
+          href="/service/verification"
+          className="text-sm font-medium hover:underline"
+        >
+          Service
+        </Link>
+        <Link
           href="/home"
           className="text-muted-foreground ml-auto text-sm hover:underline"
         >
