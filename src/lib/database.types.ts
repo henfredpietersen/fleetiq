@@ -125,7 +125,7 @@ export type Database = {
           locked_at: string | null;
           locked_by: string | null;
           max_attempts: number;
-          payload: Json;
+          payload: NonNullable<Json>;
           result: Json | null;
           run_after: string;
           status: string;
@@ -144,7 +144,7 @@ export type Database = {
           locked_at?: string | null;
           locked_by?: string | null;
           max_attempts?: number;
-          payload?: Json;
+          payload?: NonNullable<Json>;
           result?: Json | null;
           run_after?: string;
           status?: string;
@@ -162,7 +162,7 @@ export type Database = {
           locked_at?: string | null;
           locked_by?: string | null;
           max_attempts?: number;
-          payload?: Json;
+          payload?: NonNullable<Json>;
           result?: Json | null;
           run_after?: string;
           status?: string;
@@ -807,7 +807,11 @@ export type Database = {
       };
       claim_abandoned_evidence_slots: {
         Args: { p_grace_minutes: number; p_limit?: number };
-        Returns: { bucket: string; id: string; object_path: string }[];
+        Returns: {
+          bucket: string;
+          id: string;
+          object_path: string;
+        }[];
       };
       claim_background_job: {
         Args: {
@@ -815,7 +819,30 @@ export type Database = {
           p_lock_timeout?: string;
           p_worker: string;
         };
-        Returns: Database["public"]["Tables"]["background_jobs"]["Row"][];
+        Returns: {
+          attempts: number;
+          company_id: string | null;
+          created_at: string;
+          finished_at: string | null;
+          id: string;
+          idempotency_key: string;
+          job_type: string;
+          last_error: string | null;
+          locked_at: string | null;
+          locked_by: string | null;
+          max_attempts: number;
+          payload: NonNullable<Json>;
+          result: Json | null;
+          run_after: string;
+          status: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "background_jobs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       complete_background_job: {
         Args: { p_id: string; p_result?: Json; p_worker: string };
@@ -873,7 +900,10 @@ export type Database = {
           p_related_entity_id?: string;
           p_related_entity_type?: string;
         };
-        Returns: { bucket: string; object_path: string }[];
+        Returns: {
+          bucket: string;
+          object_path: string;
+        }[];
       };
       mark_evidence_slots_object_removed: {
         Args: { p_ids: string[] };
@@ -903,7 +933,32 @@ export type Database = {
           p_size_bytes: number;
           p_ttl_minutes?: number;
         };
-        Returns: Database["public"]["Tables"]["evidence_upload_slots"]["Row"];
+        Returns: {
+          branch_id: string | null;
+          bucket: string;
+          capture_source: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          declared_mime_type: string;
+          declared_size_bytes: number;
+          device_capture_at: string | null;
+          evidence_file_id: string | null;
+          expires_at: string;
+          id: string;
+          object_path: string;
+          object_removed_at: string | null;
+          purpose: string;
+          requested_by: string;
+          status: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "evidence_upload_slots";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
     };
