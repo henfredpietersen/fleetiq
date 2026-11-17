@@ -36,6 +36,8 @@ export async function issueSignedReadUrl(
     p_purpose: req.purpose?.slice(0, 100) ?? "view",
     p_related_entity_type: req.relatedEntityType?.slice(0, 100),
     p_related_entity_id: req.relatedEntityId,
+    // the database only lets this user read the object for as long as the URL lives
+    p_ttl_seconds: deps.config.signedUrlMinutes * 60,
   });
   if (error) {
     const f = mapDbError(error);

@@ -39,6 +39,7 @@ describe("issueSignedReadUrl", () => {
       p_evidence_file_id: FILE,
       p_purpose: "inspection_review",
       p_related_entity_type: "inspection",
+      p_ttl_seconds: 180, // the DB only lets the user read the object for as long as the URL lives
     });
   });
 

@@ -4,7 +4,7 @@
 --   access log for every signed URL · cleanup of unregistered uploads · storage policies · private bucket
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(80);
+select plan(95);
 
 create schema tests;
 grant usage on schema tests to anon, authenticated, service_role;
@@ -305,15 +305,56 @@ select ok(tests.fails($$ insert into storage.objects (bucket_id, name) select 'e
 select tests.reset();
 insert into storage.objects (bucket_id, name)
   select 'evidence', object_path from public.evidence_files;       -- registered evidence objects exist in storage
+-- Storage reads need evidence.view AND a fresh access-log grant of the caller's own (migration 000012).
+-- 1. Without a grant nobody can read, list or sign objects — even with evidence.view in scope.
+select tests.act_as('drv_a1b');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 0::bigint,
+          'no access-log grant: a driver cannot read even their own evidence object (F2) directly');
+select tests.act_as('fla');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 0::bigint,
+          'no access-log grant: fleet admin (evidence.view, all) cannot read objects directly either');
+-- 2. After issue_evidence_access() the caller can read exactly the objects they were granted.
 select tests.act_as('drv_a1');
-select is((select count(*) from storage.objects where bucket_id = 'evidence' and name in (select object_path from public.evidence_files)), 2::bigint,
-          'storage read follows evidence RLS: a driver reads only own evidence objects (F1, reg-1)');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F1'))), 1::bigint, 'drv_a1 is granted access to F1');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 1::bigint,
+          'after issue_evidence_access: the granted object (and only it) is readable');
+select is((select count(*) from storage.objects where bucket_id = 'evidence' and name in (select object_path from public.evidence_files where id = tests.fid('F1'))), 1::bigint,
+          'the readable object is the granted one');
+-- 3. Another user's grant does not help: sup_a1 was granted F2 earlier; bm_a1 (same branch) has none.
+select tests.act_as('bm_a1');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 0::bigint,
+          'another user''s log row does not grant access (bm_a1 can view F2 but has no grant)');
+select tests.act_as('sup_a1');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 1::bigint,
+          'sup_a1 holds a grant for F2 only: reads exactly that object');
+-- 4. The window expires: an expired grant row gives nothing; a new issue (short ttl) re-opens it.
+select tests.reset();
+insert into public.evidence_access_log (company_id, branch_id, evidence_file_id, accessed_by, access_type, url_expires_at)
+  values (tests.id('coA'), tests.id('A1'), tests.fid('F2'), tests.id('bm_a1'), 'signed_url_issued', now() - interval '1 second');
+select tests.act_as('bm_a1');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 0::bigint, 'an expired grant (window closed) gives no access');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F2'), 'review', null, null, 60)), 1::bigint, 'bm_a1 is granted access to F2 for 60 s');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 1::bigint, 'a fresh issue re-opens access');
+select tests.reset();
+select is((select url_expires_at > now() + interval '50 seconds' and url_expires_at < now() + interval '70 seconds'
+           from public.evidence_access_log where accessed_by = tests.id('bm_a1') and purpose = 'review'), true,
+          'the grant window is the ttl the server passed (60 s)');
+select tests.act_as('fla');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F1'), 'cap-test', null, null, 999999)), 1::bigint, 'fla issues with an absurd ttl');
+select tests.reset();
+select is((select url_expires_at <= now() + interval '3600 seconds' from public.evidence_access_log where purpose = 'cap-test'), true,
+          'the window is capped at one hour');
+-- 5. Scope still applies on top of the grant (can_view_evidence): other branch / company / system admin.
+select tests.act_as('drv_a2');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F3'))), 1::bigint, 'drv_a2 is granted access to F3');
 select tests.act_as('sup_a2');
-select is((select count(*) from storage.objects where bucket_id = 'evidence' and name in (select object_path from public.evidence_files)), 1::bigint,
-          'storage read: supervisor of A2 reads only the A2 object — no cross-branch');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F3'))), 1::bigint, 'sup_a2 is granted access to F3');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 1::bigint,
+          'storage read: supervisor of A2 reads only the A2 object they were granted — no cross-branch');
 select tests.act_as('fla_b');
-select is((select count(*) from storage.objects where bucket_id = 'evidence' and name in (select object_path from public.evidence_files)), 1::bigint,
-          'storage read: other company only reads its own object');
+select is((select count(*) from public.issue_evidence_access(tests.fid('F5'))), 1::bigint, 'fla_b is granted access to F5');
+select is((select count(*) from storage.objects where bucket_id = 'evidence'), 1::bigint,
+          'storage read: other company only reads its own granted object');
 select tests.act_as('sa');
 select is((select count(*) from storage.objects where bucket_id = 'evidence'), 0::bigint, 'storage read: system admin sees no evidence objects');
 select tests.act_as('fla');

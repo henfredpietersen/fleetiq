@@ -565,6 +565,68 @@ describe("signed read URLs: permission, short life, access log", () => {
     }
   });
 
+  it("direct Storage access needs a fresh, logged grant of the caller's own — evidence.view alone is not enough", async () => {
+    const up = await upload(driver1, jpeg({}));
+    const reg = await register(driver1, up.slot!.slotId);
+    if (!reg.ok) throw new Error(reg.message);
+    const id = reg.evidence.evidenceFileId;
+    const p = up.slot!.objectPath;
+    const direct = async (db: Db) => ({
+      download: (await db.storage.from("evidence").download(p)).error,
+      sign: (await db.storage.from("evidence").createSignedUrl(p, 60)).error,
+      list: (
+        (
+          await db.storage
+            .from("evidence")
+            .list(p.split("/").slice(0, -1).join("/"))
+        ).data ?? []
+      ).length,
+    });
+
+    // 1. everyone who may VIEW it (owner, branch supervisor, fleet admin) is refused without a grant
+    for (const db of [driver1, supB1, fleet]) {
+      const r = await direct(db);
+      expect(r.download).toBeTruthy();
+      expect(r.sign).toBeTruthy();
+      expect(r.list).toBe(0);
+    }
+    expect(await logCount(id)).toBe(0); // and nothing was logged, nothing was served
+
+    // 2. a grant is a logged issue: after it, only the grantee can read/sign directly
+    expect((await readUrl(supB1, id)).ok).toBe(true);
+    expect(await logCount(id)).toBe(1);
+    const granted = await direct(supB1);
+    expect(granted.download).toBeNull();
+    expect(granted.sign).toBeNull();
+    expect(granted.list).toBe(1);
+    // 3. someone else's log row grants nothing
+    for (const db of [driver1, fleet])
+      expect((await direct(db)).download).toBeTruthy();
+    // and the going-through-the-front-door path is the only way in: still no extra log rows from direct reads
+    expect(await logCount(id)).toBe(1);
+
+    // 4. the window closes: a 2-second grant works now and not a little later
+    const short = await fleet.rpc("issue_evidence_access", {
+      p_evidence_file_id: id,
+      p_purpose: "window-test",
+      p_ttl_seconds: 2,
+    });
+    expect(short.error).toBeNull();
+    expect((await direct(fleet)).download).toBeNull();
+    await sleep(3500);
+    expect((await direct(fleet)).download).toBeTruthy();
+    expect((await direct(fleet)).sign).toBeTruthy();
+    // supB1's 5-minute grant is unaffected
+    expect((await direct(supB1)).download).toBeNull();
+    // refused users still cannot get a grant (can_view_evidence still applies)
+    for (const db of [driver2, supB2, fleetOther, sysadmin]) {
+      expect(
+        (await db.rpc("issue_evidence_access", { p_evidence_file_id: id }))
+          .error,
+      ).toBeTruthy();
+    }
+  }, 30_000);
+
   it("the access log is readable only with audit.view in scope", async () => {
     expect(
       (

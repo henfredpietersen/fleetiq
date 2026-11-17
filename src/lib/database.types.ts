@@ -303,6 +303,7 @@ export type Database = {
           purpose: string | null;
           related_entity_id: string | null;
           related_entity_type: string | null;
+          url_expires_at: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -316,6 +317,7 @@ export type Database = {
           purpose?: string | null;
           related_entity_id?: string | null;
           related_entity_type?: string | null;
+          url_expires_at?: string | null;
         };
         Update: {
           access_type?: string;
@@ -328,6 +330,7 @@ export type Database = {
           purpose?: string | null;
           related_entity_id?: string | null;
           related_entity_type?: string | null;
+          url_expires_at?: string | null;
         };
         Relationships: [
           {
@@ -899,6 +902,7 @@ export type Database = {
           p_purpose?: string;
           p_related_entity_id?: string;
           p_related_entity_type?: string;
+          p_ttl_seconds?: number;
         };
         Returns: {
           bucket: string;
