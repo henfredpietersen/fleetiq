@@ -385,6 +385,156 @@ export type Database = {
           },
         ];
       };
+      driver_licences: {
+        Row: {
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          driver_id: string;
+          evidence_file_id: string | null;
+          expiry_date: string;
+          id: string;
+          issue_date: string;
+          licence_code: string;
+          licence_number: string;
+          prdp_expiry_date: string | null;
+          prdp_required: boolean;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          driver_id: string;
+          evidence_file_id?: string | null;
+          expiry_date: string;
+          id?: string;
+          issue_date: string;
+          licence_code: string;
+          licence_number: string;
+          prdp_expiry_date?: string | null;
+          prdp_required?: boolean;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          driver_id?: string;
+          evidence_file_id?: string | null;
+          expiry_date?: string;
+          id?: string;
+          issue_date?: string;
+          licence_code?: string;
+          licence_number?: string;
+          prdp_expiry_date?: string | null;
+          prdp_required?: boolean;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "driver_licences_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "driver_licences_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "driver_licences_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "driver_licences_verified_by_company_id_fkey";
+            columns: ["verified_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      drivers: {
+        Row: {
+          active_status: string;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          employee_number: string;
+          id: string;
+          profile_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active_status?: string;
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          employee_number: string;
+          id?: string;
+          profile_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          active_status?: string;
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          employee_number?: string;
+          id?: string;
+          profile_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "drivers_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "drivers_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "drivers_profile_id_company_id_fkey";
+            columns: ["profile_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       evidence_access_log: {
         Row: {
           access_type: string;
@@ -1159,10 +1309,100 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      driver_register: {
+        Row: {
+          active_status: string | null;
+          branch_id: string | null;
+          company_id: string | null;
+          display_name: string | null;
+          employee_number: string | null;
+          id: string | null;
+          licence_expiry_date: string | null;
+          licence_verification_status: string | null;
+          phone: string | null;
+          pin_change_pending: boolean | null;
+          prdp_expiry_date: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "drivers_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "drivers_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      driver_licences_safe: {
+        Row: {
+          branch_id: string | null;
+          company_id: string | null;
+          created_at: string | null;
+          driver_id: string | null;
+          expiry_date: string | null;
+          has_evidence: boolean | null;
+          id: string | null;
+          issue_date: string | null;
+          licence_code: string | null;
+          prdp_expiry_date: string | null;
+          prdp_required: boolean | null;
+          verification_status: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "drivers_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "driver_licences_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
     };
     Functions: {
       access_cleared: { Args: { p_user: string }; Returns: boolean };
+      admin_create_driver: {
+        Args: {
+          p_actor: string;
+          p_branch_id: string;
+          p_display_name: string;
+          p_employee_number: string;
+          p_login_identifier: string;
+          p_phone?: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
+      admin_create_staff: {
+        Args: {
+          p_actor: string;
+          p_display_name: string;
+          p_email: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       apply_approved_effect: {
         Args: { p_approval_id: string };
         Returns: undefined;
@@ -1172,12 +1412,20 @@ export type Database = {
         Returns: undefined;
       };
       approval_decide_permission: { Args: { p_type: string }; Returns: string };
+      auth_complete_password_change: {
+        Args: { p_profile: string };
+        Returns: undefined;
+      };
       auth_complete_pin_change: {
         Args: { p_profile: string };
         Returns: undefined;
       };
       auth_issue_pin_flags: {
         Args: { p_actor: string; p_mode: string; p_target: string };
+        Returns: undefined;
+      };
+      auth_issue_staff_password_flags: {
+        Args: { p_actor: string; p_target: string };
         Returns: undefined;
       };
       auth_lock_profile: {
@@ -1219,6 +1467,10 @@ export type Database = {
           p_purpose: string;
           p_uploaded_by: string;
         };
+        Returns: boolean;
+      };
+      can_view_licence: {
+        Args: { p_branch_id: string; p_driver_profile_id: string };
         Returns: boolean;
       };
       cancel_approval: {
@@ -1370,6 +1622,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      driver_register_visible: {
+        Args: { p_branch_id: string; p_profile_id: string };
+        Returns: boolean;
+      };
       enqueue_background_job: {
         Args: {
           p_company_id?: string;
@@ -1424,9 +1680,27 @@ export type Database = {
           object_path: string;
         }[];
       };
+      licence_evidence_owner_allows: {
+        Args: { p_file_id: string };
+        Returns: boolean;
+      };
       mark_evidence_slots_object_removed: {
         Args: { p_ids: string[] };
         Returns: number;
+      };
+      record_driver_licence: {
+        Args: {
+          p_client_submission_id: string;
+          p_driver_id: string;
+          p_evidence_file_id: string;
+          p_expiry_date: string;
+          p_issue_date: string;
+          p_licence_code: string;
+          p_licence_number: string;
+          p_prdp_expiry_date: string;
+          p_prdp_required: boolean;
+        };
+        Returns: string;
       };
       register_evidence_file: {
         Args: {
@@ -1512,6 +1786,22 @@ export type Database = {
         };
       };
       user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
+      set_driver_status: {
+        Args: { p_driver_id: string; p_reason: string; p_status: string };
+        Returns: undefined;
+      };
+      update_driver_details: {
+        Args: { p_display_name: string; p_driver_id: string; p_phone?: string };
+        Returns: undefined;
+      };
+      user_has_permission: {
+        Args: { p_branch_id: string; p_permission_key: string; p_user: string };
+        Returns: boolean;
+      };
+      verify_driver_licence: {
+        Args: { p_decision: string; p_licence_id: string; p_reason?: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;
