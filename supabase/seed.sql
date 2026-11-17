@@ -116,3 +116,32 @@ from (values
   (5, 'EC', 500, 365, true, true)
 ) as l(n, code, issued_days_ago, expires_in_days, prdp, verified)
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------- Slice 2C: service records (SYNTHETIC)
+-- Baseline mix for the 10 seed vehicles: 1-4 verified (different odometers; vehicle 1 is the PRD 82,400 example),
+-- 5 recorded only (awaiting verification), 6-10 no record => Baseline required (vehicle 5 also awaiting verification).
+-- Created by the seed admin, verified by the seed verifier (verifier <> creator, DEC-24). Source workshop/manual: no
+-- historical_import rows, because those need real evidence photos (DEC-20). The company default config is seeded
+-- by migration 022's companies trigger. Rows are inserted as `recorded` and then verified, like the real flow.
+insert into public.service_records (id, company_id, branch_id, vehicle_id, service_date, actual_service_odometer_km,
+                                    service_type, source, supplier_name, job_reference, client_submission_id, created_by)
+select ('5eed0000-0000-4000-8000-0000000006' || lpad(s.n::text, 2, '0'))::uuid,
+       '5eed0000-0000-4000-8000-000000000001',
+       case when s.n <= 6 then '5eed0000-0000-4000-8000-0000000000b1'::uuid else '5eed0000-0000-4000-8000-0000000000b2'::uuid end,
+       ('5eed0000-0000-4000-8000-0000000001' || lpad(s.n::text, 2, '0'))::uuid,
+       current_date - s.days_ago, s.odo, 'Scheduled service', s.src, 'Synthetic Workshop', 'SYN-JC-' || lpad(s.n::text, 3, '0'),
+       ('5eed0000-0000-4000-8000-0000000007' || lpad(s.n::text, 2, '0'))::uuid,
+       '5eed0000-0000-4000-8000-0000000000a1'
+from (values
+  (1, 45, 82400, 'workshop'),
+  (2, 120, 41250, 'workshop'),
+  (3, 200, 118900, 'manual'),
+  (4, 15, 9800, 'workshop'),
+  (5, 10, 64000, 'workshop')
+) as s(n, days_ago, odo, src)
+on conflict (id) do nothing;
+
+update public.service_records
+   set verification_status = 'verified', verified_by = '5eed0000-0000-4000-8000-0000000000a2', verified_at = now()
+ where id in (select ('5eed0000-0000-4000-8000-0000000006' || lpad(n::text, 2, '0'))::uuid from generate_series(1, 4) n)
+   and verification_status = 'recorded';
