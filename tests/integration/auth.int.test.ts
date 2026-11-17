@@ -12,6 +12,8 @@ import {
   type World,
 } from "./helpers";
 import { driverAuthFor } from "./driver-auth";
+import { DEFAULT_AUTH_CONFIG } from "@/modules/identity-access/domain/auth-config";
+import { StaffAccounts } from "@/modules/identity-access/server/staff-accounts";
 
 let w: World;
 let boot: Awaited<ReturnType<typeof makeBootstrap>>;
@@ -392,5 +394,38 @@ describe("service-role path is unreachable from clients", () => {
           .neq("id", "00000000-0000-0000-0000-000000000000")
       ).error,
     ).not.toBeNull();
+  });
+});
+
+describe("staff password policy cannot be bypassed through Auth directly (migration 017)", () => {
+  it("a signed-in staff user cannot set a short password from their own session, but the server path works", async () => {
+    const sm = await makeStaff(w, "pwuser", "senior_management", null);
+    await grant(w, sm.id, "senior_management", null, boot.id);
+    const client = await signInStaff(sm.email, sm.password, "none");
+
+    // Direct call, as a browser could make it: Auth accepts 6 characters, the database trigger refuses it.
+    const direct = await client.auth.updateUser({ password: "abc123" });
+    expect(direct.error).not.toBeNull();
+    // The old password still works.
+    await signInStaff(sm.email, sm.password, "none");
+
+    // Through the server path: a short password is rejected before Auth, a 12+ one is accepted.
+    const svc = new StaffAccounts({
+      admin: admin(),
+      userClient: client,
+      config: DEFAULT_AUTH_CONFIG,
+    });
+    expect(
+      await svc.changeOwnPassword({ newPassword: "abc123" }),
+    ).toMatchObject({ ok: false, code: "weak_password" });
+    const longer = "Synthetic-New-Passw0rd!";
+    expect(await svc.changeOwnPassword({ newPassword: longer })).toEqual({
+      ok: true,
+    });
+    await signInStaff(sm.email, longer, "none");
+
+    // The authorisation was single use: a second direct call is refused again.
+    const again = await client.auth.updateUser({ password: "abc123" });
+    expect(again.error).not.toBeNull();
   });
 });

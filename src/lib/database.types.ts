@@ -778,6 +778,59 @@ export type Database = {
           },
         ];
       };
+      staff_password_authorisations: {
+        Row: {
+          actor_id: string;
+          company_id: string;
+          consumed_at: string | null;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          company_id: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          actor_id?: string;
+          company_id?: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "staff_password_authorisations_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "staff_password_authorisations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "staff_password_authorisations_user_id_company_id_fkey";
+            columns: ["user_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       user_roles: {
         Row: {
           branch_id: string | null;
@@ -1153,6 +1206,10 @@ export type Database = {
           p_profile: string;
           p_succeeded: boolean;
         };
+        Returns: undefined;
+      };
+      authorise_staff_password_change: {
+        Args: { p_actor: string; p_user: string };
         Returns: undefined;
       };
       can_view_evidence: {

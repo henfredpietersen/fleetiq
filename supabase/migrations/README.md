@@ -27,6 +27,8 @@ Tests: `supabase/tests/database/*.test.sql` (pgTAP, `supabase test db`). Types: 
 12. `…12_evidence_read_requires_logged_grant`, 13. `…13_perf_tidyup` — see their headers (FK covering indexes, RLS initplan wrapping).
 14. `…14_approvals` — generic `approvals` (DB §17), `decide_approval()` / `cancel_approval()`, DEC-24 CHECK + transition guard, RLS (requester or approver in scope), no client writes.
 15. `…15_vehicles` — `vehicles`, `vehicle_branch_assignments` (btree_gist exclusion), `vehicle_documents`, `create_vehicle()`, `request_vehicle_transfer()`, internal `apply_branch_transfer()`, RLS, caches protected, no deletes, audit triggers.
+16. `…16_carryover_2b_trigger_function_privileges` — REVOKE EXECUTE on the SECURITY DEFINER trigger functions `vba_guard`, `vba_sync_cache`, `vehicle_documents_validate` (carry-over C1).
+17. `…17_staff_password_change_guard` — `staff_password_authorisations` (service-only, audited), `authorise_staff_password_change()` and trigger `staff_password_guard` on `auth.users`: a staff password hash changes only with a single-use server authorisation (closes the C3 bypass).
 
 `supabase/seed.sql` loads synthetic data only (1 company, 2 branches, 10 vehicles `TESTnnn-GP`) on `supabase db reset`.
 

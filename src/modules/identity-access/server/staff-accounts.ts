@@ -14,8 +14,9 @@ import {
  * Supabase Auth, whose own minimum (6) exists only because driver PINs share it and is never relied on here.
  * A unit test fails if any other module calls Auth's password-setting APIs (staff-accounts.architecture.test.ts).
  *
- * Known limit: Auth still lets a signed-in user call updateUser({ password }) from their own browser session
- * with the global 6-character minimum. App code cannot intercept that; see the 2B report (open question).
+ * Backstop: Auth itself still accepts a 6-character password (driver PINs share it), so the database refuses any
+ * staff password-hash change that was not authorised by this class (trigger staff_password_guard, migration 017).
+ * A browser calling Auth's updateUser directly, or a recovery link, therefore fails for staff.
  */
 
 export type StaffPasswordFailure =
@@ -137,6 +138,14 @@ export class StaffAccounts {
     )
       return { ok: false, code: "not_found" };
 
+    // The database refuses any staff password-hash change without this single-use authorisation (migration 017),
+    // so it is recorded only now: after the policy check, the permission checks and the target checks.
+    const { error: authError } = await this.d.admin.rpc(
+      "authorise_staff_password_change",
+      { p_user: target.id, p_actor: auth.callerId },
+    );
+    if (authError) return { ok: false, code: "service_error" };
+
     const { error } = await this.d.admin.auth.admin.updateUserById(target.id, {
       password: input.newPassword,
     });
@@ -161,6 +170,12 @@ export class StaffAccounts {
       .maybeSingle();
     // Drivers change a PIN, not a password (their own rules, supabase-driver-auth.ts).
     if (own?.user_type !== "staff") return { ok: false, code: "forbidden" };
+
+    const { error: authError } = await this.d.admin.rpc(
+      "authorise_staff_password_change",
+      { p_user: user.id, p_actor: user.id },
+    );
+    if (authError) return { ok: false, code: "service_error" };
 
     const { error } = await userClient.auth.updateUser({
       password: input.newPassword,

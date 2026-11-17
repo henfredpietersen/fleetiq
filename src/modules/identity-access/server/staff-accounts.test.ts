@@ -21,11 +21,14 @@ type Opts = {
   createError?: { code?: string } | null;
   updateError?: { code?: string } | null;
   userUpdateError?: { code?: string } | null;
+  authoriseError?: { code?: string } | null;
 };
 
 /** In-memory stand-in for the two Supabase clients; `authCalls` records every Auth password write. */
 function fake(o: Opts = {}) {
   const authCalls: { api: string; password: string }[] = [];
+  const events: string[] = []; // order of authorisations and Auth writes
+  const authorisations: { p_user: string; p_actor: string }[] = [];
   const o2 = {
     caller: CALLER as string | null,
     allowed: true,
@@ -41,18 +44,28 @@ function fake(o: Opts = {}) {
     createError: null,
     updateError: null,
     userUpdateError: null,
+    authoriseError: null,
     ...o,
   };
   const admin = {
+    rpc: async (name: string, args: { p_user: string; p_actor: string }) => {
+      if (name !== "authorise_staff_password_change")
+        throw new Error(`unexpected admin rpc ${name}`);
+      events.push("authorise");
+      authorisations.push(args);
+      return { error: o2.authoriseError };
+    },
     auth: {
       admin: {
         createUser: async (a: { password: string }) => {
+          events.push("createUser");
           authCalls.push({ api: "createUser", password: a.password });
           return o2.createError
             ? { data: { user: null }, error: o2.createError }
             : { data: { user: { id: "new-user" } }, error: null };
         },
         updateUserById: async (_id: string, a: { password: string }) => {
+          events.push("updateUserById");
           authCalls.push({ api: "updateUserById", password: a.password });
           return { error: o2.updateError };
         },
@@ -71,6 +84,7 @@ function fake(o: Opts = {}) {
       }),
       getClaims: async () => ({ data: { claims: { aal: o2.aal } } }),
       updateUser: async (a: { password: string }) => {
+        events.push("updateUser");
         authCalls.push({ api: "updateUser", password: a.password });
         return { error: o2.userUpdateError };
       },
@@ -98,7 +112,7 @@ function fake(o: Opts = {}) {
     userClient,
     config: DEFAULT_AUTH_CONFIG,
   } as unknown as StaffAccountsDeps);
-  return { svc, authCalls };
+  return { svc, authCalls, events, authorisations };
 }
 
 describe("default policy", () => {
@@ -326,6 +340,75 @@ describe("CHANGE own staff password", () => {
         userUpdateError: { code: "weak_password" },
       }).svc.changeOwnPassword({ newPassword: STRONG }),
     ).toEqual({ ok: false, code: "weak_password", violations: ["too_short"] });
+  });
+});
+
+describe("database authorisation for staff password changes (migration 017)", () => {
+  it("RESET records one authorisation for the target, before the Auth write", async () => {
+    const { svc, events, authorisations } = fake();
+    await svc.resetStaffPassword({ targetUserId: TARGET, newPassword: STRONG });
+    expect(events).toEqual(["authorise", "updateUserById"]);
+    expect(authorisations).toEqual([{ p_user: TARGET, p_actor: CALLER }]);
+  });
+
+  it("CHANGE records one authorisation for the caller, before the Auth write", async () => {
+    const { svc, events, authorisations } = fake();
+    await svc.changeOwnPassword({ newPassword: STRONG });
+    expect(events).toEqual(["authorise", "updateUser"]);
+    expect(authorisations).toEqual([{ p_user: CALLER, p_actor: CALLER }]);
+  });
+
+  it("no authorisation is recorded for a weak password, a forbidden caller or a bad target", async () => {
+    const cases = [
+      fake(),
+      fake({ allowed: false }),
+      fake({
+        target: { id: TARGET, company_id: OTHER_COMPANY, user_type: "staff" },
+      }),
+      fake({
+        target: { id: TARGET, company_id: COMPANY, user_type: "driver" },
+      }),
+    ];
+    await cases[0].svc.resetStaffPassword({
+      targetUserId: TARGET,
+      newPassword: PIN,
+    });
+    for (const c of cases.slice(1))
+      await c.svc.resetStaffPassword({
+        targetUserId: TARGET,
+        newPassword: STRONG,
+      });
+    const driver = fake({ ownUserType: "driver" });
+    await driver.svc.changeOwnPassword({ newPassword: STRONG });
+    const weakChange = fake();
+    await weakChange.svc.changeOwnPassword({ newPassword: ELEVEN });
+    for (const c of [...cases, driver, weakChange])
+      expect(c.authorisations).toEqual([]);
+  });
+
+  it("if the authorisation cannot be recorded, nothing is written to Auth", async () => {
+    const reset = fake({ authoriseError: { code: "42501" } });
+    expect(
+      await reset.svc.resetStaffPassword({
+        targetUserId: TARGET,
+        newPassword: STRONG,
+      }),
+    ).toEqual({
+      ok: false,
+      code: "service_error",
+    });
+    expect(reset.authCalls).toEqual([]);
+    const change = fake({ authoriseError: { code: "42501" } });
+    expect(await change.svc.changeOwnPassword({ newPassword: STRONG })).toEqual(
+      { ok: false, code: "service_error" },
+    );
+    expect(change.authCalls).toEqual([]);
+  });
+
+  it("CREATE needs no authorisation (inserting a user is not a password update)", async () => {
+    const { svc, authorisations } = fake();
+    await svc.createStaffUser({ email: "a@example.test", password: STRONG });
+    expect(authorisations).toEqual([]);
   });
 });
 
