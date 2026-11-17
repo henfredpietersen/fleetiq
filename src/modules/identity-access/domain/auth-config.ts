@@ -1,6 +1,12 @@
 // Sign-in policy as configuration (ARCH §5.1: PIN rules, lockout thresholds and session expiry are
 // configurable). Every value below is a PROPOSED default, not an approved decision — change via env.
 
+import {
+  STAFF_PASSWORD_MAX_LENGTH,
+  STAFF_PASSWORD_MIN_FLOOR,
+  type StaffPasswordRules,
+} from "./staff-password-policy";
+
 export type PinRules = {
   /** Number of digits. Supabase's minimum_password_length must be <= this value. */
   length: number;
@@ -28,12 +34,15 @@ export type SessionConfig = {
 
 export type AuthConfig = {
   pin: PinRules;
+  /** Staff password rules (carry-over C3). Supabase's own minimum (6) is never relied on for staff. */
+  staffPassword: StaffPasswordRules;
   lockout: LockoutConfig;
   session: SessionConfig;
 };
 
 export const DEFAULT_AUTH_CONFIG: AuthConfig = {
   pin: { length: 6, blockSequences: true, blockRepeats: true },
+  staffPassword: { minLength: STAFF_PASSWORD_MIN_FLOOR },
   lockout: {
     accountMaxFailures: 5,
     ipMaxFailures: 20,
@@ -82,6 +91,16 @@ export function loadAuthConfig(env: Env = process.env): AuthConfig {
         d.pin.blockSequences,
       ),
       blockRepeats: bool(env, "AUTH_PIN_BLOCK_REPEATS", d.pin.blockRepeats),
+    },
+    staffPassword: {
+      // Floor 12: the setting can be raised, but a value below 12 fails loudly rather than weakening staff auth.
+      minLength: int(
+        env,
+        "AUTH_STAFF_PASSWORD_MIN_LENGTH",
+        d.staffPassword.minLength,
+        STAFF_PASSWORD_MIN_FLOOR,
+        STAFF_PASSWORD_MAX_LENGTH,
+      ),
     },
     lockout: {
       accountMaxFailures: int(
