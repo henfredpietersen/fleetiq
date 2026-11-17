@@ -57,7 +57,7 @@ jobs:
           diff -u src/lib/database.types.ts /tmp/database.types.ts
 
   e2e:
-    name: Playwright (mobile: smoke + sign-in)
+    name: "Playwright (mobile: smoke + sign-in)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
