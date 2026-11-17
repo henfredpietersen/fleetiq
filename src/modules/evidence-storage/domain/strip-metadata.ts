@@ -16,7 +16,7 @@ export class MetadataError extends Error {
   }
 }
 
-const concat = (parts: Uint8Array[]): Uint8Array => {
+const concat = (parts: Uint8Array[]): Uint8Array<ArrayBuffer> => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let o = 0;
   for (const p of parts) {
@@ -136,7 +136,7 @@ function sanitizeTiff(t: Uint8Array): boolean {
 }
 
 // ------------------------------------------------------------------ JPEG
-export function stripJpegMetadata(input: Uint8Array): Uint8Array {
+export function stripJpegMetadata(input: Uint8Array): Uint8Array<ArrayBuffer> {
   if (!(input.length > 4 && input[0] === 0xff && input[1] === 0xd8)) {
     throw new MetadataError("not a JPEG");
   }
@@ -236,7 +236,7 @@ const PNG_KEEP = new Set([
   "cLLI",
 ]);
 
-export function stripPngMetadata(input: Uint8Array): Uint8Array {
+export function stripPngMetadata(input: Uint8Array): Uint8Array<ArrayBuffer> {
   const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
   if (input.length < 8 || !sig.every((v, i) => input[i] === v)) {
     throw new MetadataError("not a PNG");
@@ -258,7 +258,7 @@ export function stripPngMetadata(input: Uint8Array): Uint8Array {
   return concat(out); // bytes after IEND are dropped
 }
 
-export type StripResult = { bytes: Uint8Array; changed: boolean };
+export type StripResult = { bytes: Uint8Array<ArrayBuffer>; changed: boolean };
 
 export function stripMetadata(
   input: Uint8Array,

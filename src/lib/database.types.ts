@@ -112,6 +112,72 @@ export type Database = {
           },
         ];
       };
+      background_jobs: {
+        Row: {
+          attempts: number;
+          company_id: string | null;
+          created_at: string;
+          finished_at: string | null;
+          id: string;
+          idempotency_key: string;
+          job_type: string;
+          last_error: string | null;
+          locked_at: string | null;
+          locked_by: string | null;
+          max_attempts: number;
+          payload: Json;
+          result: Json | null;
+          run_after: string;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attempts?: number;
+          company_id?: string | null;
+          created_at?: string;
+          finished_at?: string | null;
+          id?: string;
+          idempotency_key: string;
+          job_type: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          locked_by?: string | null;
+          max_attempts?: number;
+          payload?: Json;
+          result?: Json | null;
+          run_after?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          company_id?: string | null;
+          created_at?: string;
+          finished_at?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          job_type?: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          locked_by?: string | null;
+          max_attempts?: number;
+          payload?: Json;
+          result?: Json | null;
+          run_after?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "background_jobs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       branches: {
         Row: {
           address: string | null;
@@ -222,6 +288,253 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "companies";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      evidence_access_log: {
+        Row: {
+          access_type: string;
+          accessed_by: string;
+          branch_id: string | null;
+          company_id: string;
+          evidence_file_id: string;
+          id: string;
+          occurred_at: string;
+          purpose: string | null;
+          related_entity_id: string | null;
+          related_entity_type: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          access_type: string;
+          accessed_by: string;
+          branch_id?: string | null;
+          company_id: string;
+          evidence_file_id: string;
+          id?: string;
+          occurred_at?: string;
+          purpose?: string | null;
+          related_entity_id?: string | null;
+          related_entity_type?: string | null;
+        };
+        Update: {
+          access_type?: string;
+          accessed_by?: string;
+          branch_id?: string | null;
+          company_id?: string;
+          evidence_file_id?: string;
+          id?: string;
+          occurred_at?: string;
+          purpose?: string | null;
+          related_entity_id?: string | null;
+          related_entity_type?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "evidence_access_log_accessed_by_company_id_fkey";
+            columns: ["accessed_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "evidence_access_log_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "evidence_access_log_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      evidence_files: {
+        Row: {
+          branch_id: string | null;
+          bucket: string;
+          capture_source: string;
+          company_id: string;
+          created_at: string;
+          device_capture_at: string | null;
+          exif_gps_stripped: boolean;
+          height: number | null;
+          id: string;
+          legal_hold: boolean;
+          mime_type: string;
+          object_path: string;
+          perceptual_hash: string | null;
+          purpose: string;
+          retention_class: string | null;
+          server_received_at: string;
+          sha256: string;
+          size_bytes: number;
+          uploaded_by: string;
+          width: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          branch_id?: string | null;
+          bucket: string;
+          capture_source: string;
+          company_id: string;
+          created_at?: string;
+          device_capture_at?: string | null;
+          exif_gps_stripped: boolean;
+          height?: number | null;
+          id?: string;
+          legal_hold?: boolean;
+          mime_type: string;
+          object_path: string;
+          perceptual_hash?: string | null;
+          purpose: string;
+          retention_class?: string | null;
+          server_received_at?: string;
+          sha256: string;
+          size_bytes: number;
+          uploaded_by: string;
+          width?: number | null;
+        };
+        Update: {
+          branch_id?: string | null;
+          bucket?: string;
+          capture_source?: string;
+          company_id?: string;
+          created_at?: string;
+          device_capture_at?: string | null;
+          exif_gps_stripped?: boolean;
+          height?: number | null;
+          id?: string;
+          legal_hold?: boolean;
+          mime_type?: string;
+          object_path?: string;
+          perceptual_hash?: string | null;
+          purpose?: string;
+          retention_class?: string | null;
+          server_received_at?: string;
+          sha256?: string;
+          size_bytes?: number;
+          uploaded_by?: string;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "evidence_files_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "evidence_files_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "evidence_files_uploaded_by_company_id_fkey";
+            columns: ["uploaded_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      evidence_upload_slots: {
+        Row: {
+          branch_id: string | null;
+          bucket: string;
+          capture_source: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          declared_mime_type: string;
+          declared_size_bytes: number;
+          device_capture_at: string | null;
+          evidence_file_id: string | null;
+          expires_at: string;
+          id: string;
+          object_path: string;
+          object_removed_at: string | null;
+          purpose: string;
+          requested_by: string;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          branch_id?: string | null;
+          bucket?: string;
+          capture_source: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          declared_mime_type: string;
+          declared_size_bytes: number;
+          device_capture_at?: string | null;
+          evidence_file_id?: string | null;
+          expires_at: string;
+          id?: string;
+          object_path: string;
+          object_removed_at?: string | null;
+          purpose: string;
+          requested_by: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          bucket?: string;
+          capture_source?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          declared_mime_type?: string;
+          declared_size_bytes?: number;
+          device_capture_at?: string | null;
+          evidence_file_id?: string | null;
+          expires_at?: string;
+          id?: string;
+          object_path?: string;
+          object_removed_at?: string | null;
+          purpose?: string;
+          requested_by?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "evidence_slots_file_fk";
+            columns: ["evidence_file_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "evidence_upload_slots_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "evidence_upload_slots_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "evidence_upload_slots_requested_by_company_id_fkey";
+            columns: ["requested_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
           },
         ];
       };
@@ -483,14 +796,114 @@ export type Database = {
         };
         Returns: undefined;
       };
+      can_view_evidence: {
+        Args: {
+          p_branch_id: string;
+          p_company_id: string;
+          p_purpose: string;
+          p_uploaded_by: string;
+        };
+        Returns: boolean;
+      };
+      claim_abandoned_evidence_slots: {
+        Args: { p_grace_minutes: number; p_limit?: number };
+        Returns: { bucket: string; id: string; object_path: string }[];
+      };
+      claim_background_job: {
+        Args: {
+          p_job_types: string[];
+          p_lock_timeout?: string;
+          p_worker: string;
+        };
+        Returns: Database["public"]["Tables"]["background_jobs"]["Row"][];
+      };
+      complete_background_job: {
+        Args: { p_id: string; p_result?: Json; p_worker: string };
+        Returns: boolean;
+      };
       current_company_id: { Args: Record<PropertyKey, never>; Returns: string };
       current_user_requires_mfa: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      enqueue_background_job: {
+        Args: {
+          p_company_id?: string;
+          p_idempotency_key: string;
+          p_job_type: string;
+          p_max_attempts?: number;
+          p_payload?: Json;
+          p_run_after?: string;
+        };
+        Returns: string;
+      };
+      evidence_object_readable: {
+        Args: { p_bucket: string; p_path: string };
+        Returns: boolean;
+      };
+      evidence_scope_allows: {
+        Args: { p_branch_id: string; p_purpose: string; p_uploaded_by: string };
+        Returns: boolean;
+      };
+      evidence_slot_open_for_upload: {
+        Args: { p_bucket: string; p_path: string };
+        Returns: boolean;
+      };
+      evidence_upload_permission: {
+        Args: { p_purpose: string };
+        Returns: string;
+      };
+      fail_background_job: {
+        Args: {
+          p_error: string;
+          p_id: string;
+          p_retry_in?: string;
+          p_worker: string;
+        };
+        Returns: string;
+      };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
+      };
+      issue_evidence_access: {
+        Args: {
+          p_evidence_file_id: string;
+          p_purpose?: string;
+          p_related_entity_id?: string;
+          p_related_entity_type?: string;
+        };
+        Returns: { bucket: string; object_path: string }[];
+      };
+      mark_evidence_slots_object_removed: {
+        Args: { p_ids: string[] };
+        Returns: number;
+      };
+      register_evidence_file: {
+        Args: {
+          p_exif_gps_stripped: boolean;
+          p_height: number;
+          p_mime_type: string;
+          p_sha256: string;
+          p_size_bytes: number;
+          p_slot_id: string;
+          p_user_id: string;
+          p_width: number;
+        };
+        Returns: string;
+      };
+      request_evidence_upload_slot: {
+        Args: {
+          p_branch_id: string;
+          p_capture_source: string;
+          p_client_submission_id: string;
+          p_device_capture_at?: string;
+          p_mime_type: string;
+          p_purpose: string;
+          p_size_bytes: number;
+          p_ttl_minutes?: number;
+        };
+        Returns: Database["public"]["Tables"]["evidence_upload_slots"]["Row"];
       };
       user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
     };
