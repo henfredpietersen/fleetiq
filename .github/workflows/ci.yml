@@ -25,6 +25,26 @@ jobs:
       - run: npm ci
       - run: npm run check
 
+  db:
+    name: Database (migrations + pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Local Supabase in CI only; synthetic data, no cloud services (PRD §10 exception).
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit
+      - name: Rebuild database from migrations
+        run: supabase db reset
+      - name: Run pgTAP tests
+        run: supabase test db
+      - name: Generated types are current
+        run: |
+          supabase gen types typescript --local --schema public > /tmp/database.types.ts
+          npx prettier --write /tmp/database.types.ts
+          diff -u src/lib/database.types.ts /tmp/database.types.ts
+
   e2e:
     name: Playwright (mobile smoke)
     runs-on: ubuntu-latest
