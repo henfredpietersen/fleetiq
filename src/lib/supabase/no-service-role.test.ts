@@ -21,6 +21,8 @@ const read = (f: string) => readFileSync(f, "utf8");
 // Reviewed importers of the admin client (extend only through code review):
 const ADMIN_CLIENT_IMPORTERS = [
   "modules/identity-access/server/factory.ts", // builds the reviewed DriverAuth (attempt log, lockout, PIN admin)
+  "modules/evidence-storage/server/factory.ts", // lazy admin factory, used only by the reviewed registration step
+  "jobs/run.ts", // manual job runner (jobs may use the service role, ARCH §5.3)
 ];
 const KEY_HOLDERS = ["lib/supabase/admin.ts"];
 
@@ -45,7 +47,9 @@ describe("service-role key hygiene", () => {
   });
 
   it("only reviewed modules import the admin client", () => {
-    const importers = files.filter((f) => /supabase\/admin["']/.test(read(f)));
+    const importers = files.filter((f) =>
+      /supabase\/admin(\.ts)?["']/.test(read(f)),
+    );
     expect(importers.map(rel).sort()).toEqual(
       [...ADMIN_CLIENT_IMPORTERS].sort(),
     );
@@ -59,6 +63,38 @@ describe("service-role key hygiene", () => {
     )) {
       expect(read(f), rel(f)).toMatch(/^import "server-only";/m);
     }
+  });
+
+  it("evidence server modules are server-only (except the 'use server' actions file)", () => {
+    for (const f of files.filter(
+      (f) =>
+        rel(f).startsWith("modules/evidence-storage/server/") &&
+        !/actions\.ts$/.test(f),
+    )) {
+      expect(read(f), rel(f)).toMatch(/^import "server-only";/m);
+    }
+  });
+
+  it("evidence request-slot and signed-read paths never touch the service role", () => {
+    for (const name of ["request-upload.ts", "read-url.ts"]) {
+      const src = read(path.join(SRC, "modules/evidence-storage/server", name));
+      expect(src, name).not.toMatch(/admin|service[_-]?role/i);
+    }
+  });
+
+  it("only the reviewed registration step, its factory and the cleanup handler use an admin client for evidence", () => {
+    const users = files.filter(
+      (f) =>
+        rel(f).startsWith("modules/evidence-storage/") &&
+        /\badmin\b/.test(read(f)),
+    );
+    expect(users.map(rel).sort()).toEqual(
+      [
+        "modules/evidence-storage/server/cleanup.ts",
+        "modules/evidence-storage/server/factory.ts",
+        "modules/evidence-storage/server/register-upload.ts",
+      ].sort(),
+    );
   });
 
   it("client components never import server or admin code (except 'use server' actions)", () => {

@@ -44,7 +44,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Integration tests (lockout, forced PIN change, MFA, service-role isolation)
+      - name: Integration tests (auth, MFA, service-role isolation, private evidence storage)
         run: |
           supabase status -o env | sed 's/^/export /' > /tmp/sb.env
           . /tmp/sb.env
