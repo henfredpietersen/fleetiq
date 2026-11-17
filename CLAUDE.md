@@ -1,6 +1,6 @@
 # FleetIQ — Claude Code rules
 
-Detail for every rule lives in docs/CONTEXT.md (digest). Full docs: PRD, ARCH, DB in /docs (v1.3, read-only).
+Detail for every rule lives in docs/CONTEXT.md (digest). Full docs: PRD, ARCH, DB in /docs (v1.4, read-only).
 
 ## A. Rules
 

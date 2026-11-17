@@ -1,10 +1,10 @@
 # FleetIQ — Product Requirements Document (PRD)
 
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Approved (2026-11-17)
 **Product:** FleetIQ
 **Product type:** Internal fleet-management and operational intelligence platform
-**Companion documents:** Technical Architecture v1.3, Database Design Specification v1.3
+**Companion documents:** Technical Architecture v1.4, Database Design Specification v1.4
 
 ---
 
@@ -17,6 +17,7 @@
 | 1.2 | 2026-11-12 | Reconciled with principal-architect review. Added: allocation lifecycle; inter-allocation unaccounted-distance control; reading lifecycle, auto-acceptance and correction rules; configurable validation thresholds; no-photo exception path; service status bands; time-based tolerances; minimal service record capture and baseline onboarding in MVP; existing-damage register; MVP dashboard definition; segregation of duties; proposed permission matrix; POPIA specifics; Decision Register; roadmap; pre-development gate. Clarified that last-service and next-service values are derived, not editable vehicle fields. Mapped "Operations manager" to a pending role decision. |
 | 1.3 | 2026-11-12 | Decisions approved: DEC-08 (drivers sign in with employee number + PIN; each driver uses a company-issued phone), DEC-24 (segregation of duties as proposed), DEC-32 ("Operations manager" = Branch manager). Added DEC-34 (office user login) and DEC-35 (company device register) as Proposed. Updated driver register, notifications, security NFRs, permission matrix note and pre-development gate. |
 | 1.3 | 2026-11-17 | **Approved by the user as the product baseline.** Document approval does not approve individual decisions: every Decision Register item marked Proposed or Open remains unapproved and configurable until decided individually. Pre-development gate updated (documentation approved; duplicate v1.2 PRD still present in Project Knowledge, so that item is reopened). |
+| 1.4 | 2026-11-17 | Decisions approved: DEC-34 (office users: email + password, MFA for administrators and approvers); DEC-12, DEC-14, DEC-16, DEC-17, DEC-18 approved as configurable default values; DEC-13 and DEC-15 explicitly deferred to configuration (no default until set from operational data). AD-01 and AD-05 approved (Technical Architecture v1.4). Pre-development gate updated. |
 
 **Notation.** Items marked **[DEC-xx]** depend on a decision in the Decision Register (§12). Until a decision is approved, the stated value is a **proposed default** and must be implemented as configurable, not hard-coded.
 
@@ -296,7 +297,7 @@ The odometer photograph is mandatory.
 
 The driver must not be able to complete a normal pre-shift inspection without the required odometer evidence. An authorised exception process must be available for genuine technical or operational circumstances (§5.8.6).
 
-**Late pre-shift inspection:** submitted more than the configured period after scheduled shift start (proposed 30 minutes) [DEC-17]. Flag as an exception; do not block submission.
+**Late pre-shift inspection:** submitted more than the configured period after scheduled shift start (default 30 minutes, configurable) [DEC-17 — Approved]. Flag as an exception; do not block submission.
 
 ### 5.7 Mandatory post-shift inspection
 
@@ -308,7 +309,7 @@ The post-shift odometer photograph is mandatory.
 
 A post-shift inspection must be linked to the correct allocation, not merely to a vehicle and date.
 
-**Missing post-shift inspection:** not submitted within the configured period after scheduled shift end (proposed 60 minutes) [DEC-17]. Create an exception and notify the supervisor.
+**Missing post-shift inspection:** not submitted within the configured period after scheduled shift end (default 60 minutes, configurable) [DEC-17 — Approved]. Create an exception and notify the supervisor.
 
 **Completion by another person:** whether a supervisor may complete it when the driver is unavailable is pending [DEC-09]; proposed: yes, flagged and audited.
 
@@ -359,7 +360,7 @@ Retakes are kept; only one evidence record per inspection is marked current.
 5. **Auto-acceptance** — the reading is accepted without human review only when all of the following hold:
    - The evidence is an in-app capture.
    - OCR succeeded at or above the confidence threshold [DEC-13].
-   - The driver's reading matches OCR within tolerance (proposed 0 km) [DEC-14].
+   - The driver's reading matches OCR within tolerance (default 0 km, configurable) [DEC-14 — Approved].
    - All validation checks pass.
    The acceptance records `accepted_by = system`, the method and the rule version.
 6. Otherwise, the reading goes to review with an exception reason; an authorised reviewer accepts, rejects or corrects it.
@@ -373,7 +374,7 @@ The system must flag:
 3. Discrepancies between OCR and driver reading [DEC-14].
 4. Decreasing readings compared with the previous accepted reading for the vehicle.
 5. Implausible distance within an allocation, above the configured maximum for the vehicle category [DEC-15].
-6. **Unaccounted distance** between the previous allocation's accepted post-shift reading and this allocation's accepted pre-shift reading, above the configured tolerance (proposed 5 km) [DEC-16].
+6. **Unaccounted distance** between the previous allocation's accepted post-shift reading and this allocation's accepted pre-shift reading, above the configured tolerance (default 5 km, configurable) [DEC-16 — Approved].
 7. Duplicate or repeated evidence (identical image hash; perceptual similarity in a later phase).
 8. Gallery or file uploads [DEC-04].
 9. Late or delayed submissions [DEC-17].
@@ -408,7 +409,7 @@ If [DEC-03] is not approved, such allocations remain incomplete and their mileag
 
 The latest accepted reading for a vehicle is the accepted, non-superseded reading belonging to the most recent allocation (by allocation start time, then stage: post-shift after pre-shift). It is not the highest value and not the latest device timestamp.
 
-A reading is **stale** when an active vehicle has had no accepted reading for the configured period (proposed 7 days) [DEC-18].
+A reading is **stale** when an active vehicle has had no accepted reading for the configured period (default 7 days, configurable) [DEC-18 — Approved].
 
 ### 5.9 Mileage calculation
 
@@ -639,7 +640,7 @@ Historical evidence must not be silently overwritten or hard-deleted.
 
 ### Security
 - Driver authentication: employee number + PIN [DEC-08 — Approved]. PINs are issued and reset by authorised supervisors or administrators, never visible to them after issue; the driver must change a temporary PIN at first sign-in; repeated failed attempts lock the account temporarily; PIN rules (proposed: 6 digits, no trivial sequences) are configurable.
-- Office and management user authentication per [DEC-34] (proposed: email + password, with multi-factor authentication for administrators and approvers).
+- Office and management user authentication [DEC-34 — Approved]: email + password, with multi-factor authentication required for administrators and anyone holding approval permissions.
 - Drivers use company-issued phones, one per driver [DEC-08 — Approved]. Shared-device session handling is not required for MVP.
 - Role-based and branch-level access driven by the permission matrix.
 - Server-side authorisation and database Row Level Security.
@@ -781,8 +782,9 @@ Development (Phase 1) does not start until:
 
 **Decisions**
 - [x] DEC-08, DEC-24, DEC-32 approved (2026-11-12).
-- [ ] Remaining Phase 0–1 decisions approved: DEC-23, DEC-25, DEC-34; AD-01, AD-05.
-- [ ] Validation threshold defaults approved or explicitly deferred to configuration (DEC-12 to DEC-18).
+- [x] DEC-34, AD-01, AD-05 approved (2026-11-17).
+- [ ] Remaining Phase 0–1 decisions approved: DEC-23, DEC-25.
+- [x] Validation threshold defaults approved (DEC-12, 14, 16–18) or explicitly deferred to configuration (DEC-13, DEC-15) (2026-11-17).
 - [ ] Every other decision has an owner and a "needed by" phase.
 
 **Security and compliance**
@@ -791,10 +793,10 @@ Development (Phase 1) does not start until:
 - [ ] POPIA position confirmed: driver notice, Information Officer awareness, cross-border processing.
 
 **Environment**
-- [ ] Repository inspected or created; branching and review approach agreed.
+- [x] Repository created (henfredpietersen/fleetiq, private); Phase 0 merged 2026-11-17. Branch + PR workflow; PRs are reviewed before merge from Phase 1 onward.
 - [ ] Supabase dev and staging projects provisioned.
 - [ ] Secrets management agreed.
-- [ ] CI runs type-check, lint and unit tests.
+- [x] CI runs type-check, lint and unit tests (GitHub Actions, green on main 2026-11-17).
 
 **Business inputs**
 - [ ] Current paper inspection checklists per vehicle category.
@@ -805,7 +807,7 @@ Development (Phase 1) does not start until:
 
 ## 11. Approval and change control
 
-This document is the approved version 1.3 product baseline (approved by the user on 2026-11-17).
+This document is the approved version 1.4 product baseline (v1.3 approved by the user on 2026-11-17; v1.4 records decisions approved the same day).
 
 Approval of this document does not approve any Decision Register item still marked Proposed or Open; those remain configurable proposed defaults until decided individually.
 
@@ -830,13 +832,13 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-09 | Post-shift inspection completed by someone other than the driver | Supervisor may, flagged and audited | Proposed | Phase 4 |
 | DEC-10 | Service status bands | As in §5.10.3 | Proposed | Phase 8 |
 | DEC-11 | Time-based tolerances; minor/major service alternation | 30 days early / 30 days late; alternation later phase | Proposed | Phase 8 |
-| DEC-12 | Odometer precision | Whole kilometres | Proposed | Phase 5 |
-| DEC-13 | OCR confidence threshold for auto-acceptance | Set after OCR trial; conservative start | Open | Phase 6 |
-| DEC-14 | OCR vs driver tolerance | 0 km | Proposed | Phase 5 |
-| DEC-15 | Maximum plausible km per allocation | Per vehicle category from operational data | Open | Phase 5 |
-| DEC-16 | Unaccounted distance tolerance | 5 km | Proposed | Phase 7 |
-| DEC-17 | Late inspection windows | Pre-shift +30 min after start; post-shift +60 min after end | Proposed | Phase 4 |
-| DEC-18 | Stale reading age | 7 days on an active vehicle | Proposed | Phase 8 |
+| DEC-12 | Odometer precision | Whole kilometres | **Approved** as configurable default (2026-11-17) | Phase 5 |
+| DEC-13 | OCR confidence threshold for auto-acceptance | Set after OCR trial; conservative start | Open — deferred to configuration (2026-11-17) | Phase 6 |
+| DEC-14 | OCR vs driver tolerance | 0 km | **Approved** as configurable default (2026-11-17) | Phase 5 |
+| DEC-15 | Maximum plausible km per allocation | Per vehicle category from operational data | Open — deferred to configuration (2026-11-17) | Phase 5 |
+| DEC-16 | Unaccounted distance tolerance | 5 km | **Approved** as configurable default (2026-11-17) | Phase 7 |
+| DEC-17 | Late inspection windows | Pre-shift +30 min after start; post-shift +60 min after end | **Approved** as configurable default (2026-11-17) | Phase 4 |
+| DEC-18 | Stale reading age | 7 days on an active vehicle | **Approved** as configurable default (2026-11-17) | Phase 8 |
 | DEC-19 | Service configuration precedence | Vehicle → manufacturer/model → category → company default; current config applies to current cycle | Proposed | Phase 2 |
 | DEC-20 | Baseline onboarding evidence and verifier | Invoice, job card or service-book photo; verified by maintenance administrator | Proposed | Phase 2 |
 | DEC-21 | Mandatory checklist items per vehicle category | Business to supply current checklists | Open | Phase 4 |
@@ -852,5 +854,5 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-31 | Branch transfer approval | Fleet administrator approves; history kept | Proposed | Phase 2 |
 | DEC-32 | "Operations manager" role | Same as Branch manager; no separate role | **Approved** (2026-11-12) | Phase 1 |
 | DEC-33 | Fuel data source | Later phase | Deferred | Later |
-| DEC-34 | Office and management user login | Email + password; multi-factor authentication for administrators and approvers | Proposed | Phase 1 |
+| DEC-34 | Office and management user login | Email + password; multi-factor authentication for administrators and approvers | **Approved** (2026-11-17) | Phase 1 |
 | DEC-35 | Company device register | Record the issued company phone per driver and the device used for each submission (for accountability; not a block on submission) | Proposed | Phase 4 |

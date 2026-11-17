@@ -2,7 +2,7 @@
 
 Internal fleet management and operational intelligence platform for a single South African company (50–200 vehicles, multi-branch, multi-shift). Mobile-first driver portal and desktop management app. Built on Next.js (App Router), TypeScript (strict), Tailwind, shadcn/ui and Supabase.
 
-**Status:** Phase 0 (setup) — no business features yet. Start with [docs/CONTEXT.md](docs/CONTEXT.md); open the full v1.3 docs in `docs/` only for a specific section. Open decisions: [docs/DECISIONS-STATUS.md](docs/DECISIONS-STATUS.md).
+**Status:** Phase 0 (setup) — no business features yet. Start with [docs/CONTEXT.md](docs/CONTEXT.md); open the full v1.4 docs in `docs/` only for a specific section. Open decisions: [docs/DECISIONS-STATUS.md](docs/DECISIONS-STATUS.md).
 
 ## Setup
 

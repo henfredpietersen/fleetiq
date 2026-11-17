@@ -1,9 +1,9 @@
 # FleetIQ — Technical Architecture
 
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Approved (2026-11-17)
 **Product:** Internal fleet-management and operational intelligence platform
-**Companion documents:** PRD v1.3 (requirements and Decision Register DEC-xx), Database Design Specification v1.3
+**Companion documents:** PRD v1.4 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
 
 ---
 
@@ -16,6 +16,7 @@
 | 1.2 | 2026-11-12 | Corrected early-warning definition (13,500 km **after** the last verified service, not before the target). Background jobs made an MVP requirement. Added: evidence upload-verify-register flow; capture-source handling and web camera limits; reading state machine and auto-acceptance; unaccounted-distance check; odometer segments; time-based service status and effective status; canonical status catalogue reference; segregation of duties; service-role key rule; evidence access logging; scheduled jobs; capacity estimate; architecture decision register (AD-xx). |
 | 1.3 | 2026-11-12 | Applied approved DEC-08 (employee number + PIN; company phone per driver), DEC-24 (segregation of duties), DEC-32. Added driver PIN authentication design (§5.1) and AD-08. |
 | 1.3 | 2026-11-17 | **Approved by the user as the architecture baseline.** Document approval does not approve individual items: AD-xx entries marked Proposed or Open remain unapproved until decided individually. |
+| 1.4 | 2026-11-17 | Approved: AD-01 (Postgres job table + scheduled worker), AD-05 (`user_roles` is the only branch-scope source), DEC-34 (office login). Validation threshold defaults per PRD v1.4. |
 
 ---
 
@@ -134,7 +135,7 @@ Critical rules are enforced on the server and, where possible, also in the datab
 - Brute-force protection: per-account and per-IP rate limiting with temporary lockout after repeated failures (thresholds configurable), plus Supabase's built-in auth rate limits. Lockouts and resets are audited.
 - Devices: each driver uses a company-issued phone (DEC-08), so sessions may persist on the device with sensible expiry; shared-device fast switching is not required for MVP. Recording the device per submission is proposed under DEC-35.
 
-**Office and management users (DEC-34, Proposed):** email + password, with multi-factor authentication required for administrators and anyone holding approval permissions.
+**Office and management users (DEC-34, Approved):** email + password, with multi-factor authentication required for administrators and anyone holding approval permissions.
 
 ### 5.2 Authorisation model
 - Permissions are keys (e.g. `odometer.correction.approve`) granted to roles; roles are granted to users with a scope (company-wide or a specific branch).
@@ -294,7 +295,7 @@ Acceptance method: `auto_rule`, `reviewer`, `no_photo_exception` (DEC-03).
 A reading is accepted automatically only when all are true:
 - Evidence capture source is `in_app_camera`.
 - OCR succeeded with confidence ≥ configured threshold (DEC-13).
-- |driver reading − OCR reading| ≤ configured tolerance (DEC-14; proposed 0).
+- |driver reading − OCR reading| ≤ configured tolerance (DEC-14; default 0, configurable).
 - No validation check failed.
 
 The acceptance records `accepted_by = system`, the method and the validation settings version.
@@ -422,7 +423,7 @@ Store notification status, recipient, delivery attempts, acknowledgement and esc
 - UUID identifiers.
 - No image binaries in tables; private object references only.
 
-Full design: Database Design Specification v1.3.
+Full design: Database Design Specification v1.4.
 
 ## 11. Background processing
 
@@ -436,7 +437,7 @@ Jobs:
 - Cleanup of unregistered uploads.
 - Later: AI image analysis, report generation, data imports.
 
-Requirements: retry with backoff, failure states, idempotency, processing logs, monitoring, controlled reprocessing. No complex distributed infrastructure for the initial deployment. Mechanism per AD-01.
+Requirements: retry with backoff, failure states, idempotency, processing logs, monitoring, controlled reprocessing. No complex distributed infrastructure for the initial deployment. Mechanism per AD-01 (Approved): a Postgres `background_jobs` table processed by a scheduled worker; the concrete scheduler is chosen to fit the approved hosting (DEC-25).
 
 ## 12. Future integration architecture
 
@@ -491,11 +492,11 @@ Indicative, to be validated with pilot data: ~2,400 photos/day at full fleet siz
 
 | ID | Decision | Proposed option | Status |
 |---|---|---|---|
-| AD-01 | Background job mechanism | A Postgres-backed job table processed by a scheduled worker (e.g. Supabase scheduled functions / cron), chosen to fit the approved hosting | Proposed |
+| AD-01 | Background job mechanism | A Postgres-backed job table processed by a scheduled worker (e.g. Supabase scheduled functions / cron), chosen to fit the approved hosting | **Approved** (2026-11-17) |
 | AD-02 | Email provider | Choose when email is approved (DEC-28) | Open |
 | AD-03 | Perceptual duplicate-image detection | Later phase; exact hash in MVP | Proposed |
 | AD-04 | `vehicle_service_status` implementation | Database view; switch to a snapshot table only if performance requires | Proposed |
-| AD-05 | Branch-scope source | `user_roles` with nullable `branch_id` is the only scope source; `branch_memberships` removed | Proposed |
+| AD-05 | Branch-scope source | `user_roles` with nullable `branch_id` is the only scope source; `branch_memberships` removed | **Approved** (2026-11-17) |
 | AD-06 | Status columns | `text` + `CHECK` constraints and a documented status catalogue, not Postgres enums | Proposed |
 | AD-07 | In-app camera approach | Browser camera stream with in-app shutter; file input fallback flagged | Proposed |
 | AD-08 | Driver PIN sign-in implementation | Supabase Auth with internal login identifier per employee number, PIN as password, server-side resolver, rate limiting and lockout | Proposed |

@@ -1,9 +1,9 @@
 # FleetIQ — Database Design Specification
 
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Approved (2026-11-17)
 **Database:** PostgreSQL / Supabase PostgreSQL
-**Companion documents:** PRD v1.3 (requirements, Decision Register DEC-xx), Technical Architecture v1.3 (AD-xx)
+**Companion documents:** PRD v1.4 (requirements, Decision Register DEC-xx), Technical Architecture v1.4 (AD-xx)
 
 ---
 
@@ -16,6 +16,7 @@
 | 1.2 | 2026-11-12 | Added `evidence_files`, `evidence_access_log`, `vehicle_branch_assignments`, `odometer_validation_settings`, `odometer_segments`, `vehicle_damage_items`, `background_jobs`, `notification_rules`. Single branch-scope source (`branch_memberships` removed). Licence data only in `driver_licences`. Immutable accepted readings with `supersedes_reading_id`. `reading_stage` renamed `inspection_stage`. Composite FKs for repeated keys. `branch_id` added to branch-scoped tables. Exclusion constraint for allocations. Partial unique indexes for inspections and accepted readings. Idempotency columns. New exception types. Time tolerances on service configs. `allocation_mileage` made required, with unaccounted distance. Status catalogue. `maintenance_schedules` scoped to non-primary maintenance. |
 | 1.3 | 2026-11-12 | Applied approved DEC-08: `drivers.profile_id` required; driver sign-in fields on `profiles`; added `auth_login_attempts`. Added proposed `company_devices` and `evidence_files.device_id` (DEC-35). Segregation of duties (DEC-24) marked approved. |
 | 1.3 | 2026-11-17 | **Approved by the user as the logical database baseline.** Items marked Proposed, Open, Pending or [DEC-xx] remain configurable/nullable until their decisions are approved individually. |
+| 1.4 | 2026-11-17 | AD-01, AD-05 and DEC-34 approved. `profiles.email` required for staff users. Default values documented for `odometer_validation_settings` (DEC-12, 14, 16–18); DEC-13 and DEC-15 have no default until set. |
 
 **Notation.** **[MVP]** = required for the MVP. **[Later]** = planned phase; the table may be created later. Items marked **[DEC-xx]** depend on a pending decision and must be configurable or nullable until approved.
 
@@ -97,7 +98,7 @@ One row per authenticated user.
 - id — equals the Supabase auth user id
 - company_id
 - display_name
-- email, nullable — required for office users if DEC-34 is approved
+- email, nullable — required when `user_type = staff` (DEC-34, Approved: email + password, MFA for administrators and approvers); `CHECK (user_type <> 'staff' OR email IS NOT NULL)`
 - phone, nullable
 - user_type — `driver`, `staff`
 - login_identifier — internal, non-deliverable identifier used for driver PIN sign-in (AD-08); `UNIQUE`
@@ -125,7 +126,7 @@ One row per authenticated user.
 - PK (role_id, permission_id)
 
 ### user_roles
-**The single source of access scope (AD-05).**
+**The single source of access scope (AD-05, Approved).**
 - id
 - user_id → profiles
 - role_id → roles
@@ -464,6 +465,8 @@ Effective-dated, configurable thresholds (DEC-12 to DEC-18).
 - created_at
 
 Exclusion: no overlapping effective ranges per (company_id, vehicle_category).
+
+Seeded company-default values (approved as configurable defaults, 2026-11-17): `ocr_driver_tolerance_km = 0` (DEC-14), `unaccounted_tolerance_km = 5` (DEC-16), `pre_shift_late_minutes = 30`, `post_shift_late_minutes = 60` (DEC-17), `stale_reading_days = 7` (DEC-18); readings in whole km (DEC-12). `ocr_min_confidence` (DEC-13) and `max_km_per_allocation` (DEC-15) are nullable and have no default: while null, no reading can be auto-accepted, and the implausible-distance check reports `not_configured` rather than passing.
 
 ### odometer_segments
 Continuous lifetime kilometres across replacements and rollovers.
@@ -952,7 +955,7 @@ Constraints:
 
 ## 18. Background jobs [MVP]
 
-### background_jobs (AD-01)
+### background_jobs (AD-01, Approved)
 - id
 - company_id, nullable
 - job_type — ocr, service_evaluation, inspection_watch, notification_dispatch, upload_cleanup
@@ -1138,10 +1141,10 @@ The design is acceptable when:
 | Company device register | Proposed | DEC-35 |
 | Service config precedence | Proposed | DEC-19 |
 | `vehicle_service_status` view vs snapshot | Proposed view | AD-04 |
-| Branch scope source | Proposed `user_roles` only | AD-05 |
+| Branch scope source | Approved: `user_roles` only | AD-05 |
 | Retention classes | Pending | DEC-27 |
 | Fuel import source and format | Deferred | DEC-33 |
 
 ---
 
-**Important implementation rule:** This specification (v1.3, approved 2026-11-17) defines the intended logical database design. Do not create production tables or migrations from it until the pre-development gate in PRD §10 is passed and the actual application repository and database have been inspected.
+**Important implementation rule:** This specification (v1.4, approved 2026-11-17) defines the intended logical database design. Do not create production tables or migrations from it until the pre-development gate in PRD §10 is passed and the actual application repository and database have been inspected.

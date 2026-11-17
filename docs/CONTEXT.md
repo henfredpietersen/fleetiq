@@ -1,8 +1,8 @@
 # FleetIQ — Working Context (digest)
 
 Read this first. Open the full docs only for the section you need (cite § numbers):
-PRD = docs/01-FleetIQ-PRD-v1.3.md · ARCH = docs/02-FleetIQ-Technical-Architecture-v1.3.md · DB = docs/03-FleetIQ-Database-Design-v1.3.md.
-All three: v1.3, Approved 2026-11-17. If this digest and a full doc disagree, the full doc wins.
+PRD = docs/01-FleetIQ-PRD-v1.4.md · ARCH = docs/02-FleetIQ-Technical-Architecture-v1.4.md · DB = docs/03-FleetIQ-Database-Design-v1.4.md.
+All three: v1.4, Approved 2026-11-17. If this digest and a full doc disagree, the full doc wins.
 
 ## Product
 Internal (not SaaS) fleet platform, one SA company, 50–200 vehicles, multi-branch, multi-shift (incl. across midnight), TZ Africa/Johannesburg. Mobile-first driver portal (mid-range phones, weak signal), desktop management app.
@@ -14,10 +14,14 @@ Next.js App Router · React · TypeScript strict · Tailwind · shadcn/ui · Sup
 - DEC-08: drivers sign in with employee number + PIN; one company phone per driver.
 - DEC-24: segregation of duties, no override — nobody approves/verifies/corrects their own record; supervisor can't approve on an allocation where they are the driver; service record verifier ≠ creator; no self-granted roles.
 - DEC-32: "Operations manager" = Branch manager.
+- DEC-34: office/management users sign in with email + password; MFA required for administrators and anyone with approval permissions.
+- AD-01: background jobs = Postgres `background_jobs` table + scheduled worker (scheduler chosen to fit hosting, DEC-25).
+- AD-05: `user_roles` (branch_id nullable = company-wide) is the only branch-scope source.
+- DEC-12/14/16/17/18 (configurable defaults in `odometer_validation_settings`): whole km; OCR–driver tolerance 0 km; unaccounted tolerance 5 km; late pre-shift +30 min, post-shift +60 min; stale after 7 days. DEC-13 (OCR confidence) and DEC-15 (max km/allocation) have no default: while unset, no auto-acceptance and the implausible check reports `not_configured`.
 Everything else in PRD §12 / ARCH §17 is Proposed/Open → configurable, cite the ID.
 
 ## Phase 1 blockers (pending)
-DEC-23 permission matrix (PRD §4.2) · DEC-25 hosting/Supabase/data region · DEC-34 office login (proposed email+password, MFA for admins/approvers) · AD-01 job mechanism (proposed Postgres job table + scheduled worker) · AD-05 scope source (proposed `user_roles` only) · DEC-12–18 validation thresholds.
+DEC-23 permission matrix (PRD §4.2) · DEC-25 hosting/Supabase/data region (company IT). Also open before go-live: POPIA position, business inputs (PRD §10).
 
 ## Roadmap (PRD §9)
 0 Setup → 1 Foundation (auth, org/branches, roles/permissions, RLS, audit triggers, private evidence storage) → 2 Registers → 3 Shifts & allocations → 4 Inspections (mobile) → 5 Odometer manual path → 6 OCR → 7 Mileage → 8 Service monitoring & alerts → 9 Incidents, dashboard, reports → 10 Pilot. Never build ahead of the current phase.
