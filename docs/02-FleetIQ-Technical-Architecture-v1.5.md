@@ -1,9 +1,9 @@
 # FleetIQ — Technical Architecture
 
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Approved (2026-11-17)
 **Product:** Internal fleet-management and operational intelligence platform
-**Companion documents:** PRD v1.4 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
+**Companion documents:** PRD v1.5 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
 
 ---
 
@@ -17,6 +17,7 @@
 | 1.3 | 2026-11-12 | Applied approved DEC-08 (employee number + PIN; company phone per driver), DEC-24 (segregation of duties), DEC-32. Added driver PIN authentication design (§5.1) and AD-08. |
 | 1.3 | 2026-11-17 | **Approved by the user as the architecture baseline.** Document approval does not approve individual items: AD-xx entries marked Proposed or Open remain unapproved until decided individually. |
 | 1.4 | 2026-11-17 | Approved: AD-01 (Postgres job table + scheduled worker), AD-05 (`user_roles` is the only branch-scope source), DEC-34 (office login). Validation threshold defaults per PRD v1.4. |
+| 1.5 | 2026-11-17 | DEC-23 permission matrix approved (PRD v1.5 §4.2). |
 
 ---
 
@@ -140,7 +141,7 @@ Critical rules are enforced on the server and, where possible, also in the datab
 ### 5.2 Authorisation model
 - Permissions are keys (e.g. `odometer.correction.approve`) granted to roles; roles are granted to users with a scope (company-wide or a specific branch).
 - One database helper, `has_permission(permission_key, branch_id)`, is used by both RLS policies and server services.
-- The proposed matrix is in PRD §4.2 (DEC-23).
+- The approved matrix is in PRD §4.2 (DEC-23, Approved 2026-11-17), seeded as configuration data.
 
 Every sensitive server-side operation verifies:
 1. The user is authenticated.

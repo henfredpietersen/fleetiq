@@ -4,7 +4,7 @@ Source: docs/CONTEXT.md; detail in PRD §12 / ARCH §17. Proposed/Open items are
 
 | ID | Decision | Status |
 |---|---|---|
-| DEC-23 | Permission matrix (PRD §4.2) | Pending — owner: user |
+| DEC-23 | Permission matrix (PRD §4.2) | Approved 2026-11-17 |
 | DEC-25 | Hosting / Supabase project / data region | Pending — owner: user + company IT |
 | DEC-34 | Office login: email + password, MFA for admins/approvers | Approved 2026-11-17 |
 | AD-01 | Background jobs: Postgres job table + scheduled worker | Approved 2026-11-17 |
@@ -12,4 +12,4 @@ Source: docs/CONTEXT.md; detail in PRD §12 / ARCH §17. Proposed/Open items are
 | DEC-12, 14, 16–18 | Validation thresholds (configurable defaults) | Approved 2026-11-17 |
 | DEC-13, DEC-15 | OCR confidence; max km per allocation | Deferred to configuration (no default) |
 
-Approved and fixed: DEC-08, DEC-24, DEC-32, DEC-34, AD-01, AD-05 (see docs/CONTEXT.md).
+Approved and fixed: DEC-08, DEC-23, DEC-24, DEC-32, DEC-34, AD-01, AD-05 (see docs/CONTEXT.md).

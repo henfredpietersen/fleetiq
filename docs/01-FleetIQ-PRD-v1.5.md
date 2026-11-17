@@ -1,10 +1,10 @@
 # FleetIQ — Product Requirements Document (PRD)
 
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Approved (2026-11-17)
 **Product:** FleetIQ
 **Product type:** Internal fleet-management and operational intelligence platform
-**Companion documents:** Technical Architecture v1.4, Database Design Specification v1.4
+**Companion documents:** Technical Architecture v1.5, Database Design Specification v1.4
 
 ---
 
@@ -18,6 +18,7 @@
 | 1.3 | 2026-11-12 | Decisions approved: DEC-08 (drivers sign in with employee number + PIN; each driver uses a company-issued phone), DEC-24 (segregation of duties as proposed), DEC-32 ("Operations manager" = Branch manager). Added DEC-34 (office user login) and DEC-35 (company device register) as Proposed. Updated driver register, notifications, security NFRs, permission matrix note and pre-development gate. |
 | 1.3 | 2026-11-17 | **Approved by the user as the product baseline.** Document approval does not approve individual decisions: every Decision Register item marked Proposed or Open remains unapproved and configurable until decided individually. Pre-development gate updated (documentation approved; duplicate v1.2 PRD still present in Project Knowledge, so that item is reopened). |
 | 1.4 | 2026-11-17 | Decisions approved: DEC-34 (office users: email + password, MFA for administrators and approvers); DEC-12, DEC-14, DEC-16, DEC-17, DEC-18 approved as configurable default values; DEC-13 and DEC-15 explicitly deferred to configuration (no default until set from operational data). AD-01 and AD-05 approved (Technical Architecture v1.4). Pre-development gate updated. |
+| 1.5 | 2026-11-17 | DEC-23 permission matrix approved as proposed (§4.2), including: odometer corrections approved by fleet admin (company-wide) or branch manager (own branch); supervisors approve standard exceptions in their own branch; system administrator has no access to operational data (evidence, reports, licence details) but can view the audit log. All grants subject to DEC-24. |
 
 **Notation.** Items marked **[DEC-xx]** depend on a decision in the Decision Register (§12). Until a decision is approved, the stated value is a **proposed default** and must be implemented as configurable, not hard-coded.
 
@@ -124,9 +125,9 @@ The following roles are proposed. Final role names and permissions must be confi
 
 **Operations manager** — not a separate role. Approved: wherever "Operations manager" was referenced, the Branch manager role applies [DEC-32 — Approved].
 
-### 4.2 Proposed permission matrix [DEC-23]
+### 4.2 Permission matrix [DEC-23 — Approved]
 
-Scope key: **Own** = own records only · **Branch** = assigned branches · **All** = whole company.
+Approved 2026-11-17. Grants are stored as configuration (roles, permissions, `user_roles`) and every grant is subject to segregation of duties (§4.3). Scope key: **Own** = own records only · **Branch** = assigned branches · **All** = whole company.
 
 | Permission | Driver | Supervisor | Fleet admin | Maint. admin | Branch mgr | Senior mgmt | System admin |
 |---|---|---|---|---|---|---|---|
@@ -783,12 +784,13 @@ Development (Phase 1) does not start until:
 **Decisions**
 - [x] DEC-08, DEC-24, DEC-32 approved (2026-11-12).
 - [x] DEC-34, AD-01, AD-05 approved (2026-11-17).
-- [ ] Remaining Phase 0–1 decisions approved: DEC-23, DEC-25.
+- [x] DEC-23 permission matrix approved (2026-11-17).
+- [ ] Remaining Phase 0–1 decision approved: DEC-25 (company IT).
 - [x] Validation threshold defaults approved (DEC-12, 14, 16–18) or explicitly deferred to configuration (DEC-13, DEC-15) (2026-11-17).
 - [ ] Every other decision has an owner and a "needed by" phase.
 
 **Security and compliance**
-- [ ] Permission matrix approved.
+- [x] Permission matrix approved (2026-11-17).
 - [ ] Company IT approval of Supabase and hosting, including data region.
 - [ ] POPIA position confirmed: driver notice, Information Officer awareness, cross-border processing.
 
@@ -807,7 +809,7 @@ Development (Phase 1) does not start until:
 
 ## 11. Approval and change control
 
-This document is the approved version 1.4 product baseline (v1.3 approved by the user on 2026-11-17; v1.4 records decisions approved the same day).
+This document is the approved version 1.5 product baseline (v1.3 approved by the user on 2026-11-17; v1.4 and v1.5 record decisions approved the same day).
 
 Approval of this document does not approve any Decision Register item still marked Proposed or Open; those remain configurable proposed defaults until decided individually.
 
@@ -843,7 +845,7 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-20 | Baseline onboarding evidence and verifier | Invoice, job card or service-book photo; verified by maintenance administrator | Proposed | Phase 2 |
 | DEC-21 | Mandatory checklist items per vehicle category | Business to supply current checklists | Open | Phase 4 |
 | DEC-22 | Licence validity at allocation | Block expired/unverified; warn + override on class mismatch | Proposed | Phase 3 |
-| DEC-23 | Permission matrix | As in §4.2 | Proposed | Phase 1 |
+| DEC-23 | Permission matrix | As in §4.2 | **Approved** (2026-11-17) | Phase 1 |
 | DEC-24 | Segregation of duties | As in §4.3, no override | **Approved** (2026-11-12) | Phase 1 |
 | DEC-25 | Hosting, Supabase approval and data region | Company IT to confirm | Open | Phase 0 |
 | DEC-26 | OCR provider | Trial two providers on 50–100 real photos; check data location and cost | Open | Phase 6 |
