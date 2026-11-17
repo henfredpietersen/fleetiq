@@ -1631,6 +1631,39 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      driver_licences_safe_rows: {
+        Args: never;
+        Returns: {
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          driver_id: string;
+          expiry_date: string;
+          has_evidence: boolean;
+          id: string;
+          issue_date: string;
+          licence_code: string;
+          prdp_expiry_date: string;
+          prdp_required: boolean;
+          verification_status: string;
+        }[];
+      };
+      driver_register_rows: {
+        Args: never;
+        Returns: {
+          active_status: string;
+          branch_id: string;
+          company_id: string;
+          display_name: string;
+          employee_number: string;
+          id: string;
+          licence_expiry_date: string;
+          licence_verification_status: string;
+          phone: string;
+          pin_change_pending: boolean;
+          prdp_expiry_date: string;
+        }[];
+      };
       driver_register_visible: {
         Args: { p_branch_id: string; p_profile_id: string };
         Returns: boolean;

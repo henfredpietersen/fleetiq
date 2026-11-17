@@ -16,6 +16,7 @@ Next.js App Router · React · TypeScript strict · Tailwind · shadcn/ui · Sup
 - DEC-32: "Operations manager" = Branch manager.
 - DEC-34: office/management users sign in with email + password; MFA required for administrators and anyone with approval permissions.
 - DEC-23: permission matrix = PRD §4.2 table, seeded as config. Key points: corrections approved by fleet admin (all) or branch manager (own branch); supervisors approve standard exceptions in own branch; senior management view-only; system admin manages users/settings and sees the audit log but has no access to evidence, reports or licence data.
+- DEC-37: driver-register visibility (Approved 2026-11-17): supervisor, fleet admin, branch manager, senior management within scope; driver own record; maintenance and system admin none. Recorded on `driver_register_visible()`.
 - DEC-19: service config precedence vehicle → make/model → category → company default (effective-dated, audited).
 - DEC-20: go-live baselines need an invoice/job card/service-book photo, verified by the maintenance admin (verifier ≠ creator); none = baseline_required.
 - DEC-31: branch transfers approved by a fleet admin; branch history kept.
