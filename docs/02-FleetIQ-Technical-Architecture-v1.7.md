@@ -426,7 +426,7 @@ Store notification status, recipient, delivery attempts, acknowledgement and esc
 - UUID identifiers.
 - No image binaries in tables; private object references only.
 
-Full design: Database Design Specification v1.4.
+Full design: Database Design Specification v1.5.
 
 ## 11. Background processing
 
