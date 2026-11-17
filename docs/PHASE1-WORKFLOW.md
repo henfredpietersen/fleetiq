@@ -20,3 +20,8 @@ Role: principal architect + senior engineer. Correctness, security, auditability
 
 ## Final report (brief)
 Migrations/files added (grouped), what each test proves, real check + CI results, deviations from the docs (with reason), open questions.
+
+## Carry-over fixes from review (do these first in your slice, own migration, with tests)
+- From PR #2 (1A), fix in slice 1B:
+  1. `user_roles` update policy: a manager may only END a grant (set `effective_to` to a time ≤ now() and never later than an existing `effective_to`). Re-activating or extending an ended grant must require a new grant row. Add pgTAP tests for both.
+  2. `audit_row_change()`: `current_user` inside SECURITY DEFINER is always the owner, so `metadata.db_role` is meaningless. Record `session_user` (or drop the field).
