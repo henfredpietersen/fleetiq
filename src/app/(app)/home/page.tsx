@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -13,6 +14,7 @@ import {
 async function Content() {
   const ctx = await requireSession("full");
   const supabase = await createSupabaseServerClient();
+  await connection(); // current time is request-specific
   const nowIso = new Date().toISOString();
   const [{ data: grants, error }, { data: branches }] = await Promise.all([
     supabase

@@ -36,11 +36,11 @@ test("driver signs in, sees role and branch scope, and signs out", async ({
 
 test("wrong credentials show one generic message", async ({ page }) => {
   await signIn(page, "NOSUCHNUMBER1", "999111");
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.locator("[data-slot=alert]")).toHaveText(
     "Employee number or PIN is incorrect.",
   );
   await signIn(page, process.env.E2E_EMP_OK!, "999111");
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.locator("[data-slot=alert]")).toHaveText(
     "Employee number or PIN is incorrect.",
   );
 });
@@ -50,9 +50,13 @@ test("repeated failures lock the account, even for the right PIN", async ({
 }) => {
   const emp = process.env.E2E_EMP_LOCK!;
   for (let i = 0; i < 5; i++) await signIn(page, emp, "999111");
-  await expect(page.getByRole("alert")).toContainText("Too many attempts");
+  await expect(page.locator("[data-slot=alert]")).toContainText(
+    "Too many attempts",
+  );
   await signIn(page, emp, PIN);
-  await expect(page.getByRole("alert")).toContainText("Too many attempts");
+  await expect(page.locator("[data-slot=alert]")).toContainText(
+    "Too many attempts",
+  );
   await expect(page).toHaveURL(/\/sign-in$/);
 });
 
@@ -66,7 +70,7 @@ test("a driver with a temporary PIN must change it before anything else", async 
   await page.getByLabel("New PIN", { exact: true }).fill("123456");
   await page.getByLabel("Confirm new PIN").fill("123456");
   await page.getByRole("button", { name: "Save new PIN" }).click();
-  await expect(page.getByRole("alert")).toContainText("not allowed");
+  await expect(page.locator("[data-slot=alert]")).toContainText("not allowed");
   await page.getByLabel("New PIN", { exact: true }).fill("739051");
   await page.getByLabel("Confirm new PIN").fill("739051");
   await page.getByRole("button", { name: "Save new PIN" }).click();

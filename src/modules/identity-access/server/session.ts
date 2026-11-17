@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { nextAuthStep, type NextStep } from "../domain/next-step";
 
@@ -20,6 +21,7 @@ export type SessionContext = {
 
 /** Authenticated user + own profile + assurance level, validated against Supabase Auth. Null when signed out. */
 export async function getSessionContext(): Promise<SessionContext | null> {
+  await connection(); // request-time only: never prerender session reads
   const supabase = await createSupabaseServerClient();
   const { data: userData, error } = await supabase.auth.getUser();
   if (error || !userData.user) return null;
