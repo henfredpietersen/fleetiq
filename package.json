@@ -14,7 +14,8 @@
     "test:e2e": "playwright test --reporter=line",
     "check": "bash scripts/check.sh",
     "check:e2e": "bash scripts/check.sh e2e",
-    "db:types": "supabase gen types typescript --local --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
+    "test:int": "vitest run --config vitest.integration.config.ts --reporter=default"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

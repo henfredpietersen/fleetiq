@@ -66,6 +66,52 @@ export type Database = {
           },
         ];
       };
+      auth_login_attempts: {
+        Row: {
+          company_id: string | null;
+          employee_number_attempted: string;
+          id: string;
+          ip_hash: string;
+          occurred_at: string;
+          profile_id: string | null;
+          succeeded: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          company_id?: string | null;
+          employee_number_attempted: string;
+          id?: string;
+          ip_hash: string;
+          occurred_at?: string;
+          profile_id?: string | null;
+          succeeded: boolean;
+        };
+        Update: {
+          company_id?: string | null;
+          employee_number_attempted?: string;
+          id?: string;
+          ip_hash?: string;
+          occurred_at?: string;
+          profile_id?: string | null;
+          succeeded?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "auth_login_attempts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "auth_login_attempts_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       branches: {
         Row: {
           address: string | null;
@@ -184,17 +230,20 @@ export type Database = {
           description: string | null;
           id: string;
           permission_key: string;
+          requires_mfa: boolean;
         };
         ComputedFields: never;
         Insert: {
           description?: string | null;
           id?: string;
           permission_key: string;
+          requires_mfa?: boolean;
         };
         Update: {
           description?: string | null;
           id?: string;
           permission_key?: string;
+          requires_mfa?: boolean;
         };
         Relationships: [];
       };
@@ -209,6 +258,7 @@ export type Database = {
           login_identifier: string;
           must_change_pin: boolean;
           phone: string | null;
+          pin_set_at: string | null;
           status: string;
           updated_at: string;
           user_type: string;
@@ -224,6 +274,7 @@ export type Database = {
           login_identifier: string;
           must_change_pin?: boolean;
           phone?: string | null;
+          pin_set_at?: string | null;
           status?: string;
           updated_at?: string;
           user_type: string;
@@ -238,6 +289,7 @@ export type Database = {
           login_identifier?: string;
           must_change_pin?: boolean;
           phone?: string | null;
+          pin_set_at?: string | null;
           status?: string;
           updated_at?: string;
           user_type?: string;
@@ -289,6 +341,7 @@ export type Database = {
           description: string | null;
           id: string;
           name: string;
+          requires_mfa: boolean;
         };
         ComputedFields: never;
         Insert: {
@@ -296,12 +349,14 @@ export type Database = {
           description?: string | null;
           id?: string;
           name: string;
+          requires_mfa?: boolean;
         };
         Update: {
           company_id?: string | null;
           description?: string | null;
           id?: string;
           name?: string;
+          requires_mfa?: boolean;
         };
         Relationships: [
           {
@@ -391,11 +446,53 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      access_cleared: { Args: { p_user: string }; Returns: boolean };
+      auth_complete_pin_change: {
+        Args: { p_profile: string };
+        Returns: undefined;
+      };
+      auth_issue_pin_flags: {
+        Args: { p_actor: string; p_mode: string; p_target: string };
+        Returns: undefined;
+      };
+      auth_lock_profile: {
+        Args: { p_profile: string; p_until: string };
+        Returns: undefined;
+      };
+      auth_login_counts: {
+        Args: {
+          p_emp_hash: string;
+          p_ip_hash: string;
+          p_profile_id?: string;
+          p_window: string;
+        };
+        Returns: {
+          account_failures: number;
+          account_last_failure: string;
+          ip_failures: number;
+          ip_last_failure: string;
+        }[];
+      };
+      auth_login_record: {
+        Args: {
+          p_company: string;
+          p_emp_hash: string;
+          p_ip_hash: string;
+          p_profile: string;
+          p_succeeded: boolean;
+        };
+        Returns: undefined;
+      };
       current_company_id: { Args: Record<PropertyKey, never>; Returns: string };
+      current_user_requires_mfa: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
       };
+      user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;

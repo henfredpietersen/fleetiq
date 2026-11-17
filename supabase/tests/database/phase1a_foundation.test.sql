@@ -1,4 +1,5 @@
 -- Phase 1A pgTAP: org/access tables, has_permission, RLS, DEC-23 matrix, DEC-24, audit.
+-- (1B: act_as() now carries aal2 so MFA-required users keep their permissions; end-dating uses now().)
 -- Fixtures: 2 companies x 2 branches, one synthetic user per role (company A), plus company B
 -- users. All data synthetic; everything rolls back.
 begin;
@@ -13,7 +14,7 @@ create function tests.id(n text) returns uuid language sql immutable as
 create function tests.act_as(n text) returns void language plpgsql as $$
 begin
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', tests.id(n), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', tests.id(n), 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
 end $$;
 create function tests.act_anon() returns void language plpgsql as $$
@@ -220,12 +221,12 @@ select ok(tests.fails($$ insert into public.user_roles (user_id, role_id, compan
   select tests.id('sup_b'), id, tests.id('coB'), tests.id('sa') from public.roles where name = 'driver' $$), 'cannot grant in another company');
 select ok(tests.fails($$ insert into public.user_roles (user_id, role_id, company_id, granted_by)
   values (tests.id('victim'), tests.id('b_only'), tests.id('coA'), tests.id('sa')) $$), 'cannot assign another company''s role');
-select is(tests.affected($$ update public.user_roles set effective_to = now() + interval '1 day' where user_id = tests.id('sa') $$), 0::bigint, 'cannot end-date own grants');
+select is(tests.affected($$ update public.user_roles set effective_to = now() where user_id = tests.id('sa') $$), 0::bigint, 'cannot end-date own grants');
 select ok(tests.fails($$ delete from public.user_roles where user_id = tests.id('drv') $$), 'user_roles has no client DELETE');
 select ok(tests.fails($$ update public.user_roles set role_id = role_id where user_id = tests.id('drv') $$), 'only effective_to is client-updatable');
-select lives_ok($$ insert into public.user_roles (user_id, role_id, company_id, branch_id, granted_by)
-  select tests.id('victim'), id, tests.id('coA'), tests.id('A1'), tests.id('sa') from public.roles where name = 'supervisor' $$, 'user manager can grant to another user');
-select is(tests.affected($$ update public.user_roles set effective_to = now() + interval '1 day' where user_id = tests.id('victim') $$), 1::bigint, 'user manager can end-date another user''s grant');
+select lives_ok($$ insert into public.user_roles (user_id, role_id, company_id, branch_id, granted_by, effective_from)
+  select tests.id('victim'), id, tests.id('coA'), tests.id('A1'), tests.id('sa'), now() - interval '1 hour' from public.roles where name = 'supervisor' $$, 'user manager can grant to another user');
+select is(tests.affected($$ update public.user_roles set effective_to = now() where user_id = tests.id('victim') $$), 1::bigint, 'user manager can end-date another user''s grant');
 select tests.act_as('fla');
 select ok(tests.fails($$ insert into public.user_roles (user_id, role_id, company_id, granted_by)
   select tests.id('victim'), id, tests.id('coA'), tests.id('fla') from public.roles where name = 'driver' $$), 'fleet admin cannot manage roles');

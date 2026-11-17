@@ -39,6 +39,17 @@ jobs:
         run: supabase db reset
       - name: Run pgTAP tests
         run: supabase test db
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Integration tests (lockout, forced PIN change, MFA, service-role isolation)
+        run: |
+          supabase status -o env | sed 's/^/export /' > /tmp/sb.env
+          . /tmp/sb.env
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL" NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          npm run test:int
       - name: Generated types are current
         run: |
           supabase gen types typescript --local --schema public > /tmp/database.types.ts
@@ -46,7 +57,7 @@ jobs:
           diff -u src/lib/database.types.ts /tmp/database.types.ts
 
   e2e:
-    name: Playwright (mobile smoke)
+    name: "Playwright (mobile: smoke + sign-in)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,9 +67,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # No secrets: the home page is static placeholder content.
-      - run: npm run check:e2e
-        env:
-          CI: "true"
-          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-not-a-secret
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Local Supabase in CI only; synthetic users seeded by e2e/global-setup.ts (no cloud, no real data).
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit
+      - name: Sign-in end-to-end on a mobile viewport
+        run: |
+          supabase status -o env | sed 's/^/export /' > /tmp/sb.env
+          . /tmp/sb.env
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL" NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export CI=true E2E_AUTH=1
+          npm run check:e2e
