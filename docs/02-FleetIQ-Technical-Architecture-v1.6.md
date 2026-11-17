@@ -1,9 +1,9 @@
 # FleetIQ — Technical Architecture
 
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Approved (2026-11-17)
 **Product:** Internal fleet-management and operational intelligence platform
-**Companion documents:** PRD v1.5 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
+**Companion documents:** PRD v1.6 (requirements and Decision Register DEC-xx), Database Design Specification v1.4
 
 ---
 
@@ -18,6 +18,7 @@
 | 1.3 | 2026-11-17 | **Approved by the user as the architecture baseline.** Document approval does not approve individual items: AD-xx entries marked Proposed or Open remain unapproved until decided individually. |
 | 1.4 | 2026-11-17 | Approved: AD-01 (Postgres job table + scheduled worker), AD-05 (`user_roles` is the only branch-scope source), DEC-34 (office login). Validation threshold defaults per PRD v1.4. |
 | 1.5 | 2026-11-17 | DEC-23 permission matrix approved (PRD v1.5 §4.2). |
+| 1.6 | 2026-11-17 | DEC-25 approved: self-hosted Supabase and Next.js on RSAWEB cloud servers in South Africa (AD-09); Vercel removed. Deployment, backups, secrets and scheduler updated. |
 
 ---
 
@@ -46,7 +47,7 @@ Use a modular monolith for the initial product.
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS |
 | Components | shadcn/ui |
-| Database | Supabase PostgreSQL |
+| Database | Supabase PostgreSQL, self-hosted (Docker) on RSAWEB (AD-09) |
 | Authentication | Supabase Auth |
 | File storage | Supabase Storage (private buckets) |
 | Server logic | Next.js server-side services, server actions and route handlers |
@@ -54,9 +55,9 @@ Use a modular monolith for the initial product.
 | Source control | GitHub |
 | Unit/integration tests | Vitest |
 | End-to-end tests | Playwright |
-| Hosting | Vercel, subject to company approval (DEC-25) |
+| Hosting | RSAWEB cloud servers, South African data centres; Next.js (Node) behind a TLS reverse proxy on the same server as self-hosted Supabase; production at `fleetiq.outview.co.za` (DEC-25, AD-09) |
 
-These are proposed technologies, not proof that the services have been provisioned. Confirm the existing repository, deployment and database setup before implementation.
+Hosting is approved (DEC-25); servers are not yet provisioned. Confirm the existing repository, deployment and database setup before implementation.
 
 ## 3. Logical architecture
 
@@ -438,7 +439,7 @@ Jobs:
 - Cleanup of unregistered uploads.
 - Later: AI image analysis, report generation, data imports.
 
-Requirements: retry with backoff, failure states, idempotency, processing logs, monitoring, controlled reprocessing. No complex distributed infrastructure for the initial deployment. Mechanism per AD-01 (Approved): a Postgres `background_jobs` table processed by a scheduled worker; the concrete scheduler is chosen to fit the approved hosting (DEC-25).
+Requirements: retry with backoff, failure states, idempotency, processing logs, monitoring, controlled reprocessing. No complex distributed infrastructure for the initial deployment. Mechanism per AD-01 (Approved): a Postgres `background_jobs` table processed by a scheduled worker; on the RSAWEB server, jobs are triggered by `pg_cron` and processed by a Node worker process (systemd/Docker-managed) using the service-role key under §5.3.
 
 ## 12. Future integration architecture
 
@@ -478,12 +479,15 @@ Negative tests for unauthorised access, self-approval and invalid readings are m
 ## 15. Deployment and environments
 
 - Separate development, staging and production environments.
-- Environment-specific configuration; secrets in the hosting provider's secret store, never in source control.
+- Environments: local (Supabase CLI) and CI with synthetic data; RSAWEB staging; RSAWEB production. Real company data only in production, never in local, CI or staging.
+- Secrets: never in source control. On servers, in environment files readable only by the service user; in CI, GitHub Actions encrypted secrets. Rotate on staff change.
+- Self-hosted Supabase (Docker Compose) and OS updates applied on a monthly schedule, plus urgent security fixes; staging first.
+- Network: only HTTPS (443) public; SSH restricted to named IPs/keys; Supabase Studio and the database port not exposed publicly.
 - Migration process: applied by CI to staging, then promoted to production.
-- Backups with a tested restore procedure.
+- Backups: nightly database dump and storage sync to RSAWEB backup service (stored in South Africa), retention per DEC-27; restore tested monthly on staging.
 - Controlled production deployments; monitoring after release.
 - Single-branch pilot before full roll-out.
-- Confirm hosting, data region and company IT/security approval before production (DEC-25).
+- Hosting and data region approved (DEC-25): all data in South Africa. A POPIA operator agreement is required before go-live (PRD §6).
 
 ## 16. Capacity estimate
 
@@ -501,6 +505,7 @@ Indicative, to be validated with pilot data: ~2,400 photos/day at full fleet siz
 | AD-06 | Status columns | `text` + `CHECK` constraints and a documented status catalogue, not Postgres enums | Proposed |
 | AD-07 | In-app camera approach | Browser camera stream with in-app shutter; file input fallback flagged | Proposed |
 | AD-08 | Driver PIN sign-in implementation | Supabase Auth with internal login identifier per employee number, PIN as password, server-side resolver, rate limiting and lockout | Proposed |
+| AD-09 | Production platform | Self-hosted Supabase (Docker Compose) + Next.js on RSAWEB cloud servers in South Africa; separate staging and production; RSAWEB backup service | **Approved** (2026-11-17) |
 
 Business decisions that affect architecture (hosting, OCR provider, retention, gallery policy, permissions) are tracked in the PRD Decision Register.
 

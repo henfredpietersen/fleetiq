@@ -1,10 +1,10 @@
 # FleetIQ — Product Requirements Document (PRD)
 
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Approved (2026-11-17)
 **Product:** FleetIQ
 **Product type:** Internal fleet-management and operational intelligence platform
-**Companion documents:** Technical Architecture v1.5, Database Design Specification v1.4
+**Companion documents:** Technical Architecture v1.6, Database Design Specification v1.4
 
 ---
 
@@ -19,6 +19,7 @@
 | 1.3 | 2026-11-17 | **Approved by the user as the product baseline.** Document approval does not approve individual decisions: every Decision Register item marked Proposed or Open remains unapproved and configurable until decided individually. Pre-development gate updated (documentation approved; duplicate v1.2 PRD still present in Project Knowledge, so that item is reopened). |
 | 1.4 | 2026-11-17 | Decisions approved: DEC-34 (office users: email + password, MFA for administrators and approvers); DEC-12, DEC-14, DEC-16, DEC-17, DEC-18 approved as configurable default values; DEC-13 and DEC-15 explicitly deferred to configuration (no default until set from operational data). AD-01 and AD-05 approved (Technical Architecture v1.4). Pre-development gate updated. |
 | 1.5 | 2026-11-17 | DEC-23 permission matrix approved as proposed (§4.2), including: odometer corrections approved by fleet admin (company-wide) or branch manager (own branch); supervisors approve standard exceptions in their own branch; system administrator has no access to operational data (evidence, reports, licence details) but can view the audit log. All grants subject to DEC-24. |
+| 1.6 | 2026-11-17 | DEC-25 approved: all personal data and evidence stay in South Africa; self-hosted Supabase and the Next.js app on RSAWEB cloud servers (South African data centres); production address fleetiq.outview.co.za; company-owned accounts with at least two administrators. Added POPIA operator agreement (Outview as operator) and in-country rule for later providers (DEC-26, DEC-28). Approved exception: Phase 1 may be built on local/CI Supabase with synthetic data before servers are provisioned. |
 
 **Notation.** Items marked **[DEC-xx]** depend on a decision in the Decision Register (§12). Until a decision is approved, the stated value is a **proposed default** and must be implemented as configurable, not hard-coded.
 
@@ -679,7 +680,9 @@ Historical evidence must not be silently overwritten or hard-deleted.
 - Company phones are company devices; any device management (e.g. MDM) is a company IT decision outside FleetIQ.
 - Photos may incidentally include people or third-party vehicles; access is restricted accordingly.
 - EXIF GPS stripped in MVP [DEC-29].
-- Cross-border processing (hosting region, OCR provider) confirmed before production [DEC-25, DEC-26].
+- Data residency [DEC-25 — Approved]: all personal data and evidence are stored and processed in South Africa. Any later provider (OCR, email, monitoring) must also process data in South Africa or be separately approved [DEC-26, DEC-28].
+- Outview hosts and operates FleetIQ for the company: a written POPIA operator agreement (security safeguards, confidentiality, breach notification) is required before go-live.
+- The user's manager is informed of the POPIA position (driver notice, operator agreement, data residency).
 - Retention periods set by company policy and legal requirements [DEC-27].
 - Information Officer sign-off before go-live.
 - Auditability of access and changes.
@@ -785,18 +788,20 @@ Development (Phase 1) does not start until:
 - [x] DEC-08, DEC-24, DEC-32 approved (2026-11-12).
 - [x] DEC-34, AD-01, AD-05 approved (2026-11-17).
 - [x] DEC-23 permission matrix approved (2026-11-17).
-- [ ] Remaining Phase 0–1 decision approved: DEC-25 (company IT).
+- [x] DEC-25 hosting approved: RSAWEB, South Africa only (2026-11-17).
+- [x] Exception approved 2026-11-17: Phase 1 may be built and tested on local/CI Supabase with synthetic data only before the RSAWEB servers exist. No real company data until every remaining gate item is complete.
 - [x] Validation threshold defaults approved (DEC-12, 14, 16–18) or explicitly deferred to configuration (DEC-13, DEC-15) (2026-11-17).
 - [ ] Every other decision has an owner and a "needed by" phase.
 
 **Security and compliance**
 - [x] Permission matrix approved (2026-11-17).
-- [ ] Company IT approval of Supabase and hosting, including data region.
-- [ ] POPIA position confirmed: driver notice, Information Officer awareness, cross-border processing.
+- [x] Hosting and data region approved (DEC-25, 2026-11-17).
+- [ ] POPIA operator agreement between Outview and the company signed.
+- [ ] POPIA position confirmed: driver notice, manager and Information Officer informed (no cross-border processing under DEC-25).
 
 **Environment**
 - [x] Repository created (henfredpietersen/fleetiq, private); Phase 0 merged 2026-11-17. Branch + PR workflow; PRs are reviewed before merge from Phase 1 onward.
-- [ ] Supabase dev and staging projects provisioned.
+- [ ] RSAWEB staging and production servers provisioned (self-hosted Supabase, TLS, firewall, backups to RSAWEB backup service in South Africa).
 - [ ] Secrets management agreed.
 - [x] CI runs type-check, lint and unit tests (GitHub Actions, green on main 2026-11-17).
 
@@ -809,7 +814,7 @@ Development (Phase 1) does not start until:
 
 ## 11. Approval and change control
 
-This document is the approved version 1.5 product baseline (v1.3 approved by the user on 2026-11-17; v1.4 and v1.5 record decisions approved the same day).
+This document is the approved version 1.6 product baseline (v1.3 approved by the user on 2026-11-17; v1.4–v1.6 record decisions approved the same day).
 
 Approval of this document does not approve any Decision Register item still marked Proposed or Open; those remain configurable proposed defaults until decided individually.
 
@@ -847,10 +852,10 @@ Status values: **Proposed** (recommendation awaiting approval) · **Open** (inpu
 | DEC-22 | Licence validity at allocation | Block expired/unverified; warn + override on class mismatch | Proposed | Phase 3 |
 | DEC-23 | Permission matrix | As in §4.2 | **Approved** (2026-11-17) | Phase 1 |
 | DEC-24 | Segregation of duties | As in §4.3, no override | **Approved** (2026-11-12) | Phase 1 |
-| DEC-25 | Hosting, Supabase approval and data region | Company IT to confirm | Open | Phase 0 |
-| DEC-26 | OCR provider | Trial two providers on 50–100 real photos; check data location and cost | Open | Phase 6 |
+| DEC-25 | Hosting, Supabase approval and data region | Self-hosted Supabase + Next.js on RSAWEB cloud servers in South Africa; production at fleetiq.outview.co.za; data stays in South Africa; company-owned accounts, ≥2 admins | **Approved** (2026-11-17) | Phase 0 |
+| DEC-26 | OCR provider | Trial two providers on 50–100 real photos; must process data in South Africa (DEC-25); check cost | Open | Phase 6 |
 | DEC-27 | Retention periods for photos, evidence and audit logs | Company policy / legal input required | Open | Phase 4 |
-| DEC-28 | Notification channels and escalation periods | In-app for MVP; email when provider approved; escalation delays to be set | Proposed | Phase 8 |
+| DEC-28 | Notification channels and escalation periods | In-app for MVP; email when an in-country provider is approved (DEC-25); escalation delays to be set | Proposed | Phase 8 |
 | DEC-29 | EXIF GPS in photos | Strip on upload for MVP | Proposed | Phase 4 |
 | DEC-30 | KPI definitions and targets | MVP operational metrics only; catalogue later | Proposed | Phase 9 |
 | DEC-31 | Branch transfer approval | Fleet administrator approves; history kept | Proposed | Phase 2 |
