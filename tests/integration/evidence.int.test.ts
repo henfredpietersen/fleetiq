@@ -574,13 +574,14 @@ describe("signed read URLs: permission, short life, access log", () => {
     const direct = async (db: Db) => ({
       download: (await db.storage.from("evidence").download(p)).error,
       sign: (await db.storage.from("evidence").createSignedUrl(p, 60)).error,
-      list: (
+      // the folder also holds other files this user was granted earlier: look for THIS file by name
+      listed: (
         (
           await db.storage
             .from("evidence")
             .list(p.split("/").slice(0, -1).join("/"))
         ).data ?? []
-      ).length,
+      ).some((o) => o.name === p.split("/").pop()),
     });
 
     // 1. everyone who may VIEW it (owner, branch supervisor, fleet admin) is refused without a grant
@@ -588,7 +589,7 @@ describe("signed read URLs: permission, short life, access log", () => {
       const r = await direct(db);
       expect(r.download).toBeTruthy();
       expect(r.sign).toBeTruthy();
-      expect(r.list).toBe(0);
+      expect(r.listed).toBe(false);
     }
     expect(await logCount(id)).toBe(0); // and nothing was logged, nothing was served
 
@@ -598,7 +599,7 @@ describe("signed read URLs: permission, short life, access log", () => {
     const granted = await direct(supB1);
     expect(granted.download).toBeNull();
     expect(granted.sign).toBeNull();
-    expect(granted.list).toBe(1);
+    expect(granted.listed).toBe(true);
     // 3. someone else's log row grants nothing
     for (const db of [driver1, fleet])
       expect((await direct(db)).download).toBeTruthy();
