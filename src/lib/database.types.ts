@@ -9,6 +9,100 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      approvals: {
+        Row: {
+          approval_type: string;
+          assigned_approver: string | null;
+          branch_id: string | null;
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_notes: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          payload: NonNullable<Json>;
+          reason: string | null;
+          requested_by: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_type: string;
+          assigned_approver?: string | null;
+          branch_id?: string | null;
+          client_submission_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_notes?: string | null;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          payload?: NonNullable<Json>;
+          reason?: string | null;
+          requested_by: string;
+          status?: string;
+        };
+        Update: {
+          approval_type?: string;
+          assigned_approver?: string | null;
+          branch_id?: string | null;
+          client_submission_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_notes?: string | null;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          payload?: NonNullable<Json>;
+          reason?: string | null;
+          requested_by?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approvals_assigned_approver_company_id_fkey";
+            columns: ["assigned_approver", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "approvals_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "approvals_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approvals_decided_by_company_id_fkey";
+            columns: ["decided_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "approvals_requested_by_company_id_fkey";
+            columns: ["requested_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -757,12 +851,274 @@ export type Database = {
           },
         ];
       };
+      vehicle_branch_assignments: {
+        Row: {
+          approval_id: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_id?: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          effective_from: string;
+          effective_to?: string | null;
+          id?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          approval_id?: string | null;
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          effective_from?: string;
+          effective_to?: string | null;
+          id?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_branch_assignments_approval_id_company_id_fkey";
+            columns: ["approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_branch_assignments_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_branch_assignments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_branch_assignments_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_branch_assignments_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      vehicle_documents: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          document_number: string | null;
+          document_type: string;
+          evidence_file_id: string;
+          expiry_date: string | null;
+          id: string;
+          issue_date: string | null;
+          vehicle_id: string;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          document_number?: string | null;
+          document_type: string;
+          evidence_file_id: string;
+          expiry_date?: string | null;
+          id?: string;
+          issue_date?: string | null;
+          vehicle_id: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          document_number?: string | null;
+          document_type?: string;
+          evidence_file_id?: string;
+          expiry_date?: string | null;
+          id?: string;
+          issue_date?: string | null;
+          vehicle_id?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_documents_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_documents_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_documents_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_documents_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_documents_verified_by_company_id_fkey";
+            columns: ["verified_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      vehicles: {
+        Row: {
+          administrative_status: string;
+          archived_at: string | null;
+          company_id: string;
+          created_at: string;
+          current_branch_id: string;
+          current_odometer_km: number;
+          current_odometer_reading_id: string | null;
+          department_id: string | null;
+          engine_number: string | null;
+          fleet_number: string;
+          fuel_type: string | null;
+          id: string;
+          make: string;
+          model: string;
+          model_year: number | null;
+          registration_number: string;
+          transmission: string | null;
+          updated_at: string;
+          variant: string | null;
+          vehicle_category: string;
+          vin: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          administrative_status?: string;
+          archived_at?: string | null;
+          company_id: string;
+          created_at?: string;
+          current_branch_id: string;
+          current_odometer_km?: number;
+          current_odometer_reading_id?: string | null;
+          department_id?: string | null;
+          engine_number?: string | null;
+          fleet_number: string;
+          fuel_type?: string | null;
+          id?: string;
+          make: string;
+          model: string;
+          model_year?: number | null;
+          registration_number: string;
+          transmission?: string | null;
+          updated_at?: string;
+          variant?: string | null;
+          vehicle_category: string;
+          vin?: string | null;
+        };
+        Update: {
+          administrative_status?: string;
+          archived_at?: string | null;
+          company_id?: string;
+          created_at?: string;
+          current_branch_id?: string;
+          current_odometer_km?: number;
+          current_odometer_reading_id?: string | null;
+          department_id?: string | null;
+          engine_number?: string | null;
+          fleet_number?: string;
+          fuel_type?: string | null;
+          id?: string;
+          make?: string;
+          model?: string;
+          model_year?: number | null;
+          registration_number?: string;
+          transmission?: string | null;
+          updated_at?: string;
+          variant?: string | null;
+          vehicle_category?: string;
+          vin?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicles_current_branch_id_company_id_fkey";
+            columns: ["current_branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicles_department_id_company_id_fkey";
+            columns: ["department_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
       access_cleared: { Args: { p_user: string }; Returns: boolean };
+      apply_approved_effect: {
+        Args: { p_approval_id: string };
+        Returns: undefined;
+      };
+      apply_branch_transfer: {
+        Args: { p_approval_id: string };
+        Returns: undefined;
+      };
+      approval_decide_permission: { Args: { p_type: string }; Returns: string };
       auth_complete_pin_change: {
         Args: { p_profile: string };
         Returns: undefined;
@@ -808,6 +1164,33 @@ export type Database = {
         };
         Returns: boolean;
       };
+      cancel_approval: {
+        Args: { p_approval_id: string };
+        Returns: {
+          approval_type: string;
+          assigned_approver: string | null;
+          branch_id: string | null;
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_notes: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          payload: NonNullable<Json>;
+          reason: string | null;
+          requested_by: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "approvals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       claim_abandoned_evidence_slots: {
         Args: { p_grace_minutes: number; p_limit?: number };
         Returns: {
@@ -851,10 +1234,84 @@ export type Database = {
         Args: { p_id: string; p_result?: Json; p_worker: string };
         Returns: boolean;
       };
+      create_vehicle: {
+        Args: {
+          p_administrative_status?: string;
+          p_branch_id: string;
+          p_department_id?: string;
+          p_engine_number?: string;
+          p_fleet_number: string;
+          p_fuel_type?: string;
+          p_make: string;
+          p_model: string;
+          p_model_year?: number;
+          p_registration_number: string;
+          p_transmission?: string;
+          p_variant?: string;
+          p_vehicle_category: string;
+          p_vin?: string;
+        };
+        Returns: {
+          administrative_status: string;
+          archived_at: string | null;
+          company_id: string;
+          created_at: string;
+          current_branch_id: string;
+          current_odometer_km: number;
+          current_odometer_reading_id: string | null;
+          department_id: string | null;
+          engine_number: string | null;
+          fleet_number: string;
+          fuel_type: string | null;
+          id: string;
+          make: string;
+          model: string;
+          model_year: number | null;
+          registration_number: string;
+          transmission: string | null;
+          updated_at: string;
+          variant: string | null;
+          vehicle_category: string;
+          vin: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "vehicles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       current_company_id: { Args: Record<PropertyKey, never>; Returns: string };
       current_user_requires_mfa: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      decide_approval: {
+        Args: { p_approval_id: string; p_decision: string; p_notes?: string };
+        Returns: {
+          approval_type: string;
+          assigned_approver: string | null;
+          branch_id: string | null;
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_notes: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          payload: NonNullable<Json>;
+          reason: string | null;
+          requested_by: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "approvals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       enqueue_background_job: {
         Args: {
@@ -892,6 +1349,7 @@ export type Database = {
         };
         Returns: string;
       };
+      has_branch_access: { Args: { p_branch_id: string }; Returns: boolean };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
@@ -960,6 +1418,38 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "evidence_upload_slots";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_vehicle_transfer: {
+        Args: {
+          p_client_submission_id: string;
+          p_reason: string;
+          p_to_branch_id: string;
+          p_vehicle_id: string;
+        };
+        Returns: {
+          approval_type: string;
+          assigned_approver: string | null;
+          branch_id: string | null;
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_notes: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          payload: NonNullable<Json>;
+          reason: string | null;
+          requested_by: string;
+          status: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "approvals";
           isOneToOne: true;
           isSetofReturn: false;
         };

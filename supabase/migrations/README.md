@@ -22,4 +22,12 @@ Tests: `supabase/tests/database/*.test.sql` (pgTAP, `supabase test db`). Types: 
 10. `…10_evidence_storage` — `evidence_upload_slots`, `evidence_files` (insert-only), `evidence_access_log` (append-only), RLS, request/register/issue-access/cleanup functions.
 11. `…11_evidence_bucket` — private `evidence` bucket (size + MIME backstop) and storage policies tied to the evidence tables.
 
+## Phase 2A (vehicle register)
+
+12. `…12_evidence_read_requires_logged_grant`, 13. `…13_perf_tidyup` — see their headers (FK covering indexes, RLS initplan wrapping).
+14. `…14_approvals` — generic `approvals` (DB §17), `decide_approval()` / `cancel_approval()`, DEC-24 CHECK + transition guard, RLS (requester or approver in scope), no client writes.
+15. `…15_vehicles` — `vehicles`, `vehicle_branch_assignments` (btree_gist exclusion), `vehicle_documents`, `create_vehicle()`, `request_vehicle_transfer()`, internal `apply_branch_transfer()`, RLS, caches protected, no deletes, audit triggers.
+
+`supabase/seed.sql` loads synthetic data only (1 company, 2 branches, 10 vehicles `TESTnnn-GP`) on `supabase db reset`.
+
 Manual job run (no scheduler yet): `npm run job:evidence-cleanup` (needs the server-side env, see `.env.example`).
