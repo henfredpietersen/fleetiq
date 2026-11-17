@@ -460,13 +460,6 @@ export type Database = {
             foreignKeyName: "driver_licences_driver_id_company_id_fkey";
             columns: ["driver_id", "company_id"];
             isOneToOne: false;
-            referencedRelation: "driver_register";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
             referencedRelation: "drivers";
             referencedColumns: ["id", "company_id"];
           },
@@ -1708,52 +1701,30 @@ export type Database = {
     Views: {
       driver_licences_safe: {
         Row: {
-          branch_id: string;
-          company_id: string;
-          created_at: string;
-          driver_id: string;
-          expiry_date: string;
+          branch_id: string | null;
+          company_id: string | null;
+          created_at: string | null;
+          driver_id: string | null;
+          expiry_date: string | null;
           has_evidence: boolean | null;
-          id: string;
-          issue_date: string;
-          licence_code: string;
+          id: string | null;
+          issue_date: string | null;
+          licence_code: string | null;
           prdp_expiry_date: string | null;
-          prdp_required: boolean;
-          verification_status: string;
+          prdp_required: boolean | null;
+          verification_status: string | null;
         };
         ComputedFields: never;
-        Relationships: [
-          {
-            foreignKeyName: "driver_licences_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "driver_register";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "driver_licences_driver_id_company_id_fkey";
-            columns: ["driver_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "drivers";
-            referencedColumns: ["id", "company_id"];
-          },
-        ];
+        Relationships: [];
       };
       driver_register: {
         Row: {
-          active_status: string;
-          branch_id: string;
-          company_id: string;
-          display_name: string;
-          employee_number: string;
-          id: string;
+          active_status: string | null;
+          branch_id: string | null;
+          company_id: string | null;
+          display_name: string | null;
+          employee_number: string | null;
+          id: string | null;
           licence_expiry_date: string | null;
           licence_verification_status: string | null;
           phone: string | null;
@@ -1761,22 +1732,7 @@ export type Database = {
           prdp_expiry_date: string | null;
         };
         ComputedFields: never;
-        Relationships: [
-          {
-            foreignKeyName: "drivers_branch_id_company_id_fkey";
-            columns: ["branch_id", "company_id"];
-            isOneToOne: false;
-            referencedRelation: "branches";
-            referencedColumns: ["id", "company_id"];
-          },
-          {
-            foreignKeyName: "drivers_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       vehicle_service_status: {
         Row: {
@@ -2196,10 +2152,7 @@ export type Database = {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
       };
-      is_staff_member: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
+      is_staff_member: { Args: Record<PropertyKey, never>; Returns: boolean };
       issue_evidence_access: {
         Args: {
           p_evidence_file_id: string;
@@ -2316,7 +2269,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          payload: Json;
+          payload: NonNullable<Json>;
           reason: string | null;
           requested_by: string;
           status: string;
@@ -2421,6 +2374,12 @@ export type Database = {
           vehicle_category: string | null;
           vehicle_id: string | null;
         }[];
+        SetofOptions: {
+          from: "*";
+          to: "vehicle_service_configs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       service_config_validate: {
         Args: {
@@ -2482,8 +2441,8 @@ export type Database = {
       vehicle_service_status_rows: {
         Args: Record<PropertyKey, never>;
         Returns: {
-          awaiting_verification: string;
-          baseline_required: string;
+          awaiting_verification: boolean;
+          baseline_required: boolean;
           early_tolerance_days: number;
           early_tolerance_km: number;
           early_warning_date: string;
