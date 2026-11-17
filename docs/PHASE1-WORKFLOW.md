@@ -26,3 +26,6 @@ Migrations/files added (grouped), what each test proves, real check + CI results
   1. `user_roles` update policy: a manager may only END a grant (set `effective_to` to a time ≤ now() and never later than an existing `effective_to`). Re-activating or extending an ended grant must require a new grant row. Add pgTAP tests for both.
   2. `audit_row_change()`: `current_user` inside SECURITY DEFINER is always the owner, so `metadata.db_role` is meaningless. Record `session_user` (or drop the field).
   3. (Codex finding on PR #2) `audit_row_change()` on `role_permissions`: resolve `company_id` via the related role (`roles.company_id`), keeping NULL only for system roles, so company `audit.view` users can see changes to their own custom roles. Add a pgTAP test.
+- From PR #3 (1B), fix in the slice/phase noted:
+  4. (Phase 2, when staff accounts are created/managed) Staff password policy enforced server-side wherever a staff password is set: minimum 12 characters, configurable. Supabase's global minimum stays 6 only because driver PINs share it; never rely on it for staff.
+  5. (slice 1C) `user_roles`: allow a manager to cancel a not-yet-started (future-dated) grant, which the end-only rule currently blocks. Add pgTAP tests.
