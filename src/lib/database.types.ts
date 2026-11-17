@@ -23,7 +23,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          payload: Json;
+          payload: NonNullable<Json>;
           reason: string | null;
           requested_by: string;
           status: string;
@@ -42,7 +42,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id?: string;
-          payload?: Json;
+          payload?: NonNullable<Json>;
           reason?: string | null;
           requested_by: string;
           status?: string;
@@ -60,7 +60,7 @@ export type Database = {
           entity_id?: string;
           entity_type?: string;
           id?: string;
-          payload?: Json;
+          payload?: NonNullable<Json>;
           reason?: string | null;
           requested_by?: string;
           status?: string;
@@ -1111,23 +1111,14 @@ export type Database = {
     Functions: {
       access_cleared: { Args: { p_user: string }; Returns: boolean };
       apply_approved_effect: {
-        Args: {
-          p_approval_id: string;
-        };
+        Args: { p_approval_id: string };
         Returns: undefined;
       };
       apply_branch_transfer: {
-        Args: {
-          p_approval_id: string;
-        };
+        Args: { p_approval_id: string };
         Returns: undefined;
       };
-      approval_decide_permission: {
-        Args: {
-          p_type: string;
-        };
-        Returns: string;
-      };
+      approval_decide_permission: { Args: { p_type: string }; Returns: string };
       auth_complete_pin_change: {
         Args: { p_profile: string };
         Returns: undefined;
@@ -1174,9 +1165,7 @@ export type Database = {
         Returns: boolean;
       };
       cancel_approval: {
-        Args: {
-          p_approval_id: string;
-        };
+        Args: { p_approval_id: string };
         Returns: {
           approval_type: string;
           assigned_approver: string | null;
@@ -1190,7 +1179,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          payload: Json;
+          payload: NonNullable<Json>;
           reason: string | null;
           requested_by: string;
           status: string;
@@ -1245,7 +1234,6 @@ export type Database = {
         Args: { p_id: string; p_result?: Json; p_worker: string };
         Returns: boolean;
       };
-      current_company_id: { Args: Record<PropertyKey, never>; Returns: string };
       create_vehicle: {
         Args: {
           p_administrative_status?: string;
@@ -1293,16 +1281,13 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      current_company_id: { Args: Record<PropertyKey, never>; Returns: string };
       current_user_requires_mfa: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
       decide_approval: {
-        Args: {
-          p_approval_id: string;
-          p_decision: string;
-          p_notes?: string;
-        };
+        Args: { p_approval_id: string; p_decision: string; p_notes?: string };
         Returns: {
           approval_type: string;
           assigned_approver: string | null;
@@ -1316,7 +1301,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          payload: Json;
+          payload: NonNullable<Json>;
           reason: string | null;
           requested_by: string;
           status: string;
@@ -1364,12 +1349,7 @@ export type Database = {
         };
         Returns: string;
       };
-      has_branch_access: {
-        Args: {
-          p_branch_id: string;
-        };
-        Returns: boolean;
-      };
+      has_branch_access: { Args: { p_branch_id: string }; Returns: boolean };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
@@ -1462,7 +1442,7 @@ export type Database = {
           entity_id: string;
           entity_type: string;
           id: string;
-          payload: Json;
+          payload: NonNullable<Json>;
           reason: string | null;
           requested_by: string;
           status: string;
