@@ -364,7 +364,7 @@ select is(tests.sqlstate_of($$delete from public.shift_templates$$), '42501', 'n
 select tests.reset();
 select is(tests.sqlstate_of($$delete from public.shifts$$), '42501', 'no DELETE on shifts, not even for the owner (trigger)');
 select is(tests.sqlstate_of($$delete from public.shift_templates$$), '42501', 'no DELETE on templates, not even for the owner (trigger)');
-select is(tests.sqlstate_of($$truncate public.shifts$$), '42501', 'no TRUNCATE on shifts');
+select ok(tests.sqlstate_of($$truncate public.shifts$$) in ('42501', '0A000'), 'no TRUNCATE on shifts (the no_truncate trigger, or, since 3B, the FK from vehicle_allocations, stops it)');
 select ok(tests.sqlstate_of($$truncate public.shift_templates$$) in ('42501', '0A000'), 'no TRUNCATE on templates (the no_truncate trigger, or the FK from shifts, stops it)');
 select tests.act_service();
 select is(tests.sqlstate_of($$delete from public.shifts$$), '42501', 'the service role cannot delete shifts either');

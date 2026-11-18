@@ -15,6 +15,8 @@ import {
   type ActionState,
 } from "@/modules/identity-access/ui/action-state";
 import { Field, FormMessage } from "@/modules/identity-access/ui/form-parts";
+import { SelectField } from "@/modules/fleet-vehicles/ui/form-parts";
+import { LICENCE_CODES } from "@/modules/shifts-allocations/domain/licence-codes";
 import { recordLicenceAction, verifyLicenceAction } from "../server/actions";
 
 type UploadResult =
@@ -113,13 +115,20 @@ export function LicenceForm({
         autoComplete="off"
         required
       />
-      <Field
+      <SelectField
         id="licenceCode"
         label="Licence code"
-        hint="For example EB or C1."
-        maxLength={20}
+        hint="The code on the licence. A higher code covers the lower ones (for example C1 also covers B)."
+        defaultValue=""
         required
-      />
+      >
+        <option value="">Choose a code…</option>
+        {LICENCE_CODES.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </SelectField>
       <div className="grid grid-cols-2 gap-4">
         <Field id="issueDate" label="Issue date" type="date" required />
         <Field id="expiryDate" label="Expiry date" type="date" required />

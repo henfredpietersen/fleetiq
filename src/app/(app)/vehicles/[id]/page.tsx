@@ -41,6 +41,10 @@ import {
   hasPermission,
 } from "@/modules/service-monitoring/server/queries";
 import { BaselinePanel } from "@/modules/service-monitoring/ui/baseline-panel";
+import {
+  LicenceCodeGuidance,
+  RequiredLicenceCodeForm,
+} from "@/modules/shifts-allocations/ui/licence-code-form";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -82,6 +86,8 @@ async function Content({
     (b) => manageable.has(b.id) && b.id !== vehicle.current_branch_id,
   );
   const submissionId = randomUUID();
+  // The required licence code is a property of the vehicle: company-wide vehicle.manage (the SQL function re-checks).
+  const canSetLicenceCode = await hasPermission(db, "vehicle.manage", null);
   const canRecordService = await hasPermission(
     db,
     "service.record.create",
@@ -137,6 +143,32 @@ async function Content({
         failed={!serviceStatus.ok}
         canRecord={canRecordService}
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Required licence code</CardTitle>
+          <CardDescription>
+            Currently:{" "}
+            {vehicle.required_licence_code ??
+              "not configured (the licence class is not checked when allocating)"}
+            . Drivers need a verified licence of this class (or a class that
+            covers it) for the shift.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <LicenceCodeGuidance />
+          {canSetLicenceCode && !archived ? (
+            <RequiredLicenceCodeForm
+              vehicleId={vehicle.id}
+              current={vehicle.required_licence_code}
+            />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Only a fleet administrator can change this.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {canManage ? (
         <Card>

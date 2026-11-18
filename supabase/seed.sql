@@ -92,8 +92,9 @@ join public.roles r on r.company_id is null and r.name = 'driver'
 where dr.company_id = '5eed0000-0000-4000-8000-000000000001'
   and not exists (select 1 from public.user_roles ur where ur.user_id = dr.profile_id and ur.role_id = r.id);
 
--- T0001 valid + verified, T0002 expiring in 15 days, T0003 expired 10 days ago, T0004 valid but unverified,
--- T0005 valid + PrDP, T0006 has no licence record.
+-- T0001 valid + verified (B), T0002 expiring in 15 days (B), T0003 expired 10 days ago (B), T0004 valid but unverified (B),
+-- T0005 valid C1 + PrDP (verified; C1 covers a B vehicle), T0006 has no licence record. Codes are the legal set only
+-- (A1, A, B, C1, C, EB, EC1, EC; DEC-22).
 insert into public.driver_licences (id, company_id, driver_id, licence_number, licence_code, issue_date, expiry_date,
                                     prdp_required, prdp_expiry_date, verification_status, client_submission_id,
                                     created_by, verified_by, verified_at)
@@ -109,11 +110,11 @@ select ('5eed0000-0000-4000-8000-0000000004' || lpad(l.n::text, 2, '0'))::uuid,
        case when l.verified then '5eed0000-0000-4000-8000-0000000000a2'::uuid end,
        case when l.verified then now() end
 from (values
-  (1, 'EB', 1000, 400, false, true),
-  (2, 'EB', 1500, 15, false, true),
-  (3, 'C1', 1800, -10, false, true),
-  (4, 'EB', 300, 200, false, false),
-  (5, 'EC', 500, 365, true, true)
+  (1, 'B', 1000, 400, false, true),
+  (2, 'B', 1500, 15, false, true),
+  (3, 'B', 1800, -10, false, true),
+  (4, 'B', 300, 200, false, false),
+  (5, 'C1', 500, 365, true, true)
 ) as l(n, code, issued_days_ago, expires_in_days, prdp, verified)
 on conflict (id) do nothing;
 
@@ -167,3 +168,41 @@ cross join generate_series((now() at time zone 'Africa/Johannesburg')::date::tim
 cross join lateral public.shift_times(d::date, st.start_time, st.end_time) tm
 where st.company_id = '5eed0000-0000-4000-8000-000000000001'
 on conflict do nothing;
+
+-- ---------------------------------------------------------------- Slice 3B: required licence codes and planned allocations (SYNTHETIC)
+-- Vehicles: mostly B, FL-004 needs C1, FL-009 has no required code (licence class not checked). The column is written
+-- here as the owner; the app writes it only through set_vehicle_required_licence_code().
+update public.vehicles
+   set required_licence_code = case
+         when fleet_number = 'FL-004' then 'C1'
+         when fleet_number = 'FL-009' then null
+         else 'B' end
+ where company_id = '5eed0000-0000-4000-8000-000000000001';
+
+-- A few planned allocations on today's seed shifts (local date), like the application would create them:
+--   branch one Day today: FL-001 + T0001, FL-002 + T0002 (class matched); branch two Day today: FL-007 + T0005 (C1 covers B: matched);
+--   branch two Night today: FL-009 + T0005 (vehicle has no required code: not_configured; no overlap with the Day shift).
+with plan(label, branch_id, template_name, fleet_number, emp, check_) as (values
+  ('1', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-001', 'T0001', 'matched'),
+  ('2', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-002', 'T0002', 'matched'),
+  ('3', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Day',   'FL-007', 'T0005', 'matched'),
+  ('4', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Night', 'FL-009', 'T0005', 'not_configured')
+), ins as (
+  insert into public.vehicle_allocations (id, company_id, branch_id, vehicle_id, driver_id, shift_id, planned_start_at, planned_end_at,
+                                          licence_class_check, client_submission_id, created_by)
+  select ('5eed0000-0000-4000-8000-0000000009' || lpad(p.label, 2, '0'))::uuid, sh.company_id, sh.branch_id, v.id, d.id, sh.id,
+         sh.scheduled_start_at, sh.scheduled_end_at, p.check_, gen_random_uuid(), '5eed0000-0000-4000-8000-0000000000a1'
+    from plan p
+    join public.shift_templates st on st.branch_id = p.branch_id and st.name = p.template_name
+    join public.shifts sh on sh.shift_template_id = st.id and sh.shift_date = (now() at time zone 'Africa/Johannesburg')::date
+    join public.vehicles v on v.fleet_number = p.fleet_number and v.company_id = sh.company_id
+    join public.drivers d on d.employee_number = p.emp and d.company_id = sh.company_id
+  on conflict (id) do nothing
+  returning id, company_id, vehicle_id, driver_id, shift_id, planned_start_at, planned_end_at, licence_class_check
+)
+insert into public.allocation_events (company_id, allocation_id, event_type, new_value, actor_id)
+select company_id, id, 'created',
+       jsonb_build_object('status', 'planned', 'vehicle_id', vehicle_id, 'driver_id', driver_id, 'shift_id', shift_id,
+                          'planned_start_at', planned_start_at, 'planned_end_at', planned_end_at, 'licence_class_check', licence_class_check),
+       '5eed0000-0000-4000-8000-0000000000a1'
+  from ins;

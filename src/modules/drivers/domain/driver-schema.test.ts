@@ -66,6 +66,23 @@ describe("licenceSchema", () => {
     }
   });
 
+  it("accepts only the eight legal licence codes (DEC-22)", () => {
+    for (const c of ["A1", "A", "B", "C1", "C", "EB", "EC1", "EC"])
+      expect(licenceSchema.safeParse({ ...base, licenceCode: c }).success).toBe(
+        true,
+      );
+    for (const c of ["D", "EB1", "B ", "", "XX"])
+      expect(
+        licenceSchema.safeParse({
+          ...base,
+          licenceCode: c.trim() === "" ? c : `${c}x`,
+        }).success,
+      ).toBe(false);
+    expect(licenceSchema.safeParse({ ...base, licenceCode: "D" }).success).toBe(
+      false,
+    );
+  });
+
   it("expiry must be after issue (equal is rejected)", () => {
     expect(
       licenceSchema.safeParse({ ...base, expiryDate: "2022-01-10" }).success,

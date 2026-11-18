@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      allocation_events: {
+        Row: {
+          actor_id: string;
+          allocation_id: string;
+          company_id: string;
+          event_type: string;
+          id: string;
+          metadata: NonNullable<Json>;
+          new_value: Json | null;
+          occurred_at: string;
+          previous_value: Json | null;
+          reason: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          allocation_id: string;
+          company_id: string;
+          event_type: string;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          new_value?: Json | null;
+          occurred_at?: string;
+          previous_value?: Json | null;
+          reason?: string | null;
+        };
+        Update: {
+          actor_id?: string;
+          allocation_id?: string;
+          company_id?: string;
+          event_type?: string;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          new_value?: Json | null;
+          occurred_at?: string;
+          previous_value?: Json | null;
+          reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "allocation_events_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "allocation_events_allocation_id_company_id_fkey";
+            columns: ["allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "allocation_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       approvals: {
         Row: {
           approval_type: string;
@@ -1507,6 +1569,143 @@ export type Database = {
           },
         ];
       };
+      vehicle_allocations: {
+        Row: {
+          active_period: unknown;
+          allocation_type: string;
+          branch_id: string;
+          client_submission_id: string;
+          closed_by: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          driver_id: string;
+          id: string;
+          licence_class_check: string;
+          licence_override_approval_id: string | null;
+          planned_end_at: string;
+          planned_start_at: string;
+          previous_allocation_id: string | null;
+          released_at: string | null;
+          shift_id: string;
+          started_at: string | null;
+          status: string;
+          updated_at: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active_period?: never;
+          allocation_type?: string;
+          branch_id: string;
+          client_submission_id: string;
+          closed_by?: string | null;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          driver_id: string;
+          id?: string;
+          licence_class_check: string;
+          licence_override_approval_id?: string | null;
+          planned_end_at: string;
+          planned_start_at: string;
+          previous_allocation_id?: string | null;
+          released_at?: string | null;
+          shift_id: string;
+          started_at?: string | null;
+          status?: string;
+          updated_at?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          active_period?: never;
+          allocation_type?: string;
+          branch_id?: string;
+          client_submission_id?: string;
+          closed_by?: string | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          driver_id?: string;
+          id?: string;
+          licence_class_check?: string;
+          licence_override_approval_id?: string | null;
+          planned_end_at?: string;
+          planned_start_at?: string;
+          previous_allocation_id?: string | null;
+          released_at?: string | null;
+          shift_id?: string;
+          started_at?: string | null;
+          status?: string;
+          updated_at?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_allocations_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_closed_by_company_id_fkey";
+            columns: ["closed_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_licence_override_approval_id_company_i_fkey";
+            columns: ["licence_override_approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_previous_allocation_id_company_id_fkey";
+            columns: ["previous_allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_shift_id_branch_id_company_id_fkey";
+            columns: ["shift_id", "branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "shifts";
+            referencedColumns: ["id", "branch_id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_allocations_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       vehicle_branch_assignments: {
         Row: {
           approval_id: string | null;
@@ -1792,6 +1991,7 @@ export type Database = {
           model: string;
           model_year: number | null;
           registration_number: string;
+          required_licence_code: string | null;
           transmission: string | null;
           updated_at: string;
           variant: string | null;
@@ -1816,6 +2016,7 @@ export type Database = {
           model: string;
           model_year?: number | null;
           registration_number: string;
+          required_licence_code?: string | null;
           transmission?: string | null;
           updated_at?: string;
           variant?: string | null;
@@ -1839,6 +2040,7 @@ export type Database = {
           model?: string;
           model_year?: number | null;
           registration_number?: string;
+          required_licence_code?: string | null;
           transmission?: string | null;
           updated_at?: string;
           variant?: string | null;
@@ -1956,11 +2158,70 @@ export type Database = {
         };
         Returns: undefined;
       };
+      allocation_create_row: {
+        Args: {
+          p_actor: string;
+          p_approval: string;
+          p_branch: string;
+          p_check: string;
+          p_company: string;
+          p_created_by: string;
+          p_csid: string;
+          p_driver: string;
+          p_end: string;
+          p_id: string;
+          p_metadata: Json;
+          p_reason: string;
+          p_shift: string;
+          p_start: string;
+          p_vehicle: string;
+        };
+        Returns: string;
+      };
+      allocation_eligibility: {
+        Args: {
+          p_driver_id: string;
+          p_planned_end_at: string;
+          p_planned_start_at: string;
+          p_shift_id: string;
+          p_vehicle_id: string;
+        };
+        Returns: {
+          block_reasons: string[];
+          licence_class_check: string;
+          needs_override: boolean;
+          ok: boolean;
+        }[];
+      };
+      allocation_eligibility_core: {
+        Args: {
+          p_company: string;
+          p_driver_id: string;
+          p_end: string;
+          p_shift_id: string;
+          p_start: string;
+          p_vehicle_id: string;
+        };
+        Returns: {
+          r_branch: string;
+          r_check: string;
+          r_end: string;
+          r_needs_override: boolean;
+          r_ok: boolean;
+          r_reasons: string[];
+          r_start: string;
+        }[];
+      };
+      allocation_refusal: { Args: { p_reasons: string[] }; Returns: undefined };
       apply_approved_effect: {
         Args: { p_approval_id: string };
         Returns: undefined;
       };
       apply_branch_transfer: {
+        Args: { p_approval_id: string };
+        Returns: undefined;
+      };
+      apply_licence_override: {
         Args: { p_approval_id: string };
         Returns: undefined;
       };
@@ -2229,6 +2490,7 @@ export type Database = {
           model: string;
           model_year: number | null;
           registration_number: string;
+          required_licence_code: string | null;
           transmission: string | null;
           updated_at: string;
           variant: string | null;
@@ -2274,6 +2536,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      driver_is_self: { Args: { p_driver_id: string }; Returns: boolean };
       driver_licences_safe_rows: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2378,6 +2641,10 @@ export type Database = {
           object_path: string;
         }[];
       };
+      licence_code_coverage: {
+        Args: { p_held: string; p_required: string };
+        Returns: boolean;
+      };
       licence_evidence_owner_allows: {
         Args: { p_file_id: string };
         Returns: boolean;
@@ -2412,6 +2679,21 @@ export type Database = {
           p_width: number;
         };
         Returns: string;
+      };
+      request_allocation: {
+        Args: {
+          p_client_submission_id: string;
+          p_driver_id: string;
+          p_planned_end_at: string;
+          p_planned_start_at: string;
+          p_reason: string;
+          p_shift_id: string;
+          p_vehicle_id: string;
+        };
+        Returns: {
+          allocation_id: string;
+          approval_id: string;
+        }[];
       };
       request_evidence_upload_slot: {
         Args: {
@@ -2631,6 +2913,10 @@ export type Database = {
       };
       set_driver_status: {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
+        Returns: undefined;
+      };
+      set_vehicle_required_licence_code: {
+        Args: { p_code: string; p_reason: string; p_vehicle_id: string };
         Returns: undefined;
       };
       shift_access: {
