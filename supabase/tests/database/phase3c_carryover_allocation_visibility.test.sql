@@ -53,9 +53,9 @@ insert into public.vehicle_allocations (id, company_id, branch_id, vehicle_id, d
                                         licence_class_check, client_submission_id, created_by)
 select tests.id('al-' || b.branch_code), s.company_id, s.branch_id, tests.id('v-' || lower(b.branch_code)), tests.id('d-d' || b.branch_code),
        s.id, s.scheduled_start_at, s.scheduled_end_at, 'matched', gen_random_uuid(), tests.id('fa')
-  from public.shifts s join public.branches b on b.id = s.branch_id;
+  from public.shifts s join public.branches b on b.id = s.branch_id where s.company_id = tests.id('coA');
 insert into public.allocation_events (company_id, allocation_id, event_type, new_value, actor_id)
-select company_id, id, 'created', '{"status":"planned"}'::jsonb, tests.id('fa') from public.vehicle_allocations;
+select company_id, id, 'created', '{"status":"planned"}'::jsonb, tests.id('fa') from public.vehicle_allocations where company_id = tests.id('coA');
 
 -- the permission matrix (DEC-23): maintenance administrator holds reports.view, not allocation.manage
 select tests.act_as('maAll');
