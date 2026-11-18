@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Token-saving verification: one PASS/FAIL line per step; on failure, only the
-# first 40 lines of that step's output, then exit non-zero (fail fast).
+# first 40 and last 60 lines of that step's output, then exit non-zero (fail fast).
 # Usage: scripts/check.sh        -> typecheck, lint, unit tests
 #        scripts/check.sh e2e    -> Playwright (line reporter)
 set -u
@@ -16,6 +16,8 @@ run_step() {
   else
     echo "FAIL  $name  (full log: $log)"
     head -n 40 "$log"
+    # Test runners print their failure summary last; keep it visible when the log is longer than the head.
+    if [ "$(wc -l <"$log")" -gt 40 ]; then echo "... (tail of the log)"; tail -n 60 "$log"; fi
     exit 1
   fi
 }

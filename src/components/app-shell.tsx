@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { ShiftsNavLink } from "@/modules/shifts-allocations/ui/shifts-nav-link";
 
 /** Desktop-first frame for the management screens (drivers, staff users). */
 export function AppShell({
@@ -25,6 +26,9 @@ export function AppShell({
         <Link href="/drivers" className="text-sm font-medium hover:underline">
           Drivers
         </Link>
+        <Suspense fallback={null}>
+          <ShiftsNavLink />
+        </Suspense>
         <Link
           href="/service/verification"
           className="text-sm font-medium hover:underline"
