@@ -119,10 +119,12 @@ test("a supervisor allocates a vehicle and a driver to a shift, with the licence
   const secret = (await page.locator("code").first().innerText()).trim();
   await page.getByLabel("6-digit code").fill(totp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
+  // Let the verification finish (session cookie set, redirect done) before navigating away.
+  await expect(page).not.toHaveURL(/\/mfa$/);
 
   await page.goto(`/shifts/allocations?branch=${branch.id}&date=${localToday}`);
   await expect(
-    page.getByRole("heading", { name: "Allocations" }),
+    page.getByRole("heading", { name: "Allocations", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Allocate…" }).click();
   const dialog = page.getByRole("dialog");
