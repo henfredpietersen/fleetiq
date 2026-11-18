@@ -1583,6 +1583,9 @@ export type Database = {
           id: string;
           licence_class_check: string;
           licence_override_approval_id: string | null;
+          opened_at: string | null;
+          opened_by: string | null;
+          opened_on_behalf: boolean;
           planned_end_at: string;
           planned_start_at: string;
           previous_allocation_id: string | null;
@@ -1607,6 +1610,9 @@ export type Database = {
           id?: string;
           licence_class_check: string;
           licence_override_approval_id?: string | null;
+          opened_at?: string | null;
+          opened_by?: string | null;
+          opened_on_behalf?: boolean;
           planned_end_at: string;
           planned_start_at: string;
           previous_allocation_id?: string | null;
@@ -1630,6 +1636,9 @@ export type Database = {
           id?: string;
           licence_class_check?: string;
           licence_override_approval_id?: string | null;
+          opened_at?: string | null;
+          opened_by?: string | null;
+          opened_on_behalf?: boolean;
           planned_end_at?: string;
           planned_start_at?: string;
           previous_allocation_id?: string | null;
@@ -1641,6 +1650,13 @@ export type Database = {
           vehicle_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "va_opened_by_fk";
+            columns: ["opened_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
           {
             foreignKeyName: "vehicle_allocations_branch_id_company_id_fkey";
             columns: ["branch_id", "company_id"];
@@ -2158,6 +2174,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      allocation_closure_blockers: {
+        Args: { p_allocation_id: string };
+        Returns: string[];
+      };
       allocation_create_row: {
         Args: {
           p_actor: string;
@@ -2193,26 +2213,109 @@ export type Database = {
           ok: boolean;
         }[];
       };
-      allocation_eligibility_core: {
+      allocation_eligibility_core:
+        | {
+            Args: {
+              p_company: string;
+              p_driver_id: string;
+              p_end: string;
+              p_shift_id: string;
+              p_start: string;
+              p_vehicle_id: string;
+            };
+            Returns: {
+              r_branch: string;
+              r_check: string;
+              r_end: string;
+              r_needs_override: boolean;
+              r_ok: boolean;
+              r_reasons: string[];
+              r_start: string;
+            }[];
+          }
+        | {
+            Args: {
+              p_company: string;
+              p_driver_id: string;
+              p_end: string;
+              p_exclude_allocation_id: string;
+              p_shift_id: string;
+              p_start: string;
+              p_vehicle_id: string;
+            };
+            Returns: {
+              r_branch: string;
+              r_check: string;
+              r_end: string;
+              r_needs_override: boolean;
+              r_ok: boolean;
+              r_reasons: string[];
+              r_start: string;
+            }[];
+          };
+      allocation_fail: {
+        Args: { p_detail?: string; p_message: string; p_sqlstate: string };
+        Returns: undefined;
+      };
+      allocation_no_show_allowed: {
         Args: {
-          p_company: string;
-          p_driver_id: string;
-          p_end: string;
-          p_shift_id: string;
-          p_start: string;
-          p_vehicle_id: string;
+          p_grace_minutes: number;
+          p_now: string;
+          p_planned_start: string;
         };
-        Returns: {
-          r_branch: string;
-          r_check: string;
-          r_end: string;
-          r_needs_override: boolean;
-          r_ok: boolean;
-          r_reasons: string[];
-          r_start: string;
-        }[];
+        Returns: boolean;
       };
       allocation_refusal: { Args: { p_reasons: string[] }; Returns: undefined };
+      allocation_settings: {
+        Args: { p_company_id: string };
+        Returns: {
+          no_show_grace_minutes: number;
+          open_before_start_minutes: number;
+        }[];
+      };
+      allocation_start_blockers: {
+        Args: { p_allocation_id: string; p_now: string };
+        Returns: string[];
+      };
+      allocation_start_window_open: {
+        Args: {
+          p_now: string;
+          p_open_before_minutes: number;
+          p_planned_end: string;
+          p_planned_start: string;
+        };
+        Returns: boolean;
+      };
+      allocation_transition_allowed: {
+        Args: { p_from: string; p_to: string };
+        Returns: boolean;
+      };
+      amend_allocation_times: {
+        Args: {
+          p_allocation_id: string;
+          p_client_submission_id: string;
+          p_planned_end_at: string;
+          p_planned_start_at: string;
+          p_reason: string;
+        };
+        Returns: {
+          out_allocation_id: string;
+          out_planned_end_at: string;
+          out_planned_start_at: string;
+          out_replayed: boolean;
+        }[];
+      };
+      amend_eligibility: {
+        Args: {
+          p_allocation_id: string;
+          p_planned_end_at: string;
+          p_planned_start_at: string;
+        };
+        Returns: {
+          block_reasons: string[];
+          ok: boolean;
+        }[];
+      };
       apply_approved_effect: {
         Args: { p_approval_id: string };
         Returns: undefined;
@@ -2653,6 +2756,26 @@ export type Database = {
         Args: { p_ids: string[] };
         Returns: number;
       };
+      my_allocations: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          allocation_id: string;
+          branch_name: string;
+          can_open: boolean;
+          licence_class_check: string;
+          opened_on_behalf: boolean;
+          planned_end_at: string;
+          planned_start_at: string;
+          shift_date: string;
+          shift_end_at: string;
+          shift_start_at: string;
+          status: string;
+          vehicle_fleet_number: string;
+          vehicle_make: string;
+          vehicle_model: string;
+          vehicle_registration: string;
+        }[];
+      };
       record_driver_licence: {
         Args: {
           p_client_submission_id: string;
@@ -2679,6 +2802,14 @@ export type Database = {
           p_width: number;
         };
         Returns: string;
+      };
+      release_allocation: {
+        Args: {
+          p_allocation_id: string;
+          p_client_submission_id: string;
+          p_reason: string;
+        };
+        Returns: undefined;
       };
       request_allocation: {
         Args: {
@@ -2946,6 +3077,19 @@ export type Database = {
           p_rows: Json;
         };
         Returns: string;
+      };
+      transition_allocation: {
+        Args: {
+          p_allocation_id: string;
+          p_client_submission_id: string;
+          p_reason: string;
+          p_to_status: string;
+        };
+        Returns: {
+          out_allocation_id: string;
+          out_replayed: boolean;
+          out_status: string;
+        }[];
       };
       update_driver_details: {
         Args: { p_display_name: string; p_driver_id: string; p_phone?: string };

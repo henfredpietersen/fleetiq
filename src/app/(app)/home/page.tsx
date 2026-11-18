@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
+import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireSession } from "@/modules/identity-access/server/session";
 import { signOutAction } from "@/modules/identity-access/server/actions";
@@ -69,6 +70,17 @@ async function Content() {
           ))}
         </ul>
       )}
+      {ctx.profile.userType === "driver" ? (
+        <Link
+          href="/my-allocations"
+          className={buttonVariants({
+            size: "lg",
+            className: "min-h-14 w-full",
+          })}
+        >
+          My allocations
+        </Link>
+      ) : null}
       <form action={signOutAction}>
         <Button type="submit" variant="outline" size="lg" className="w-full">
           Sign out

@@ -182,11 +182,15 @@ update public.vehicles
 -- A few planned allocations on today's seed shifts (local date), like the application would create them:
 --   branch one Day today: FL-001 + T0001, FL-002 + T0002 (class matched); branch two Day today: FL-007 + T0005 (C1 covers B: matched);
 --   branch two Night today: FL-009 + T0005 (vehicle has no required code: not_configured; no overlap with the Day shift).
-with plan(label, branch_id, template_name, fleet_number, emp, check_) as (values
-  ('1', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-001', 'T0001', 'matched'),
-  ('2', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-002', 'T0002', 'matched'),
-  ('3', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Day',   'FL-007', 'T0005', 'matched'),
-  ('4', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Night', 'FL-009', 'T0005', 'not_configured')
+-- Slice 3C: the same drivers get allocations TOMORROW too (labels 5-7), so the driver "My allocations" screen is not empty.
+with plan(label, branch_id, template_name, fleet_number, emp, check_, day_offset) as (values
+  ('1', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-001', 'T0001', 'matched', 0),
+  ('2', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-002', 'T0002', 'matched', 0),
+  ('3', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Day',   'FL-007', 'T0005', 'matched', 0),
+  ('4', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Night', 'FL-009', 'T0005', 'not_configured', 0),
+  ('5', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-001', 'T0001', 'matched', 1),
+  ('6', '5eed0000-0000-4000-8000-0000000000b1'::uuid, 'Day',   'FL-002', 'T0002', 'matched', 1),
+  ('7', '5eed0000-0000-4000-8000-0000000000b2'::uuid, 'Day',   'FL-007', 'T0005', 'matched', 1)
 ), ins as (
   insert into public.vehicle_allocations (id, company_id, branch_id, vehicle_id, driver_id, shift_id, planned_start_at, planned_end_at,
                                           licence_class_check, client_submission_id, created_by)
@@ -194,7 +198,7 @@ with plan(label, branch_id, template_name, fleet_number, emp, check_) as (values
          sh.scheduled_start_at, sh.scheduled_end_at, p.check_, gen_random_uuid(), '5eed0000-0000-4000-8000-0000000000a1'
     from plan p
     join public.shift_templates st on st.branch_id = p.branch_id and st.name = p.template_name
-    join public.shifts sh on sh.shift_template_id = st.id and sh.shift_date = (now() at time zone 'Africa/Johannesburg')::date
+    join public.shifts sh on sh.shift_template_id = st.id and sh.shift_date = (now() at time zone 'Africa/Johannesburg')::date + p.day_offset
     join public.vehicles v on v.fleet_number = p.fleet_number and v.company_id = sh.company_id
     join public.drivers d on d.employee_number = p.emp and d.company_id = sh.company_id
   on conflict (id) do nothing

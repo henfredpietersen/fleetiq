@@ -15,6 +15,7 @@ export type BoardAllocation = {
   plannedEndAt: string;
   status: string;
   licenceClassCheck: string;
+  openedOnBehalf: boolean;
 };
 
 const unique = (ids: string[]) => [...new Set(ids)];
@@ -39,7 +40,7 @@ export async function getBoard(db: Db, branchId: string, date: string) {
   const { data: rows, error: e2 } = await db
     .from("vehicle_allocations")
     .select(
-      "id, shift_id, vehicle_id, driver_id, planned_start_at, planned_end_at, status, licence_class_check",
+      "id, shift_id, vehicle_id, driver_id, planned_start_at, planned_end_at, status, licence_class_check, opened_on_behalf",
     )
     .in("shift_id", ids)
     .order("planned_start_at")
@@ -81,6 +82,7 @@ export async function getBoard(db: Db, branchId: string, date: string) {
     plannedEndAt: a.planned_end_at,
     status: a.status,
     licenceClassCheck: a.licence_class_check,
+    openedOnBehalf: a.opened_on_behalf,
   }));
   return { ok: true as const, shifts: shifts ?? [], allocations };
 }

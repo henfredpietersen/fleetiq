@@ -202,13 +202,13 @@ select is((select count(*)::int from public.vehicle_allocations where id in (tes
 -- 2 vehicles can share a shift; the same pair cannot be created twice (exclusion again, via the function path below)
 
 -- ================================================================ 3. the status guard (3C replaces it) and immutability
-select is(tests.sqlstate_of($$update public.vehicle_allocations set status = 'in_use' where id = tests.id('al-base')$$), '55000', 'a status change is refused in slice 3B (even for the owner)');
+select is(tests.sqlstate_of($$update public.vehicle_allocations set status = 'in_use' where id = tests.id('al-base')$$), '55000', 'a direct status change is refused (even for the owner): only transition_allocation changes status (3B refused all; 3C routes them)');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set started_at = now() where id = tests.id('al-base')$$), '55000', 'started_at cannot change in 3B');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set released_at = tests.ts(tests.d(10), '08:00') where id = tests.id('al-base')$$), '55000', 'released_at cannot change in 3B');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set closed_by = tests.id('fa') where id = tests.id('al-base')$$), '55000', 'closed_by cannot change in 3B');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set vehicle_id = tests.id('v-o2') where id = tests.id('al-base')$$), '23514', 'vehicle_id is immutable');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set driver_id = tests.id('d-dB2') where id = tests.id('al-base')$$), '23514', 'driver_id is immutable');
-select is(tests.sqlstate_of($$update public.vehicle_allocations set planned_end_at = planned_end_at + interval '1 hour' where id = tests.id('al-base')$$), '23514', 'planned times are immutable in 3B');
+select is(tests.sqlstate_of($$update public.vehicle_allocations set planned_end_at = planned_end_at + interval '1 hour' where id = tests.id('al-base')$$), '55000', 'planned times change only through amend_allocation_times (slice 3C; immutable in 3B)');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set licence_class_check = 'not_configured' where id = tests.id('al-base')$$), '23514', 'licence_class_check is permanent');
 select is(tests.sqlstate_of($$update public.vehicle_allocations set client_submission_id = gen_random_uuid() where id = tests.id('al-base')$$), '23514', 'client_submission_id is immutable');
 select is(tests.sqlstate_of($$delete from public.vehicle_allocations where id = tests.id('al-base')$$), '42501', 'no DELETE on vehicle_allocations (even for the owner)');

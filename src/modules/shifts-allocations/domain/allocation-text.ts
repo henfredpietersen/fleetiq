@@ -76,3 +76,18 @@ const STATUS_LABEL: Record<string, string> = {
   no_show: "No-show",
 };
 export const allocationStatusLabel = (s: string) => STATUS_LABEL[s] ?? s;
+
+/** Driver-facing wording for a status (plain words, shorter than the board's). */
+const DRIVER_STATUS_LABEL: Record<string, string> = {
+  planned: "Planned",
+  pre_inspection_pending: "Pre-inspection pending",
+  in_use: "In use",
+  post_inspection_pending: "Post-inspection pending",
+  closed: "Closed",
+  closed_with_exceptions: "Closed with exceptions",
+  cancelled: "Cancelled",
+  no_show: "Marked as no-show",
+};
+export const driverStatusLabel = (s: string) => DRIVER_STATUS_LABEL[s] ?? s;
+
+export const STARTED_BY_SUPERVISOR = "Started by supervisor";
