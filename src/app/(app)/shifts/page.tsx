@@ -103,32 +103,34 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
           That filter was not valid, so the default range is shown instead.
         </Alert>
       ) : null}
-      <form
-        method="get"
-        className="flex flex-wrap items-end gap-4"
-        aria-label="Filter shifts"
-      >
-        <div className="flex min-w-56 flex-col gap-2">
-          <Label htmlFor="branch">Branch</Label>
-          <Select id="branch" name="branch" defaultValue={branch.id}>
-            {viewable.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="from">From</Label>
-          <Input id="from" name="from" type="date" defaultValue={from} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="to">To</Label>
-          <Input id="to" name="to" type="date" defaultValue={to} />
-        </div>
-        <Button type="submit" variant="outline">
-          Apply
-        </Button>
+      <div className="flex flex-wrap items-end gap-4">
+        <form
+          method="get"
+          className="flex flex-wrap items-end gap-4"
+          aria-label="Filter shifts"
+        >
+          <div className="flex min-w-56 flex-col gap-2">
+            <Label htmlFor="branch">Branch</Label>
+            <Select id="branch" name="branch" defaultValue={branch.id}>
+              {viewable.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="from">From</Label>
+            <Input id="from" name="from" type="date" defaultValue={from} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="to">To</Label>
+            <Input id="to" name="to" type="date" defaultValue={to} />
+          </div>
+          <Button type="submit" variant="outline">
+            Apply
+          </Button>
+        </form>
         {branch.canManage ? (
           <div className="ml-auto">
             <GenerateShiftsDialog
@@ -141,7 +143,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
             />
           </div>
         ) : null}
-      </form>
+      </div>
 
       <Card>
         <CardHeader>
