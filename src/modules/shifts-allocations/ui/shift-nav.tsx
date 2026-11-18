@@ -3,6 +3,8 @@ import Link from "next/link";
 const LINKS = [
   { href: "/shifts", label: "Shifts" },
   { href: "/shifts/templates", label: "Shift templates" },
+  { href: "/shifts/allocations", label: "Allocations" },
+  { href: "/shifts/allocations/overrides", label: "Licence overrides" },
 ];
 
 export function ShiftNav() {

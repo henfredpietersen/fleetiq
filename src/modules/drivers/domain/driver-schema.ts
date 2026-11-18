@@ -3,6 +3,7 @@
 // form never trips a CHECK (employee number canonical form = identity-access normalizeEmployeeNumber).
 import { z } from "zod";
 import { normalizeEmployeeNumber } from "@/modules/identity-access/domain/identifiers";
+import { LICENCE_CODES } from "@/modules/shifts-allocations/domain/licence-codes";
 
 export const uuidField = z.uuid("Invalid identifier");
 
@@ -73,9 +74,12 @@ export const licenceSchema = z
     licenceCode: z
       .string("Enter the licence code.")
       .trim()
-      .min(1, "Enter the licence code (for example EB or C1).")
-      .max(20, "The licence code is too long.")
-      .transform((v) => v.toUpperCase()),
+      .min(1, "Choose the licence code.")
+      .transform((v) => v.toUpperCase())
+      // DEC-22: the eight codes of regulation 99 only; the database CHECK is the final word.
+      .pipe(
+        z.enum(LICENCE_CODES, "Choose one of A1, A, B, C1, C, EB, EC1, EC."),
+      ),
     issueDate: date("Issue date"),
     expiryDate: date("Expiry date"),
     prdpRequired: z.preprocess(
