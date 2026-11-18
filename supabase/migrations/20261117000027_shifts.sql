@@ -431,6 +431,22 @@ grant execute on function
   public.cancel_shift(uuid, text)
   to authenticated;
 
+-- ---------------------------------------------------------------- what may I see / manage?
+-- One round trip for the screens and the navigation: the company's active branches with the caller's allocation.manage
+-- (write) and read (allocation.manage or reports.view) rights per branch. Decision data only; the writes and the
+-- table reads still enforce the same checks (the UI is never the boundary). SECURITY INVOKER: branches are RLS-scoped.
+create function public.shift_access() returns table (branch_id uuid, branch_name text, can_manage boolean, can_view boolean)
+language sql stable set search_path = '' as $$
+  select b.id, b.name,
+         public.has_permission('allocation.manage', b.id),
+         public.has_permission('allocation.manage', b.id) or public.has_permission('reports.view', b.id)
+    from public.branches b
+   where b.company_id = (select public.current_company_id()) and b.status = 'active'
+   order by b.name
+$$;
+revoke all on function public.shift_access() from public, anon;
+grant execute on function public.shift_access() to authenticated;
+
 -- ---------------------------------------------------------------- RLS + grants (deny by default)
 alter table public.shift_templates enable row level security;
 alter table public.shifts          enable row level security;

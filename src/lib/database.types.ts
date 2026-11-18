@@ -1209,6 +1209,178 @@ export type Database = {
           },
         ];
       };
+      shift_templates: {
+        Row: {
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          crosses_midnight: boolean;
+          end_time: string;
+          id: string;
+          name: string;
+          start_time: string;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          crosses_midnight: boolean;
+          end_time: string;
+          id?: string;
+          name: string;
+          start_time: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          crosses_midnight?: boolean;
+          end_time?: string;
+          id?: string;
+          name?: string;
+          start_time?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shift_templates_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "shift_templates_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_templates_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      shifts: {
+        Row: {
+          actual_end_at: string | null;
+          actual_start_at: string | null;
+          branch_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          department_id: string | null;
+          id: string;
+          scheduled_end_at: string;
+          scheduled_start_at: string;
+          shift_date: string;
+          shift_template_id: string | null;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_end_at?: string | null;
+          actual_start_at?: string | null;
+          branch_id: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          department_id?: string | null;
+          id?: string;
+          scheduled_end_at: string;
+          scheduled_start_at: string;
+          shift_date: string;
+          shift_template_id?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          actual_end_at?: string | null;
+          actual_start_at?: string | null;
+          branch_id?: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          department_id?: string | null;
+          id?: string;
+          scheduled_end_at?: string;
+          scheduled_start_at?: string;
+          shift_date?: string;
+          shift_template_id?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shifts_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "shifts_cancelled_by_company_id_fkey";
+            columns: ["cancelled_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "shifts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shifts_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "shifts_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shifts_shift_template_id_branch_id_company_id_fkey";
+            columns: ["shift_template_id", "branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "shift_templates";
+            referencedColumns: ["id", "branch_id", "company_id"];
+          },
+        ];
+      };
       staff_password_authorisations: {
         Row: {
           actor_id: string;
@@ -1797,6 +1969,10 @@ export type Database = {
         Returns: undefined;
       };
       approval_decide_permission: { Args: { p_type: string }; Returns: string };
+      archive_shift_template: {
+        Args: { p_reason: string; p_template_id: string };
+        Returns: undefined;
+      };
       attach_import_row_evidence: {
         Args: {
           p_client_submission_id: string;
@@ -1892,6 +2068,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      cancel_shift: {
+        Args: { p_reason: string; p_shift_id: string };
+        Returns: undefined;
       };
       change_company_default_service_config: {
         Args: {
@@ -1992,6 +2172,26 @@ export type Database = {
           p_supplier_name: string;
           p_total_cost: number;
           p_vehicle_id: string;
+        };
+        Returns: string;
+      };
+      create_shift: {
+        Args: {
+          p_branch_id: string;
+          p_client_submission_id: string;
+          p_department_id: string;
+          p_end_time: string;
+          p_shift_date: string;
+          p_start_time: string;
+        };
+        Returns: string;
+      };
+      create_shift_template: {
+        Args: {
+          p_branch_id: string;
+          p_end_time: string;
+          p_name: string;
+          p_start_time: string;
         };
         Returns: string;
       };
@@ -2148,6 +2348,15 @@ export type Database = {
         Returns: string;
       };
       has_branch_access: { Args: { p_branch_id: string }; Returns: boolean };
+      generate_shifts: {
+        Args: {
+          p_client_submission_id: string;
+          p_from: string;
+          p_template_id: string;
+          p_to: string;
+        };
+        Returns: { created: number; skipped: number }[];
+      };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
@@ -2421,6 +2630,23 @@ export type Database = {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
         Returns: undefined;
       };
+      shift_access: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          branch_id: string;
+          branch_name: string;
+          can_manage: boolean;
+          can_view: boolean;
+        }[];
+      };
+      shift_has_active_allocations: {
+        Args: { p_shift_id: string };
+        Returns: boolean;
+      };
+      shift_times: {
+        Args: { p_date: string; p_end: string; p_start: string };
+        Returns: { scheduled_end_at: string; scheduled_start_at: string }[];
+      };
       stage_service_import: {
         Args: {
           p_client_submission_id: string;
@@ -2431,6 +2657,15 @@ export type Database = {
       };
       update_driver_details: {
         Args: { p_display_name: string; p_driver_id: string; p_phone?: string };
+        Returns: undefined;
+      };
+      update_shift_template: {
+        Args: {
+          p_end_time: string;
+          p_name: string;
+          p_start_time: string;
+          p_template_id: string;
+        };
         Returns: undefined;
       };
       user_has_permission: {

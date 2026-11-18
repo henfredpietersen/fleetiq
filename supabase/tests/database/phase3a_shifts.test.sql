@@ -2,7 +2,7 @@
 -- Synthetic data only; everything rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(166);
+select plan(173);
 
 create schema tests;
 grant usage on schema tests to anon, authenticated, service_role;
@@ -331,6 +331,26 @@ select is((select count(*)::int from public.shifts), 0, 'a user with no role see
 select tests.act_anon();
 select is(tests.sqlstate_of($$select count(*) from public.shifts$$), '42501', 'anon has no table privilege on shifts');
 select is(tests.sqlstate_of($$select count(*) from public.shift_templates$$), '42501', 'anon has no table privilege on shift_templates');
+
+-- ================================================================ 10b. shift_access (drives the screens and the navigation)
+select tests.act_as('sup1');
+select is((select string_agg(branch_name || ':' || can_manage || ':' || can_view, ',' order by branch_name) from public.shift_access()),
+          'A one:true:true,A two:false:false', 'supervisor: manage + view for their branch only');
+select tests.act_as('fa');
+select is((select string_agg(branch_name || ':' || can_manage || ':' || can_view, ',' order by branch_name) from public.shift_access()),
+          'A one:true:true,A two:true:true', 'fleet admin: manage + view for every branch');
+select tests.act_as('ma');
+select is((select string_agg(branch_name || ':' || can_manage || ':' || can_view, ',' order by branch_name) from public.shift_access()),
+          'A one:false:true,A two:false:true', 'maintenance admin: view only (reports.view)');
+select tests.act_as('drv');
+select is((select count(*)::int from public.shift_access() where can_view or can_manage), 0, 'driver: no access');
+select tests.act_as('sa');
+select is((select count(*)::int from public.shift_access() where can_view or can_manage), 0, 'system admin: no access');
+select tests.act_as('fab');
+select is((select string_agg(branch_name, ',') from public.shift_access()), 'B one', 'company B sees only its own branches');
+select tests.act_anon();
+select is(tests.sqlstate_of($$select * from public.shift_access()$$), '42501', 'anon cannot call shift_access');
+select tests.reset();
 
 -- ================================================================ 11. no direct writes, no deletes, privileges, audit
 select tests.act_as('fa');
