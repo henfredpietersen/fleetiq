@@ -3,7 +3,7 @@
 -- Every scenario label L creates: driver tests.id('d-u-L') (profile tests.id('u-L')), vehicle v-L, shift sh-L, allocation al-L.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(213);
+select plan(219);
 
 create schema tests;
 grant usage on schema tests to anon, authenticated, service_role;
@@ -438,6 +438,19 @@ select tests.act_as('sup1');
 select is((select out_replayed from public.amend_allocation_times(tests.al('am1'), now() + interval '3 days 3 hours', now() + interval '3 days 5 hours', 'Shorter', tests.id('cs-' || 'am1' || (now() + interval '3 days 3 hours')::text || (now() + interval '3 days 5 hours')::text))), true, 'amend retry with the same submission id: replayed');
 select tests.reset();
 select is((select count(*)::int from public.allocation_events where allocation_id = tests.al('am1') and event_type = 'amended'), 2, '... no extra event');
+
+
+-- ================================================================ 7b. amend_eligibility (the dry run behind the dialog)
+select tests.act_as('sup1');
+select is((select ok from public.amend_eligibility(tests.al('am5'), now() + interval '3 days 2 hours', now() + interval '3 days 5 hours')), true, 'amend_eligibility: ok for a free period');
+select is((select block_reasons from public.amend_eligibility(tests.al('am5'), now() + interval '3 days 2 hours', now() + interval '3 days 7 hours')), array['vehicle_conflict'], '... reports the overlap without writing anything');
+select is((select block_reasons from public.amend_eligibility(tests.al('am3'), now() + interval '3 days 2 hours', now() + interval '3 days 5 hours')), array['status_not_amendable'], '... and a status that cannot be amended');
+select is(tests.sqlstate_of($$select * from public.amend_eligibility(tests.al('am5'), now(), now())$$), '22023', '... invalid times: 22023');
+select tests.act_as('sup2');
+select is(tests.sqlstate_of($$select * from public.amend_eligibility(tests.al('am5'), now() + interval '3 days 2 hours', now() + interval '3 days 5 hours')$$), '42501', '... other branch refused');
+select tests.act_as('fab');
+select is(tests.sqlstate_of($$select * from public.amend_eligibility(tests.al('am5'), now() + interval '3 days 2 hours', now() + interval '3 days 5 hours')$$), 'P0002', '... other company not found');
+select tests.reset();
 
 -- ================================================================ 8. my_allocations
 select tests.act_as('u-ok');

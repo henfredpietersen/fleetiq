@@ -68,3 +68,49 @@ export const boardFilterSchema = z.object({
   branchId: z.preprocess(blank, uuidField.optional()),
   date: z.preprocess(blank, z.iso.date().optional()),
 });
+
+const requiredReason = z
+  .string("A reason is required")
+  .trim()
+  .min(1, "A reason is required")
+  .max(500, "The reason must be at most 500 characters");
+
+/** Start (own driver: no reason; on behalf: reason required, enforced by the database), cancel and no-show. */
+export const transitionSchema = z.object({
+  allocationId: uuidField,
+  toStatus: z.enum(["pre_inspection_pending", "cancelled", "no_show"]),
+  reason: z.preprocess(blank, requiredReason.optional()),
+  clientSubmissionId: uuidField,
+});
+export const cancelSchema = transitionSchema.extend({
+  toStatus: z.literal("cancelled"),
+  reason: requiredReason,
+});
+export const noShowSchema = transitionSchema.extend({
+  toStatus: z.literal("no_show"),
+  reason: requiredReason,
+});
+
+export const amendSchema = z
+  .object({
+    allocationId: uuidField,
+    plannedStartAt: z.iso.datetime({ offset: true }),
+    plannedEndAt: z.iso.datetime({ offset: true }),
+    reason: requiredReason,
+    clientSubmissionId: uuidField,
+  })
+  .refine((v) => new Date(v.plannedEndAt) > new Date(v.plannedStartAt), {
+    message: "The end must be after the start",
+    path: ["plannedEndAt"],
+  });
+
+export const myAllocationsSchema = z.object({
+  from: z.iso.datetime({ offset: true }),
+  to: z.iso.datetime({ offset: true }),
+});
+
+export const amendCheckSchema = z.object({
+  allocationId: uuidField,
+  plannedStartAt: z.iso.datetime({ offset: true }),
+  plannedEndAt: z.iso.datetime({ offset: true }),
+});

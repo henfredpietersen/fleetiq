@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatClock, formatShiftWindow } from "./format";
+import {
+  formatClock,
+  formatShiftWindow,
+  fromLocalInput,
+  toLocalInput,
+} from "./format";
 import { shiftTimes } from "./shift-times";
 
 describe("shift formatting", () => {
@@ -21,5 +26,20 @@ describe("shift formatting", () => {
     expect(formatShiftWindow(u.scheduledStartAt, u.scheduledEndAt)).toBe(
       "22:00–00:30 (+1 day)",
     );
+  });
+});
+
+describe("local datetime inputs (Africa/Johannesburg)", () => {
+  it("round-trips", () => {
+    expect(toLocalInput("2026-11-18T04:00:00Z")).toBe("2026-11-18T06:00");
+    expect(fromLocalInput("2026-11-18T06:00")).toBe(
+      "2026-11-18T06:00:00+02:00",
+    );
+    expect(new Date(fromLocalInput("2026-11-18T06:00")!).toISOString()).toBe(
+      "2026-11-18T04:00:00.000Z",
+    );
+  });
+  it("rejects malformed input", () => {
+    expect(fromLocalInput("18/11/2026")).toBeNull();
   });
 });

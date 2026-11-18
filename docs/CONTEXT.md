@@ -20,6 +20,8 @@ Next.js App Router · React · TypeScript strict · Tailwind · shadcn/ui · Sup
 - DEC-19: service config precedence vehicle → make/model → category → company default (effective-dated, audited).
 - DEC-20: go-live baselines need an invoice/job card/service-book photo, verified by the maintenance admin (verifier ≠ creator); none = baseline_required.
 - DEC-31: branch transfers approved by a fleet admin; branch history kept.
+- DEC-39 (Approved 2026-11-18): 3B allocation creation rules stand (planned times inside the shift window; vehicle, driver, shift in one branch; only available vehicles; no branch transfer / driver deactivation with live allocations).
+- DEC-40 (Approved 2026-11-18): an allocation is started (planned → pre_inspection_pending) by its own driver, or by an `allocation.manage` holder for the branch on the driver's behalf with a reason; on-behalf starts are permanently flagged ("Started by supervisor"). Start window planned start − 60 min to planned end; licence re-checked at start; no-show from planned start + 30 min; 60/30 are configurable defaults (`allocation_settings()`).
 - AD-01: background jobs = Postgres `background_jobs` table + scheduled worker (pg_cron trigger + Node worker on the server).
 - AD-05: `user_roles` (branch_id nullable = company-wide) is the only branch-scope source.
 - DEC-12/14/16/17/18 (configurable defaults in `odometer_validation_settings`): whole km; OCR–driver tolerance 0 km; unaccounted tolerance 5 km; late pre-shift +30 min, post-shift +60 min; stale after 7 days. DEC-13 (OCR confidence) and DEC-15 (max km/allocation) have no default: while unset, no auto-acceptance and the implausible check reports `not_configured`.
@@ -54,7 +56,7 @@ None for building Phases 1–2 locally with synthetic data (approved exception).
 Default 15,000 km interval, ±1,500 km tolerance. next = last VERIFIED service odometer + interval (never rounded). Bands: <13,500 normal · 13,500–14,999 approaching · 15,000–16,500 due · >16,500 overdue · no verified record = baseline_required. Optional time basis; effective status = more severe of km and time. Only a verified service record (verifier ≠ creator) sets the baseline; never invent one. Config precedence (DEC-19, approved): vehicle → make/model → category → company default.
 
 ## Allocation lifecycle (PRD §5.5)
-planned → pre_inspection_pending → in_use → post_inspection_pending → closed | closed_with_exceptions; plus cancelled, no_show. No overlapping active allocations per vehicle (DB exclusion constraint). One non-void inspection per allocation + stage.
+planned → pre_inspection_pending → in_use → post_inspection_pending → closed | closed_with_exceptions; plus cancelled, no_show. Transitions (enforced in the DB by `allocation_transition_allowed()` + `transition_allocation()`): planned→pre_inspection_pending|cancelled; pre_inspection_pending→in_use|no_show|cancelled; in_use→post_inspection_pending; post_inspection_pending→closed|closed_with_exceptions; closed_with_exceptions→closed; closed/cancelled/no_show terminal. in_use/post/closed are stubs (0A000) until Phases 4/5. No overlapping active allocations per vehicle (DB exclusion constraint). One non-void inspection per allocation + stage.
 
 ## Privacy (POPIA)
 Minimise personal data; restricted licence data; private evidence with short-lived signed URLs, every access logged; no invented retention periods (DEC-27).

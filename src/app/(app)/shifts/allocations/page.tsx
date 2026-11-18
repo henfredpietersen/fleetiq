@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,14 @@ import {
   getBoard,
 } from "@/modules/shifts-allocations/server/allocation-queries";
 import { getShiftAccess } from "@/modules/shifts-allocations/server/queries";
+import {
+  noShowAllowed,
+  noShowFrom,
+  startOpensAt,
+  startWindowOpen,
+} from "@/modules/shifts-allocations/domain/allocation-settings";
 import { AllocateDialog } from "@/modules/shifts-allocations/ui/allocate-dialog";
+import { AllocationRowActions } from "@/modules/shifts-allocations/ui/allocation-row-actions";
 import { ShiftNav } from "@/modules/shifts-allocations/ui/shift-nav";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -48,6 +56,8 @@ const first = (v: string | string[] | undefined) =>
 
 async function Content({ searchParams }: { searchParams: SearchParams }) {
   await requireSession("full");
+  await connection(); // the start window and no-show grace depend on the current time
+  const now = new Date();
   const sp = await searchParams;
   const db = await createSupabaseServerClient();
   const access = await getShiftAccess(db);
@@ -175,6 +185,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                         <TableHead>Planned</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Licence</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -195,6 +206,32 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                             </TableCell>
                             <TableCell>
                               <Badge variant={lic.variant}>{lic.label}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <AllocationRowActions
+                                id={a.id}
+                                label={`${a.vehicleLabel}, ${a.driverLabel}`}
+                                status={a.status}
+                                plannedStartAt={a.plannedStartAt}
+                                plannedEndAt={a.plannedEndAt}
+                                openedOnBehalf={a.openedOnBehalf}
+                                canManage={branch.canManage}
+                                startWindowOpen={startWindowOpen(
+                                  new Date(a.plannedStartAt),
+                                  new Date(a.plannedEndAt),
+                                  now,
+                                )}
+                                startOpensAtLabel={`${formatShiftDate(localDate(startOpensAt(new Date(a.plannedStartAt))))} ${formatLocalClock(startOpensAt(new Date(a.plannedStartAt)).toISOString())}`}
+                                noShowOk={noShowAllowed(
+                                  new Date(a.plannedStartAt),
+                                  now,
+                                )}
+                                noShowFromLabel={formatLocalClock(
+                                  noShowFrom(
+                                    new Date(a.plannedStartAt),
+                                  ).toISOString(),
+                                )}
+                              />
                             </TableCell>
                           </TableRow>
                         );
