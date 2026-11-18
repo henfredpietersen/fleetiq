@@ -2347,7 +2347,6 @@ export type Database = {
         };
         Returns: string;
       };
-      has_branch_access: { Args: { p_branch_id: string }; Returns: boolean };
       generate_shifts: {
         Args: {
           p_client_submission_id: string;
@@ -2355,8 +2354,12 @@ export type Database = {
           p_template_id: string;
           p_to: string;
         };
-        Returns: { created: number; skipped: number }[];
+        Returns: {
+          created: number;
+          skipped: number;
+        }[];
       };
+      has_branch_access: { Args: { p_branch_id: string }; Returns: boolean };
       has_permission: {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
@@ -2645,7 +2648,10 @@ export type Database = {
       };
       shift_times: {
         Args: { p_date: string; p_end: string; p_start: string };
-        Returns: { scheduled_end_at: string; scheduled_start_at: string }[];
+        Returns: {
+          scheduled_end_at: string;
+          scheduled_start_at: string;
+        }[];
       };
       stage_service_import: {
         Args: {
