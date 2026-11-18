@@ -145,3 +145,25 @@ update public.service_records
    set verification_status = 'verified', verified_by = '5eed0000-0000-4000-8000-0000000000a2', verified_at = now()
  where id in (select ('5eed0000-0000-4000-8000-0000000006' || lpad(n::text, 2, '0'))::uuid from generate_series(1, 4) n)
    and verification_status = 'recorded';
+
+-- ---------------------------------------------------------------- Slice 3A: shift templates and shifts (SYNTHETIC)
+-- For each synthetic branch a "Day" 06:00-18:00 and a "Night" 18:00-06:00 template, and one generated week of shifts
+-- (today + 6 days, Africa/Johannesburg). Times come from the same shift_times() the application uses.
+insert into public.shift_templates (id, company_id, branch_id, name, start_time, end_time, crosses_midnight, created_by)
+select ('5eed0000-0000-4000-8000-0000000008' || lpad((b.n * 10 + t.n)::text, 2, '0'))::uuid,
+       '5eed0000-0000-4000-8000-000000000001', b.id, t.name, t.start_time, t.end_time, t.end_time < t.start_time,
+       '5eed0000-0000-4000-8000-0000000000a1'
+from (values (1, '5eed0000-0000-4000-8000-0000000000b1'::uuid), (2, '5eed0000-0000-4000-8000-0000000000b2'::uuid)) as b(n, id)
+cross join (values (1, 'Day', time '06:00', time '18:00'), (2, 'Night', time '18:00', time '06:00')) as t(n, name, start_time, end_time)
+on conflict (id) do nothing;
+
+insert into public.shifts (company_id, branch_id, shift_template_id, shift_date, scheduled_start_at, scheduled_end_at,
+                           client_submission_id, created_by)
+select st.company_id, st.branch_id, st.id, d::date, tm.scheduled_start_at, tm.scheduled_end_at,
+       gen_random_uuid(), '5eed0000-0000-4000-8000-0000000000a1'
+from public.shift_templates st
+cross join generate_series((now() at time zone 'Africa/Johannesburg')::date::timestamp,
+                           (now() at time zone 'Africa/Johannesburg')::date::timestamp + interval '6 days', interval '1 day') d
+cross join lateral public.shift_times(d::date, st.start_time, st.end_time) tm
+where st.company_id = '5eed0000-0000-4000-8000-000000000001'
+on conflict do nothing;
