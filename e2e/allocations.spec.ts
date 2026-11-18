@@ -115,6 +115,7 @@ test("a supervisor allocates a vehicle and a driver to a shift, with the licence
   await page.getByLabel("Password").fill(sup.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/mfa$/);
+  await page.getByRole("button", { name: "Set up authenticator" }).click();
   const secret = (await page.locator("code").first().innerText()).trim();
   await page.getByLabel("6-digit code").fill(totp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
