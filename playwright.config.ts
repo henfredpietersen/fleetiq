@@ -11,7 +11,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["line"]] : [["list"]],
-  use: { baseURL: `http://localhost:${PORT}`, trace: "off" },
+  use: {
+    baseURL: `http://localhost:${PORT}`,
+    trace: "off",
+    screenshot: "only-on-failure",
+  },
   projects: [
     // Mobile-first: driver portal targets mid-range phones.
     // The in-app camera (4B) needs frames: Chromium's fake capture device produces a test pattern and the fake UI flag
@@ -33,7 +37,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run build && npx next start -p ${PORT}`,
+    // Server output (build + next start) goes to .check/webserver.log, not into the test log: a failing assertion must never
+    // be buried under server warnings. CI uploads the file with the Playwright report when the e2e step fails.
+    command: `mkdir -p .check && (npm run build && npx next start -p ${PORT}) > .check/webserver.log 2>&1`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     env: {

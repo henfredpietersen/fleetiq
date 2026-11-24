@@ -44,7 +44,7 @@ run_step() {
 }
 
 if [ "${1:-}" = "e2e" ]; then
-  run_step e2e npx playwright test --reporter=line --trace off
+  PLAYWRIGHT_HTML_OPEN=never run_step e2e npx playwright test --reporter=line,html --trace off
 else
   run_step typecheck npx tsc --noEmit --pretty false
   run_step lint npx eslint --quiet .
