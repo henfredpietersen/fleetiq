@@ -210,3 +210,31 @@ select company_id, id, 'created',
                           'planned_start_at', planned_start_at, 'planned_end_at', planned_end_at, 'licence_class_check', licence_class_check),
        '5eed0000-0000-4000-8000-0000000000a1'
   from ins;
+
+-- ---------------------------------------------------------------- Slice 4A: starter checklist and one draft pre-shift inspection (SYNTHETIC)
+-- The starter checklist v1 (DEC-21) for the synthetic company (the migration seeded the companies that existed when it ran).
+-- Seeded allocation 1 (FL-001 + T0001, branch one, Day today) is shown as already started by its driver, so the driver's
+-- "Pre-shift inspection" opens at once, with one DRAFT pre-shift inspection begun by T0001 (no answers, no photos: the camera
+-- arrives in 4B and nothing is faked). The status change uses the same transaction-local flag as transition_allocation() (hence the DO block: one transaction).
+select public.seed_starter_inspection_template('5eed0000-0000-4000-8000-000000000001');
+
+do $$
+begin
+  perform set_config('app.allocation_transition', 'on', true);
+  update public.vehicle_allocations
+     set status = 'pre_inspection_pending', opened_at = now(), opened_by = (select profile_id from public.drivers where id = vehicle_allocations.driver_id)
+   where id = '5eed0000-0000-4000-8000-000000000901' and status = 'planned';
+  perform set_config('app.allocation_transition', 'off', true);
+end $$;
+
+insert into public.inspections (id, company_id, branch_id, vehicle_id, driver_id, shift_id, allocation_id, template_id, inspection_stage,
+                                submitted_by, client_submission_id)
+select '5eed0000-0000-4000-8000-000000000a01', a.company_id, a.branch_id, a.vehicle_id, a.driver_id, a.shift_id, a.id,
+       public.inspection_template_for(a.vehicle_id), 'pre_shift', d.profile_id, gen_random_uuid()
+  from public.vehicle_allocations a
+  join public.drivers d on d.id = a.driver_id
+ where a.id = '5eed0000-0000-4000-8000-000000000901' and a.status = 'pre_inspection_pending'
+on conflict (id) do nothing;
+update public.inspection_templates set first_used_at = now()
+ where company_id = '5eed0000-0000-4000-8000-000000000001' and first_used_at is null
+   and exists (select 1 from public.inspections i where i.template_id = inspection_templates.id);
