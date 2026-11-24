@@ -3804,6 +3804,10 @@ export type Database = {
         Args: { p_bucket: string; p_path: string };
         Returns: boolean;
       };
+      evidence_upload_allowed: {
+        Args: { p_branch_id: string; p_purpose: string };
+        Returns: boolean;
+      };
       evidence_upload_permission: {
         Args: { p_purpose: string };
         Returns: string;

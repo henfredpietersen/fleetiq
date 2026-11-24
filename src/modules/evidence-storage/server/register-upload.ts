@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import type { EvidenceConfig } from "../domain/evidence-config";
 import { readDimensions, sha256Hex, sniffMime } from "../domain/image";
-import { UPLOAD_PERMISSION, isEvidencePurpose } from "../domain/purposes";
+import { isEvidencePurpose } from "../domain/purposes";
 import { fail, type EvidenceResult } from "../domain/result";
 import { MetadataError, stripMetadata } from "../domain/strip-metadata";
 import { isUuid } from "../domain/validate";
@@ -75,10 +75,14 @@ export async function registerUpload(
   if (!isEvidencePurpose(slot.purpose)) {
     return fail("INVALID_INPUT", "Unknown evidence purpose.");
   }
-  const { data: allowed, error: permErr } = await db.rpc("has_permission", {
-    permission_key: UPLOAD_PERMISSION[slot.purpose],
-    target_branch_id: slot.branch_id as string,
-  });
+  // the ONE upload rule, in the database (evidence_upload_allowed): the purpose's permission, plus allocation.manage for damage photos
+  const { data: allowed, error: permErr } = await db.rpc(
+    "evidence_upload_allowed",
+    {
+      p_purpose: slot.purpose,
+      p_branch_id: slot.branch_id as string,
+    },
+  );
   if (permErr) return mapDbError(permErr);
   if (!allowed) return fail("FORBIDDEN", "You are not allowed to do this.");
 
