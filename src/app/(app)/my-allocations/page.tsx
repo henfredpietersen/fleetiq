@@ -70,7 +70,12 @@ async function Content() {
           </h2>
           <ul className="flex flex-col gap-3">
             {list.map((a) => (
-              <MyAllocationCard key={a.id} a={a} />
+              // keyed on what the server says: the card keeps local state after its own Start, and the app may keep a
+              // previous visit's component state alive, so a status change from the server must start the card afresh
+              <MyAllocationCard
+                key={`${a.id}:${a.status}:${a.postShiftSubmitted}:${a.canOpen}`}
+                a={a}
+              />
             ))}
           </ul>
         </section>

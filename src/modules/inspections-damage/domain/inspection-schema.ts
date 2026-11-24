@@ -68,3 +68,37 @@ export const listInspectionsSchema = z.object({
   branchId: z.preprocess(blank, uuidField.optional()),
   limit: z.number().int().min(1).max(500).optional(),
 });
+
+export const PHOTO_KINDS = ["odometer", "defect"] as const;
+
+/** Where a photo is requested from: the in-app camera only (the server forces the capture source). */
+export const photoSlotSchema = z.object({
+  inspectionId: uuidField,
+  kind: z.enum(PHOTO_KINDS),
+  sizeBytes: z.number().int().min(1),
+  deviceCaptureAt: optionalIso,
+  location: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      accuracyM: z.number().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  ...deviceFields,
+  deviceKey: z.string().max(64).nullable().optional(),
+  clientSubmissionId: uuidField,
+});
+
+export const attachOdometerSchema = z.object({
+  inspectionId: uuidField,
+  evidenceFileId: uuidField,
+  clientSubmissionId: uuidField,
+});
+
+export const attachDefectSchema = z.object({
+  inspectionId: uuidField,
+  evidenceFileId: uuidField,
+  templateItemId: uuidField,
+  clientSubmissionId: uuidField,
+});

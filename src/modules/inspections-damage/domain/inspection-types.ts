@@ -70,4 +70,6 @@ export type InspectionListRow = {
   capturedOffline: boolean;
   completedByRole: string;
   allocationStatus: string;
+  /** DEC-35: issued_device | other_device | unknown_device | no_issued_device; null while a draft. */
+  deviceFlag: string | null;
 };

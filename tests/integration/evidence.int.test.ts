@@ -175,7 +175,10 @@ describe("upload -> verify -> register", () => {
 
     const { data: row } = await sa
       .from("evidence_files")
-      .select("*")
+      // explicit columns: the capture-location columns are not readable through the table, by design (DEC-29)
+      .select(
+        "company_id, branch_id, bucket, object_path, mime_type, capture_source, purpose, uploaded_by, exif_gps_stripped, width, height, legal_hold, sha256, size_bytes, device_capture_at, server_received_at, captured_offline, device_id",
+      )
       .eq("id", reg.evidence.evidenceFileId)
       .single();
     const stored = await storedBytes(row!.object_path);
@@ -231,7 +234,7 @@ describe("upload -> verify -> register", () => {
     expect(r2.evidence.alreadyRegistered).toBe(true);
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", a.slot!.objectPath);
     expect(count).toBe(1);
 
@@ -266,7 +269,7 @@ describe("upload -> verify -> register", () => {
     for (const s of [up.slot!, wrongKind.slot!]) {
       const { count } = await sa
         .from("evidence_files")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("object_path", s.objectPath);
       expect(count).toBe(0);
     }
@@ -319,7 +322,7 @@ describe("upload -> verify -> register", () => {
     });
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", liar.slot!.objectPath);
     expect(count).toBe(0);
   });
@@ -732,7 +735,7 @@ describe("cleanup of unregistered uploads (background job, AD-01)", () => {
     expect(orphanSlot!.object_removed_at).not.toBeNull();
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", kept.slot!.objectPath);
     expect(count).toBe(1);
     const { data: job } = await sa

@@ -81,6 +81,18 @@ async function Content() {
           My allocations
         </Link>
       ) : null}
+      {ctx.profile.userType === "driver" ? (
+        <Link
+          href="/this-phone"
+          className={buttonVariants({
+            variant: "outline",
+            size: "lg",
+            className: "min-h-14 w-full",
+          })}
+        >
+          This phone
+        </Link>
+      ) : null}
       <form action={signOutAction}>
         <Button type="submit" variant="outline" size="lg" className="w-full">
           Sign out

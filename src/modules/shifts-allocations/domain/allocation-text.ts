@@ -90,4 +90,7 @@ const DRIVER_STATUS_LABEL: Record<string, string> = {
 };
 export const driverStatusLabel = (s: string) => DRIVER_STATUS_LABEL[s] ?? s;
 
+/** Shown on the driver's card once the post-shift inspection is in: closure is Phase 5. */
+export const AWAITING_CLOSURE = "Awaiting post-shift closure";
+
 export const STARTED_BY_SUPERVISOR = "Started by supervisor";

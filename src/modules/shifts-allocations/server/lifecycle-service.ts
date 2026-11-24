@@ -124,6 +124,7 @@ export async function listMyAllocations(
       branchName: r.branch_name,
       licenceClassCheck: r.licence_class_check,
       canOpen: r.can_open,
+      postShiftSubmitted: r.post_shift_submitted,
       openedOnBehalf: r.opened_on_behalf,
     })),
   };

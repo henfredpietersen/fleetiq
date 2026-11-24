@@ -59,6 +59,49 @@ describe("requestUploadSlot", () => {
     });
   });
 
+  it("passes the capture context (location, captured_offline, device key) to the database", async () => {
+    const KEY = "77777777-7777-4777-8777-777777777777";
+    const { f } = await run(
+      input({
+        location: {
+          latitude: -26.204103,
+          longitude: 28.047305,
+          accuracyM: 12.46,
+        },
+        capturedOffline: true,
+        deviceKey: KEY,
+      }),
+    );
+    expect(
+      called(f.calls, "rpc:request_evidence_upload_slot")[0]!.args[0],
+    ).toMatchObject({
+      p_capture_latitude: -26.204103,
+      p_capture_longitude: 28.047305,
+      p_capture_location_accuracy_m: 12.5,
+      p_captured_offline: true,
+      p_device_key: KEY,
+    });
+  });
+
+  it("a refused or broken location never blocks the request: the columns stay unset", async () => {
+    for (const location of [
+      null,
+      undefined,
+      { latitude: 200, longitude: 28 },
+      { latitude: "x", longitude: 1 },
+      { latitude: NaN, longitude: 1 },
+    ]) {
+      const { r, f } = await run(input({ location, deviceKey: "not-a-uuid" }));
+      expect(r.ok).toBe(true);
+      const args = called(f.calls, "rpc:request_evidence_upload_slot")[0]!
+        .args[0] as Record<string, unknown>;
+      expect(args.p_capture_latitude).toBeUndefined();
+      expect(args.p_capture_longitude).toBeUndefined();
+      expect(args.p_device_key).toBeUndefined();
+      expect(args.p_captured_offline).toBe(false);
+    }
+  });
+
   it("validates before asking the database: wrong MIME, oversize, bad ids, unknown purpose, forged source", async () => {
     const bad: [Record<string, unknown>, string][] = [
       [{ mimeType: "application/pdf" }, "MIME_NOT_ALLOWED"],

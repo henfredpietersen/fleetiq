@@ -79,3 +79,22 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_URL="$API_URL" NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY" SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           export CI=true E2E_AUTH=1
           npm run check:e2e
+      - name: Print the Playwright error contexts and the server log tail (failures only)
+        if: failure()
+        run: |
+          for f in $(find test-results -name error-context.md 2>/dev/null | sort); do
+            echo "::group::$f"; cat "$f"; echo "::endgroup::"
+          done
+          echo "::group::.check/webserver.log (last 120 lines)"; tail -n 120 .check/webserver.log 2>/dev/null || true; echo "::endgroup::"
+      - name: Upload the Playwright report, test results and server log (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure
+          path: |
+            playwright-report/
+            test-results/
+            .check/webserver.log
+            .check/e2e.log
+          retention-days: 7
+          if-no-files-found: ignore

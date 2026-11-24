@@ -376,6 +376,46 @@ export type Database = {
           },
         ];
       };
+      camera_notice_acknowledgements: {
+        Row: {
+          acknowledged_at: string;
+          company_id: string;
+          id: string;
+          notice_version: string;
+          profile_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string;
+          company_id: string;
+          id?: string;
+          notice_version: string;
+          profile_id: string;
+        };
+        Update: {
+          acknowledged_at?: string;
+          company_id?: string;
+          id?: string;
+          notice_version?: string;
+          profile_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "camera_notice_acknowledgements_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "camera_notice_acknowledgements_profile_id_company_id_fkey";
+            columns: ["profile_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       companies: {
         Row: {
           created_at: string;
@@ -406,6 +446,84 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      company_devices: {
+        Row: {
+          asset_tag: string | null;
+          assigned_driver_id: string | null;
+          assigned_from: string | null;
+          assigned_to: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          device_key: string;
+          id: string;
+          label: string | null;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          asset_tag?: string | null;
+          assigned_driver_id?: string | null;
+          assigned_from?: string | null;
+          assigned_to?: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          device_key: string;
+          id?: string;
+          label?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          asset_tag?: string | null;
+          assigned_driver_id?: string | null;
+          assigned_from?: string | null;
+          assigned_to?: string | null;
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          device_key?: string;
+          id?: string;
+          label?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "company_devices_assigned_driver_id_company_id_fkey";
+            columns: ["assigned_driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "company_devices_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "company_devices_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "company_devices_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
       };
       departments: {
         Row: {
@@ -666,10 +784,15 @@ export type Database = {
         Row: {
           branch_id: string | null;
           bucket: string;
+          capture_latitude: number | null;
+          capture_location_accuracy_m: number | null;
+          capture_longitude: number | null;
           capture_source: string;
+          captured_offline: boolean;
           company_id: string;
           created_at: string;
           device_capture_at: string | null;
+          device_id: string | null;
           exif_gps_stripped: boolean;
           height: number | null;
           id: string;
@@ -689,10 +812,15 @@ export type Database = {
         Insert: {
           branch_id?: string | null;
           bucket: string;
+          capture_latitude?: number | null;
+          capture_location_accuracy_m?: number | null;
+          capture_longitude?: number | null;
           capture_source: string;
+          captured_offline?: boolean;
           company_id: string;
           created_at?: string;
           device_capture_at?: string | null;
+          device_id?: string | null;
           exif_gps_stripped: boolean;
           height?: number | null;
           id?: string;
@@ -711,10 +839,15 @@ export type Database = {
         Update: {
           branch_id?: string | null;
           bucket?: string;
+          capture_latitude?: number | null;
+          capture_location_accuracy_m?: number | null;
+          capture_longitude?: number | null;
           capture_source?: string;
+          captured_offline?: boolean;
           company_id?: string;
           created_at?: string;
           device_capture_at?: string | null;
+          device_id?: string | null;
           exif_gps_stripped?: boolean;
           height?: number | null;
           id?: string;
@@ -746,6 +879,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "evidence_files_device_fk";
+            columns: ["device_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "company_devices";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
             foreignKeyName: "evidence_files_uploaded_by_company_id_fkey";
             columns: ["uploaded_by", "company_id"];
             isOneToOne: false;
@@ -758,13 +898,18 @@ export type Database = {
         Row: {
           branch_id: string | null;
           bucket: string;
+          capture_latitude: number | null;
+          capture_location_accuracy_m: number | null;
+          capture_longitude: number | null;
           capture_source: string;
+          captured_offline: boolean;
           client_submission_id: string;
           company_id: string;
           created_at: string;
           declared_mime_type: string;
           declared_size_bytes: number;
           device_capture_at: string | null;
+          device_id: string | null;
           evidence_file_id: string | null;
           expires_at: string;
           id: string;
@@ -779,13 +924,18 @@ export type Database = {
         Insert: {
           branch_id?: string | null;
           bucket?: string;
+          capture_latitude?: number | null;
+          capture_location_accuracy_m?: number | null;
+          capture_longitude?: number | null;
           capture_source: string;
+          captured_offline?: boolean;
           client_submission_id: string;
           company_id: string;
           created_at?: string;
           declared_mime_type: string;
           declared_size_bytes: number;
           device_capture_at?: string | null;
+          device_id?: string | null;
           evidence_file_id?: string | null;
           expires_at: string;
           id?: string;
@@ -799,13 +949,18 @@ export type Database = {
         Update: {
           branch_id?: string | null;
           bucket?: string;
+          capture_latitude?: number | null;
+          capture_location_accuracy_m?: number | null;
+          capture_longitude?: number | null;
           capture_source?: string;
+          captured_offline?: boolean;
           client_submission_id?: string;
           company_id?: string;
           created_at?: string;
           declared_mime_type?: string;
           declared_size_bytes?: number;
           device_capture_at?: string | null;
+          device_id?: string | null;
           evidence_file_id?: string | null;
           expires_at?: string;
           id?: string;
@@ -817,6 +972,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "evidence_slots_device_fk";
+            columns: ["device_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "company_devices";
+            referencedColumns: ["id", "company_id"];
+          },
           {
             foreignKeyName: "evidence_slots_file_fk";
             columns: ["evidence_file_id"];
@@ -1154,6 +1316,8 @@ export type Database = {
           company_id: string;
           completed_by_role: string;
           created_at: string;
+          device_flag: string | null;
+          device_id: string | null;
           device_started_at: string | null;
           device_submitted_at: string | null;
           driver_id: string;
@@ -1184,6 +1348,8 @@ export type Database = {
           company_id: string;
           completed_by_role?: string;
           created_at?: string;
+          device_flag?: string | null;
+          device_id?: string | null;
           device_started_at?: string | null;
           device_submitted_at?: string | null;
           driver_id: string;
@@ -1213,6 +1379,8 @@ export type Database = {
           company_id?: string;
           completed_by_role?: string;
           created_at?: string;
+          device_flag?: string | null;
+          device_id?: string | null;
           device_started_at?: string | null;
           device_submitted_at?: string | null;
           driver_id?: string;
@@ -1267,6 +1435,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "companies";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspections_device_fk";
+            columns: ["device_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "company_devices";
+            referencedColumns: ["id", "company_id"];
           },
           {
             foreignKeyName: "inspections_submitted_by_company_id_fkey";
@@ -2704,6 +2879,10 @@ export type Database = {
     };
     Functions: {
       access_cleared: { Args: { p_user: string }; Returns: boolean };
+      acknowledge_camera_notice: {
+        Args: { p_notice_version: string };
+        Returns: undefined;
+      };
       admin_create_driver: {
         Args: {
           p_actor: string;
@@ -2890,6 +3069,10 @@ export type Database = {
         Args: { p_reason: string; p_template_id: string };
         Returns: undefined;
       };
+      assign_company_device: {
+        Args: { p_device_id: string; p_driver_id: string; p_reason: string };
+        Returns: undefined;
+      };
       attach_import_row_evidence: {
         Args: {
           p_client_submission_id: string;
@@ -2973,6 +3156,10 @@ export type Database = {
           p_stage: string;
         };
         Returns: string;
+      };
+      camera_notice_acknowledged: {
+        Args: { p_notice_version: string };
+        Returns: boolean;
       };
       can_view_evidence: {
         Args: {
@@ -3269,6 +3456,14 @@ export type Database = {
         };
         Returns: string;
       };
+      evidence_capture_location: {
+        Args: { p_evidence_file_id: string };
+        Returns: {
+          accuracy_m: number;
+          latitude: number;
+          longitude: number;
+        }[];
+      };
       evidence_object_readable: {
         Args: { p_bucket: string; p_path: string };
         Returns: boolean;
@@ -3319,6 +3514,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      inspection_device_flag: {
+        Args: {
+          p_company_id: string;
+          p_device_id: string;
+          p_driver_id: string;
+        };
+        Returns: string;
+      };
       inspection_fail: {
         Args: { p_detail?: string; p_message: string; p_sqlstate: string };
         Returns: undefined;
@@ -3344,6 +3547,8 @@ export type Database = {
           company_id: string;
           completed_by_role: string;
           created_at: string;
+          device_flag: string | null;
+          device_id: string | null;
           device_started_at: string | null;
           device_submitted_at: string | null;
           driver_id: string;
@@ -3423,6 +3628,23 @@ export type Database = {
         Args: { p_file_id: string };
         Returns: boolean;
       };
+      list_company_devices: {
+        Args: { p_branch_id?: string };
+        Returns: {
+          asset_tag: string;
+          assigned_driver_id: string;
+          assigned_from: string;
+          assigned_to: string;
+          branch_id: string;
+          branch_name: string;
+          driver_employee_number: string;
+          driver_name: string;
+          id: string;
+          label: string;
+          short_code: string;
+          status: string;
+        }[];
+      };
       list_inspections: {
         Args: {
           p_branch_id?: string;
@@ -3437,6 +3659,7 @@ export type Database = {
           branch_name: string;
           captured_offline: boolean;
           completed_by_role: string;
+          device_flag: string;
           inspection_id: string;
           inspection_stage: string;
           late_flag: boolean;
@@ -3463,6 +3686,7 @@ export type Database = {
           opened_on_behalf: boolean;
           planned_end_at: string;
           planned_start_at: string;
+          post_shift_submitted: boolean;
           shift_date: string;
           shift_end_at: string;
           shift_start_at: string;
@@ -3488,6 +3712,15 @@ export type Database = {
           p_licence_number: string;
           p_prdp_expiry_date: string;
           p_prdp_required: boolean;
+        };
+        Returns: string;
+      };
+      register_company_device: {
+        Args: {
+          p_asset_tag: string;
+          p_branch_id: string;
+          p_device_key: string;
+          p_label: string;
         };
         Returns: string;
       };
@@ -3530,9 +3763,14 @@ export type Database = {
       request_evidence_upload_slot: {
         Args: {
           p_branch_id: string;
+          p_capture_latitude?: number;
+          p_capture_location_accuracy_m?: number;
+          p_capture_longitude?: number;
           p_capture_source: string;
+          p_captured_offline?: boolean;
           p_client_submission_id: string;
           p_device_capture_at?: string;
+          p_device_key?: string;
           p_mime_type: string;
           p_purpose: string;
           p_size_bytes: number;
@@ -3541,13 +3779,18 @@ export type Database = {
         Returns: {
           branch_id: string | null;
           bucket: string;
+          capture_latitude: number | null;
+          capture_location_accuracy_m: number | null;
+          capture_longitude: number | null;
           capture_source: string;
+          captured_offline: boolean;
           client_submission_id: string;
           company_id: string;
           created_at: string;
           declared_mime_type: string;
           declared_size_bytes: number;
           device_capture_at: string | null;
+          device_id: string | null;
           evidence_file_id: string | null;
           expires_at: string;
           id: string;
@@ -3756,6 +3999,10 @@ export type Database = {
         };
         Returns: string;
       };
+      set_company_device_status: {
+        Args: { p_device_id: string; p_reason: string; p_status: string };
+        Returns: undefined;
+      };
       set_driver_status: {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
         Returns: undefined;
@@ -3819,6 +4066,10 @@ export type Database = {
           out_replayed: boolean;
           out_status: string;
         }[];
+      };
+      unassign_company_device: {
+        Args: { p_device_id: string; p_reason: string };
+        Returns: undefined;
       };
       update_driver_details: {
         Args: { p_display_name: string; p_driver_id: string; p_phone?: string };

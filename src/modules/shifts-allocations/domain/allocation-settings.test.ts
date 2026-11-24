@@ -53,7 +53,7 @@ describe("allocation settings (DEC-40 defaults)", () => {
   });
 });
 
-describe("inspection late rule (DEC-17)", () => {
+describe("inspection late rule (DEC-17, amended 2026-11-24: from the allocation)", () => {
   const shiftStart = t0;
   const plannedEnd = at(480);
   it("pre-shift: not late at 29 and 30 minutes, late at 31 (strictly more than 30)", () => {
@@ -80,6 +80,20 @@ describe("inspection late rule (DEC-17)", () => {
     expect(
       inspectionIsLate("post_shift", at(480 + 61), shiftStart, plannedEnd),
     ).toBe(true);
+  });
+  it("pre-shift is measured from the allocation's planned start, not the shift start", () => {
+    // allocation 10:00-14:00 inside a 06:00-18:00 shift: 10:20 is not late, 10:30 is not late, 10:31 is late
+    const plannedStart = at(240); // t0 = shift start 06:00 -> 10:00
+    const end = at(480);
+    expect(inspectionIsLate("pre_shift", at(260), plannedStart, end)).toBe(
+      false,
+    );
+    expect(inspectionIsLate("pre_shift", at(270), plannedStart, end)).toBe(
+      false,
+    );
+    expect(inspectionIsLate("pre_shift", at(271), plannedStart, end)).toBe(
+      true,
+    );
   });
   it("the windows are settings, not constants", () => {
     const s = {

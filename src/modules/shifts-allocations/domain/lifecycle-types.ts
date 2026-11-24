@@ -15,6 +15,8 @@ export type MyAllocation = {
   licenceClassCheck: string;
   canOpen: boolean;
   openedOnBehalf: boolean;
+  /** The post-shift inspection has been submitted: the allocation waits for closure (Phase 5). */
+  postShiftSubmitted: boolean;
 };
 
 export type HistoryEvent = {
