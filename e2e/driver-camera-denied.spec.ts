@@ -57,10 +57,12 @@ test("camera permission denied: the camera-needed message, call the supervisor, 
     .getByRole("button", { name: "Close" })
     .click();
   // and no photo exists
-  const { count: files } = await s.sa
+  // (a refused query must never look like "0 rows": the error is asserted first)
+  const { count: files, error: filesError } = await s.sa
     .from("evidence_files")
     .select("id", { count: "exact", head: true })
     .eq("uploaded_by", s.driverProfileId);
+  expect(filesError).toBeNull();
   expect(files).toBe(0);
   await ctx.close();
 });
