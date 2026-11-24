@@ -78,6 +78,7 @@ declare v uuid;
 begin
   v := public.begin_inspection(tests.al(label), stage, null, false, tests.csid(label || stage || 'b'));
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
+  perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
   return v;
 end $$;
@@ -89,6 +90,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
 declare r integer; begin execute q into r; return r; end $$;
@@ -130,6 +132,7 @@ declare v uuid;
 begin
   v := public.begin_inspection(tests.al(label), 'pre_shift', null, false, tests.csid(label || 'b'));
   perform public.save_inspection_responses(v, tests.answers('pre_shift'), true, tests.csid(label || 's'));
+  perform public.confirm_known_damage_reviewed(v, tests.csid(label || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-' || filelabel), tests.csid(label || 'o'));
   return v;
 end $$;

@@ -79,6 +79,7 @@ declare v uuid;
 begin
   v := public.begin_inspection(tests.al(label), stage, null, false, tests.csid(label || stage || 'b'));
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
+  perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
   return v;
 end $$;
@@ -90,6 +91,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
 declare r integer; begin execute q into r; return r; end $$;
@@ -190,6 +192,7 @@ select is((select count(*)::int from public.inspection_responses where inspectio
 select tests.act_as('u-p1');
 select matches(tests.submit('p1'), '^IN001:.*onfirm.*T4AP1', 'submit: the vehicle is not confirmed -> IN001, naming the registration');
 select is(public.save_inspection_responses(tests.ins('p1'), '[]'::jsonb, true, tests.csid('r17')), tests.ins('p1'), 'the driver confirms the vehicle');
+select public.confirm_known_damage_reviewed(tests.ins('p1'), tests.csid('r17k'));
 select matches(tests.submit('p1', 'pre_shift', 'sx2'), '^IN002:.*"Wheel nuts present and tight" is not answered \(17 still to answer\)', 'submit: required items missing -> IN002, naming the first and the count');
 select is(public.save_inspection_responses(tests.ins('p1'), tests.answers('pre_shift') - 0, null, tests.csid('r18')), tests.ins('p1'), 'all items answered (as fine)...');
 select is(public.save_inspection_responses(tests.ins('p1'), jsonb_build_array(tests.ans('tyres', 'defect')), null, tests.csid('r19')), tests.ins('p1'), '... but Tyres is a Defect without a comment');
@@ -350,6 +353,7 @@ select tests.reset();
 select tests.sc('off', 'A1', 'pre_inspection_pending', now() - interval '90 minutes', now() + interval '9 hours');
 select tests.act_as('u-off'); select public.begin_inspection(tests.al('off'), 'pre_shift', '2026-01-01 04:00+00', false, tests.csid('off-b'));
 select public.save_inspection_responses(tests.ins('off'), tests.answers('pre_shift'), true, tests.csid('off-s'));
+select public.confirm_known_damage_reviewed(tests.ins('off'), tests.csid('off-k'));
 select public.attach_odometer_photo(tests.ins('off'), tests.id('f-fo-off-pre'), tests.csid('off-o'));
 select is((select out_late_flag from public.submit_inspection(tests.ins('off'), '2026-01-01 04:30+00', true, tests.csid('off-x'))), true, 'offline submit: late is judged on the server time, not the device clock');
 select tests.reset();
