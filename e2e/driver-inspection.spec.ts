@@ -215,7 +215,14 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await expect(
+    dp.getByTestId("odometer-step").getByText("Attached"),
+  ).toBeVisible();
   await dp.getByRole("button", { name: "Next", exact: true }).click();
+  // if anything is missing the review lists it (the text appears in the failure)
+  await expect(dp.getByTestId("review-step")).toContainText(
+    "Everything is in place",
+  );
   await dp.getByRole("button", { name: "Submit inspection" }).click();
   await expect(dp.getByTestId("inspection-submitted")).toContainText(
     "Post-shift inspection submitted.",

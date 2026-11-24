@@ -202,6 +202,7 @@ export async function answerChecklist(
   opts: { firstItemDefect?: string } = {},
 ) {
   const items = page.getByTestId("inspection-item");
+  await expect(items.first()).toBeVisible(); // count() does not wait: an empty count would answer nothing
   const n = await items.count();
   for (let i = 0; i < n; i++) {
     const item = items.nth(i);
