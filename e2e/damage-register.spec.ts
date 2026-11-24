@@ -1,5 +1,5 @@
 import { devices, expect, test } from "@playwright/test";
-import { signInStaff } from "../tests/integration/helpers";
+import { anonClient, totp } from "../tests/integration/helpers";
 import {
   answerChecklist,
   branchStaff,
@@ -41,7 +41,7 @@ test("onboarding damage, driver reports new damage, supervisor sees the interval
   // --- supervisor 1 records the vehicle's existing damage (day-one load), photo from the in-app camera
   const c1 = await browser.newContext(desk);
   const p1 = await c1.newPage();
-  await staffSignIn(p1, sup1);
+  const sup1Secret = await staffSignIn(p1, sup1);
   await p1.goto(`/vehicles/${s.vehicleId}/damage`);
   await expect(p1.locator('input[type="file"], [capture]')).toHaveCount(0); // no file picker anywhere (DEC-04/41)
   await p1.getByRole("button", { name: "Record existing damage" }).click();
@@ -74,8 +74,29 @@ test("onboarding damage, driver reports new damage, supervisor sees the interval
     .eq("vehicle_id", s.vehicleId)
     .single();
   expect(ob).toMatchObject({ source: "onboarding", status: "reported" });
-  // a real AAL2 staff session (DEC-34), as the app uses: without it the refusal would be a permission one, not the DEC-24 one
-  const as1 = await signInStaff(sup1.email, sup1.password, "enrol");
+  // a real AAL2 staff session on the authenticator the UI just enrolled (DEC-34): without it the refusal would be a permission
+  // one, not the DEC-24 one
+  const as1 = anonClient();
+  expect(
+    (
+      await as1.auth.signInWithPassword({
+        email: sup1.email,
+        password: sup1.password,
+      })
+    ).error,
+  ).toBeNull();
+  const factor = (await as1.auth.mfa.listFactors()).data!.totp[0]!;
+  const challenge = (await as1.auth.mfa.challenge({ factorId: factor.id }))
+    .data!;
+  expect(
+    (
+      await as1.auth.mfa.verify({
+        factorId: factor.id,
+        challengeId: challenge.id,
+        code: totp(sup1Secret),
+      })
+    ).error,
+  ).toBeNull();
   const own = await as1.rpc("review_damage", {
     p_item_id: ob!.id,
     p_decision: "verified",

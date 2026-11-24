@@ -158,7 +158,7 @@ export async function driverScenario(opts: {
 export async function staffSignIn(
   page: Page,
   staff: { email: string; password: string },
-) {
+): Promise<string> {
   await page.goto("/staff/sign-in");
   await page.getByLabel("Email").fill(staff.email);
   await page.getByLabel("Password").fill(staff.password);
@@ -169,6 +169,7 @@ export async function staffSignIn(
   await page.getByLabel("6-digit code").fill(totp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page).not.toHaveURL(/\/mfa$/);
+  return secret; // lets a spec step a direct API client up to AAL2 on the same authenticator
 }
 
 /**
