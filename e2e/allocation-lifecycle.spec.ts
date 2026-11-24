@@ -178,27 +178,24 @@ test("start by the driver, start on behalf (badge), cancel with a reason", async
     "Pre-inspection pending",
   );
 
-  // 1b. Slice 4A: the driver opens the pre-shift inspection (answers only; the camera arrives in 4B, so it stops before photos)
+  // 1b. Slices 4A/4B: the driver opens the pre-shift inspection, confirms the vehicle and answers; the answers save as they go and
+  // there is no file picker anywhere (the camera flow itself is covered by driver-inspection.spec.ts)
   await card.getByTestId("pre-shift-inspection-link").click();
   await expect(dp).toHaveURL(/\/inspection\/pre-shift$/);
   await dp.getByRole("button", { name: "Start inspection" }).click();
+  await dp
+    .getByRole("button", { name: "This is the vehicle I am inspecting" })
+    .click();
   const items = dp.getByTestId("inspection-item");
   await expect(items).toHaveCount(20);
   await expect(dp.getByText("Wheel nuts present and tight")).toBeVisible();
   const tyres = items.first();
   await tyres.getByRole("radio", { name: "Defect" }).click();
   await tyres.getByLabel(/^Comment:/).fill("Cut on the left front sidewall");
-  await expect(dp.getByTestId("photo-slots")).toContainText(
-    "Camera capture arrives in the next update",
-  );
-  await expect(dp.getByTestId("submit-blocked")).toContainText(
-    "Submit stays disabled until the odometer photo is attached",
-  );
-  await expect(
-    dp.getByRole("button", { name: "Submit inspection" }),
-  ).toBeDisabled();
-  await dp.getByRole("button", { name: "Save answers" }).click();
-  await expect(dp.getByText("Answers saved.")).toBeVisible();
+  await expect(dp.getByTestId("progress")).toContainText("Saved");
+  await dp.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(dp.getByTestId("defect-photos")).toContainText("Tyres");
+  await expect(dp.locator('input[type="file"], [capture]')).toHaveCount(0);
   await phone.close();
 
   // 1c. the supervisor sees the draft in the inspections list

@@ -234,7 +234,7 @@ describe("upload -> verify -> register", () => {
     expect(r2.evidence.alreadyRegistered).toBe(true);
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", a.slot!.objectPath);
     expect(count).toBe(1);
 
@@ -269,7 +269,7 @@ describe("upload -> verify -> register", () => {
     for (const s of [up.slot!, wrongKind.slot!]) {
       const { count } = await sa
         .from("evidence_files")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("object_path", s.objectPath);
       expect(count).toBe(0);
     }
@@ -322,7 +322,7 @@ describe("upload -> verify -> register", () => {
     });
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", liar.slot!.objectPath);
     expect(count).toBe(0);
   });
@@ -735,7 +735,7 @@ describe("cleanup of unregistered uploads (background job, AD-01)", () => {
     expect(orphanSlot!.object_removed_at).not.toBeNull();
     const { count } = await sa
       .from("evidence_files")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("object_path", kept.slot!.objectPath);
     expect(count).toBe(1);
     const { data: job } = await sa

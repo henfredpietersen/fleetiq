@@ -14,9 +14,22 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, trace: "off" },
   projects: [
     // Mobile-first: driver portal targets mid-range phones.
+    // The in-app camera (4B) needs frames: Chromium's fake capture device produces a test pattern and the fake UI flag
+    // auto-accepts the permission prompt. A "permission denied" run overrides getUserMedia in the page itself.
     {
       name: "mobile",
-      use: { ...devices["Pixel 5"], launchOptions: { executablePath } },
+      use: {
+        ...devices["Pixel 5"],
+        permissions: ["camera", "geolocation"],
+        geolocation: { latitude: -26.2041, longitude: 28.0473 },
+        launchOptions: {
+          executablePath,
+          args: [
+            "--use-fake-device-for-media-stream",
+            "--use-fake-ui-for-media-stream",
+          ],
+        },
+      },
     },
   ],
   webServer: {

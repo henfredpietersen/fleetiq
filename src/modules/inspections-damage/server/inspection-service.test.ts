@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import {
+  attachDefectPhoto,
+  attachOdometerPhoto,
   beginInspection,
   getMyInspection,
   listInspections,
@@ -317,5 +319,84 @@ describe("listInspections", () => {
     const { db, calls } = fake();
     expect((await listInspections(db, { from: "x", to: "y" })).ok).toBe(false);
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("attachOdometerPhoto / attachDefectPhoto", () => {
+  const F = "5eed0000-0000-4000-8000-000000000f01";
+  const T = "5eed0000-0000-4000-8000-000000000c01";
+  it("validate first: no call for a bad id", async () => {
+    const { db, calls } = fake();
+    expect(
+      (
+        await attachOdometerPhoto(db, {
+          inspectionId: "x",
+          evidenceFileId: F,
+          clientSubmissionId: C,
+        })
+      ).ok,
+    ).toBe(false);
+    expect(
+      (
+        await attachDefectPhoto(db, {
+          inspectionId: I,
+          evidenceFileId: F,
+          clientSubmissionId: C,
+        })
+      ).ok,
+    ).toBe(false); // the item is required
+    expect(calls).toHaveLength(0);
+  });
+  it("attach_odometer_photo gets the file and its own client_submission_id", async () => {
+    const { db, calls } = fake({ data: "photo-1" });
+    expect(
+      await attachOdometerPhoto(db, {
+        inspectionId: I,
+        evidenceFileId: F,
+        clientSubmissionId: C,
+      }),
+    ).toEqual({ ok: true, photoId: "photo-1" });
+    expect(calls[0]).toEqual({
+      name: "attach_odometer_photo",
+      args: {
+        p_inspection_id: I,
+        p_evidence_file_id: F,
+        p_client_submission_id: C,
+      },
+    });
+  });
+  it("a defect photo is linked to its checklist item", async () => {
+    const { db, calls } = fake({ data: "photo-2" });
+    await attachDefectPhoto(db, {
+      inspectionId: I,
+      evidenceFileId: F,
+      templateItemId: T,
+      clientSubmissionId: C,
+    });
+    expect(calls[0]!.name).toBe("attach_inspection_photo");
+    expect(calls[0]!.args).toMatchObject({
+      p_template_item_id: T,
+      p_category: "damage",
+    });
+  });
+  it("shows the database's refusal as is (DEC-04, IN010)", async () => {
+    const { db } = fake({
+      error: {
+        code: "IN010",
+        message:
+          "Photos for an inspection must be taken with the in-app camera; gallery, file and imported images are not accepted.",
+        hint: "user_message",
+      },
+    });
+    const r = await attachOdometerPhoto(db, {
+      inspectionId: I,
+      evidenceFileId: F,
+      clientSubmissionId: C,
+    });
+    expect(r).toEqual({
+      ok: false,
+      message:
+        "Photos for an inspection must be taken with the in-app camera; gallery, file and imported images are not accepted.",
+    });
   });
 });

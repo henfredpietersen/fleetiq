@@ -2,7 +2,7 @@
 -- driver's issued device at submit time; another phone is FLAGGED, never refused. Synthetic data only; rolls back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(37);
 
 create schema tests;
 grant usage on schema tests to anon, authenticated, service_role;
@@ -142,6 +142,7 @@ select tests.sc2('unk',   'pre_inspection_pending', now() - interval '1 hour', n
 select tests.sc2('noi',   'pre_inspection_pending', now() - interval '1 hour', now() + interval '9 hours', now() - interval '10 minutes', now() + interval '8 hours');
 select tests.sc2('noi2',  'pre_inspection_pending', now() - interval '1 hour', now() + interval '9 hours', now() - interval '10 minutes', now() + interval '8 hours');
 select tests.sc2('lost',  'pre_inspection_pending', now() - interval '1 hour', now() + interval '9 hours', now() - interval '10 minutes', now() + interval '8 hours');
+select tests.sc2('pst',   'in_use', now() - interval '10 hours', now() + interval '1 hour', now() - interval '9 hours', now() - interval '10 minutes');
 select tests.sc2('rtk',   'pre_inspection_pending', now() - interval '1 hour', now() + interval '9 hours', now() - interval '10 minutes', now() + interval '8 hours');
 
 -- the register: dA -> iss, dB -> oth, dD -> unk, dF -> rtk, dE (lost, assignment closed) was lost's, dC a spare phone nobody holds
@@ -199,10 +200,20 @@ select is((select device_id from public.inspections where allocation_id = tests.
 select is((select status from public.vehicle_allocations where id = tests.al('oth')), 'in_use', 'the allocation still starts when the device is flagged');
 select ok(tests.sqlstate_of(format('update public.inspections set device_flag = ''issued_device'' where allocation_id = %L', tests.al('oth'))) = '55000', 'a submitted inspection''s flag is immutable');
 
+-- ================================================================ the driver's card: post-shift submitted (migration 045)
+select tests.act_as('u-iss');
+select is((select post_shift_submitted from public.my_allocations(now() - interval '1 day', now() + interval '1 day')), false, 'my_allocations: no post-shift inspection yet');
+select tests.act_as('u-pst'); select tests.prep('pst', 'post_shift');
+select is((select post_shift_submitted from public.my_allocations(now() - interval '1 day', now() + interval '1 day')), false, 'my_allocations: a post-shift DRAFT is not "submitted" (the allocation is already post-inspection pending)');
+select is(tests.submit('pst', 'post_shift'), null, 'the post-shift inspection submits');
+select is((select post_shift_submitted from public.my_allocations(now() - interval '1 day', now() + interval '1 day')), true, 'my_allocations: submitted -> the card can say "Awaiting post-shift closure"');
+select is((select status from public.vehicle_allocations where id = tests.al('pst')), 'post_inspection_pending', '... and the allocation stays post-inspection pending (closure is Phase 5)');
+select tests.reset();
+
 -- ================================================================ the supervisor's list carries the flag
 select tests.act_as('sup1');
 select is((select device_flag from public.list_inspections(now() - interval '1 day', now() + interval '1 day', tests.id('A1')) where inspection_id = tests.ins('oth')), 'other_device', 'list_inspections shows the device flag');
-select is((select count(*)::int from public.list_inspections(now() - interval '1 day', now() + interval '1 day', tests.id('A1'))), 7, '... and still lists the branch''s inspections');
+select is((select count(*)::int from public.list_inspections(now() - interval '1 day', now() + interval '1 day', tests.id('A1'))), 8, '... and still lists the branch''s inspections');
 select tests.reset();
 select ok(not has_function_privilege('authenticated', 'public.inspection_device_flag(uuid, uuid, uuid)', 'EXECUTE'), 'inspection_device_flag is internal (no client grant)');
 select ok(has_function_privilege('authenticated', 'public.submit_inspection(uuid, timestamptz, boolean, uuid)', 'EXECUTE')

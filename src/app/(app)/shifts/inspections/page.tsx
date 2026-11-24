@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { Alert } from "@/components/ui/alert";
@@ -30,6 +31,7 @@ import {
   INSPECTION_STATUS_LABELS,
   stageLabel,
 } from "@/modules/inspections-damage/domain/inspection-rules";
+import { DEVICE_FLAG_LABEL } from "@/modules/drivers/domain/device-schema";
 import { listInspections } from "@/modules/inspections-damage/server/inspection-service";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -133,7 +135,12 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
               <TableRow key={i.id} data-testid="inspection-row">
                 <TableCell>{formatLocalClock(i.startedAt)}</TableCell>
                 <TableCell>
-                  {i.fleetNumber} · {i.registration}
+                  <Link
+                    href={`/shifts/inspections/${i.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {i.fleetNumber} · {i.registration}
+                  </Link>
                 </TableCell>
                 <TableCell>{stageLabel(i.stage)}</TableCell>
                 <TableCell>
@@ -147,6 +154,11 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                     ) : null}
                     {i.capturedOffline ? (
                       <Badge variant="outline">Offline</Badge>
+                    ) : null}
+                    {i.deviceFlag && i.deviceFlag !== "issued_device" ? (
+                      <Badge variant="warning">
+                        {DEVICE_FLAG_LABEL[i.deviceFlag] ?? i.deviceFlag}
+                      </Badge>
                     ) : null}
                   </div>
                 </TableCell>
@@ -170,7 +182,7 @@ export default function InspectionsPage({
   return (
     <AppShell
       title="Inspections"
-      description="Pre- and post-shift inspections for the branches you manage or view reports for. Photos arrive with the camera in the next update."
+      description="Pre- and post-shift inspections for the branches you manage or view reports for. Open one to see its answers and photos."
     >
       <ShiftNav />
       <Suspense fallback={<Loading label="Loading the inspections…" />}>

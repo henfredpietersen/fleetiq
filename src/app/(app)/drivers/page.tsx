@@ -114,12 +114,20 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
           </Link>
         ) : null}
         {canCreate ? (
-          <Link
-            href="/drivers/new"
-            className={buttonVariants({ className: "ml-auto" })}
-          >
-            Add driver
-          </Link>
+          <>
+            <Link
+              href="/drivers/devices"
+              className={buttonVariants({
+                variant: "outline",
+                className: "ml-auto",
+              })}
+            >
+              Company phones
+            </Link>
+            <Link href="/drivers/new" className={buttonVariants()}>
+              Add driver
+            </Link>
+          </>
         ) : null}
       </form>
 

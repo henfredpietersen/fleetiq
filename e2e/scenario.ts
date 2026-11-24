@@ -1,9 +1,10 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import {
   admin,
   grant,
   makeDriver,
   makeStaff,
+  totp,
   type World,
 } from "../tests/integration/helpers";
 import { E2E_COMPANY_ID } from "./global-setup";
@@ -150,4 +151,75 @@ export async function driverScenario(opts: {
     bootId: boot.id,
     driverProfileId: drv.id,
   };
+}
+
+/** Staff sign-in with the MFA set-up that DEC-34 requires (as the 3C lifecycle spec does). Returns once signed in. */
+export async function staffSignIn(
+  page: Page,
+  staff: { email: string; password: string },
+) {
+  await page.goto("/staff/sign-in");
+  await page.getByLabel("Email").fill(staff.email);
+  await page.getByLabel("Password").fill(staff.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/mfa$/);
+  await page.getByRole("button", { name: "Set up authenticator" }).click();
+  const secret = (await page.locator("code").first().innerText()).trim();
+  await page.getByLabel("6-digit code").fill(totp(secret));
+  await page.getByRole("button", { name: "Verify" }).click();
+  await expect(page).not.toHaveURL(/\/mfa$/);
+}
+
+/**
+ * Take one photo with the in-app camera: open it from `trigger`, get past the first-use notice when it appears, press the
+ * shutter, "Use photo". Resolves when the camera has closed.
+ */
+export async function takeCameraPhoto(
+  page: Page,
+  trigger: Locator,
+  opts: { acknowledge?: boolean } = {},
+) {
+  await trigger.click();
+  const cam = page.getByTestId("camera");
+  await expect(cam).toBeVisible();
+  if (opts.acknowledge) {
+    await expect(cam.getByTestId("camera-notice")).toContainText(
+      "kept for 5 years",
+    );
+    await cam.getByRole("button", { name: "I understand" }).click();
+  }
+  const shutter = cam.getByRole("button", { name: "Take photo" });
+  await expect(shutter).toBeEnabled({ timeout: 20_000 });
+  await shutter.click();
+  await expect(cam.getByTestId("camera-review")).toBeVisible();
+  await cam.getByRole("button", { name: "Use photo" }).click();
+  await expect(cam).toBeHidden();
+}
+
+/** Answer every checklist item "fine" (OK / half a tank / No), optionally making the first item a Defect with a comment. */
+export async function answerChecklist(
+  page: Page,
+  opts: { firstItemDefect?: string } = {},
+) {
+  const items = page.getByTestId("inspection-item");
+  const n = await items.count();
+  for (let i = 0; i < n; i++) {
+    const item = items.nth(i);
+    if (i === 0 && opts.firstItemDefect) {
+      await item.getByRole("radio", { name: "Defect" }).click();
+      await item.getByLabel(/^Comment:/).fill(opts.firstItemDefect);
+      continue;
+    }
+    const ok = item.getByRole("radio", { name: "OK", exact: true });
+    if (await ok.count()) {
+      await ok.click();
+      continue;
+    }
+    const half = item.getByRole("radio", { name: "½" });
+    if (await half.count()) {
+      await half.click();
+      continue;
+    }
+    await item.getByRole("radio", { name: "No", exact: true }).click();
+  }
 }

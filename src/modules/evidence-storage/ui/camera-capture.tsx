@@ -45,7 +45,9 @@ export function CameraCapture({
   const [error, setError] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
-  const location = useRef<CaptureLocation | null>(null);
+  const locationFix = useRef<Promise<CaptureLocation | null>>(
+    Promise.resolve(null),
+  );
   const [shot, setShot] = useState<{
     result: CameraResult;
     url: string;
@@ -60,25 +62,26 @@ export function CameraCapture({
   useEffect(() => {
     if (phase !== "starting") return;
     let cancelled = false;
-    if (navigator.geolocation) {
+    // ONE location request when the camera opens; refused, slow or unavailable = null and capture carries on (DEC-29)
+    locationFix.current = new Promise<CaptureLocation | null>((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
       navigator.geolocation.getCurrentPosition(
-        (p) => {
-          location.current = parseLocation({
-            latitude: p.coords.latitude,
-            longitude: p.coords.longitude,
-            accuracyM: p.coords.accuracy,
-          });
-        },
-        () => {
-          location.current = null;
-        },
+        (p) =>
+          resolve(
+            parseLocation({
+              latitude: p.coords.latitude,
+              longitude: p.coords.longitude,
+              accuracyM: p.coords.accuracy,
+            }),
+          ),
+        () => resolve(null),
         {
           timeout: CAMERA_CAPTURE.locationTimeoutMs,
           maximumAge: CAMERA_CAPTURE.locationMaxAgeMs,
           enableHighAccuracy: false,
         },
       );
-    }
+    });
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia)
@@ -129,6 +132,11 @@ export function CameraCapture({
     const capturedAt = new Date().toISOString(); // the shutter moment, phone clock, untrusted
     setError(null);
     try {
+      // a fix still on its way gets a moment more, never longer: the photo is not held up for it
+      const location = await Promise.race([
+        locationFix.current,
+        new Promise<null>((r) => setTimeout(() => r(null), 1500)),
+      ]);
       const enc = await encodeJpeg(
         v,
         { width: v.videoWidth, height: v.videoHeight },
@@ -139,7 +147,7 @@ export function CameraCapture({
         result: {
           ...enc,
           capturedAt,
-          location: location.current,
+          location,
           capturedOffline:
             typeof navigator !== "undefined" && !navigator.onLine,
         },

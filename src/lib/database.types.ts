@@ -3684,6 +3684,7 @@ export type Database = {
           opened_on_behalf: boolean;
           planned_end_at: string;
           planned_start_at: string;
+          post_shift_submitted: boolean;
           shift_date: string;
           shift_end_at: string;
           shift_start_at: string;

@@ -209,3 +209,145 @@ export async function listInspections(
     })),
   };
 }
+
+export type InspectionPhotoRef = {
+  evidenceFileId: string;
+  /** Odometer photos only: false = an earlier photo that was replaced by a retake (kept, never deleted). */
+  isCurrent?: boolean;
+  takenAt: string;
+  templateItemId?: string | null;
+  category?: string;
+};
+export type InspectionDetail = {
+  id: string;
+  stage: string;
+  status: string;
+  branchId: string;
+  fleetNumber: string;
+  registration: string;
+  make: string;
+  model: string;
+  vehicleConfirmed: boolean;
+  lateFlag: boolean;
+  safetyDefectFlag: boolean;
+  capturedOffline: boolean;
+  deviceFlag: string | null;
+  completedByRole: string;
+  /** Server times. */
+  startedAt: string;
+  submittedAt: string | null;
+  /** The phone's clock: shown as "phone time, not verified". */
+  deviceStartedAt: string | null;
+  deviceSubmittedAt: string | null;
+  voidReason: string | null;
+  answers: {
+    templateItemId: string;
+    question: string;
+    sequence: number;
+    safetyCritical: boolean;
+    value: string;
+    comment: string | null;
+  }[];
+  odometerPhotos: InspectionPhotoRef[];
+  itemPhotos: InspectionPhotoRef[];
+};
+
+/**
+ * The supervisor's read-only view of one inspection. Every read goes through the caller's own RLS (the allocation's driver,
+ * allocation.manage or reports.view for the branch); nobody else gets a row. No driver identity is read (DEC-37, DEC-41).
+ * Photos are NOT opened here: each one is a separate, logged signed-URL request (can_view_evidence).
+ */
+export async function getInspectionDetail(
+  db: Db,
+  inspectionId: string,
+): Promise<Outcome<{ detail: InspectionDetail }>> {
+  const { data: i, error } = await db
+    .from("inspections")
+    .select(
+      "id, inspection_stage, status, branch_id, vehicle_id, vehicle_confirmed, late_flag, safety_defect_flag, captured_offline, device_flag, completed_by_role, started_at, submitted_at, device_started_at, device_submitted_at, void_reason",
+    )
+    .eq("id", inspectionId)
+    .maybeSingle();
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!i) {
+    return {
+      ok: false,
+      message: "That inspection was not found, or you cannot access it.",
+    };
+  }
+  const [veh, resp, odo, photos] = await Promise.all([
+    db
+      .from("vehicles")
+      .select("fleet_number, registration_number, make, model")
+      .eq("id", i.vehicle_id)
+      .maybeSingle(),
+    db
+      .from("inspection_responses")
+      .select(
+        "template_item_id, response_value, comment, inspection_template_items(question, sequence, severity_rule)",
+      )
+      .eq("inspection_id", i.id),
+    db
+      .from("odometer_evidence")
+      .select("evidence_file_id, is_current, created_at")
+      .eq("inspection_id", i.id)
+      .order("created_at", { ascending: false }),
+    db
+      .from("inspection_photos")
+      .select("evidence_file_id, template_item_id, photo_category, created_at")
+      .eq("inspection_id", i.id)
+      .order("created_at"),
+  ]);
+  if (veh.error || resp.error || odo.error || photos.error) return unavailable;
+  const answers = (resp.data ?? [])
+    .map((r) => {
+      const it = Array.isArray(r.inspection_template_items)
+        ? r.inspection_template_items[0]
+        : r.inspection_template_items;
+      return {
+        templateItemId: r.template_item_id,
+        question: it?.question ?? "",
+        sequence: it?.sequence ?? 0,
+        safetyCritical: it?.severity_rule === "safety_critical",
+        value: r.response_value,
+        comment: r.comment,
+      };
+    })
+    .sort((a, b) => a.sequence - b.sequence);
+  return {
+    ok: true,
+    detail: {
+      id: i.id,
+      stage: i.inspection_stage,
+      status: i.status,
+      branchId: i.branch_id,
+      fleetNumber: veh.data?.fleet_number ?? "",
+      registration: veh.data?.registration_number ?? "",
+      make: veh.data?.make ?? "",
+      model: veh.data?.model ?? "",
+      vehicleConfirmed: i.vehicle_confirmed,
+      lateFlag: i.late_flag,
+      safetyDefectFlag: i.safety_defect_flag,
+      capturedOffline: i.captured_offline,
+      deviceFlag: i.device_flag,
+      completedByRole: i.completed_by_role,
+      startedAt: i.started_at,
+      submittedAt: i.submitted_at,
+      deviceStartedAt: i.device_started_at,
+      deviceSubmittedAt: i.device_submitted_at,
+      voidReason: i.void_reason,
+      answers,
+      odometerPhotos: (odo.data ?? []).map((o) => ({
+        evidenceFileId: o.evidence_file_id,
+        isCurrent: o.is_current,
+        takenAt: o.created_at,
+      })),
+      itemPhotos: (photos.data ?? []).map((p) => ({
+        evidenceFileId: p.evidence_file_id,
+        templateItemId: p.template_item_id,
+        category: p.photo_category,
+        takenAt: p.created_at,
+      })),
+    },
+  };
+}

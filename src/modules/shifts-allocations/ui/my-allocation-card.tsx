@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  AWAITING_CLOSURE,
   driverStatusLabel,
   STARTED_BY_SUPERVISOR,
 } from "../domain/allocation-text";
@@ -62,7 +63,9 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
           </p>
         </div>
         <Badge variant="outline" data-testid="allocation-status">
-          {driverStatusLabel(status)}
+          {status === "post_inspection_pending" && a.postShiftSubmitted
+            ? AWAITING_CLOSURE
+            : driverStatusLabel(status)}
         </Badge>
       </div>
       <p className="text-sm">
@@ -101,7 +104,7 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
           End shift — post-shift inspection
         </Link>
       ) : null}
-      {status === "post_inspection_pending" ? (
+      {status === "post_inspection_pending" && !a.postShiftSubmitted ? (
         <Link
           href={`/my-allocations/${a.id}/inspection/post-shift`}
           data-testid="post-shift-inspection-link"
