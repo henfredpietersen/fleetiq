@@ -1,0 +1,252 @@
+{
+  "template": {
+    "name": "Starter checklist",
+    "version": 1,
+    "vehicleCategory": null
+  },
+  "items": [
+    {
+      "stage": "pre_shift",
+      "sequence": 1,
+      "key": "tyres",
+      "question": "Tyres: tread, pressure, cuts or bulges (including the spare)",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 2,
+      "key": "wheel_nuts",
+      "question": "Wheel nuts present and tight",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 3,
+      "key": "lights",
+      "question": "Lights: headlights, indicators, brake lights, hazards",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 4,
+      "key": "windscreen_wipers",
+      "question": "Windscreen: no cracks in the driver's view; wipers work",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 5,
+      "key": "mirrors",
+      "question": "Mirrors present and undamaged",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 6,
+      "key": "plates_disc",
+      "question": "Number plates and licence disc present and current",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 7,
+      "key": "engine_oil",
+      "question": "Engine oil level",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 8,
+      "key": "coolant",
+      "question": "Coolant level",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 9,
+      "key": "brake_washer_fluid",
+      "question": "Brake and washer fluid levels",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 10,
+      "key": "no_leaks",
+      "question": "No leaks under the vehicle",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 11,
+      "key": "seatbelts",
+      "question": "Seatbelts work",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 12,
+      "key": "brakes",
+      "question": "Brakes: foot brake and handbrake feel normal",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 13,
+      "key": "warning_lights",
+      "question": "No red warning lights on the dashboard",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 14,
+      "key": "hooter",
+      "question": "Hooter works",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 15,
+      "key": "fuel_level",
+      "question": "Fuel level",
+      "responseType": "fuel_quarter",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 16,
+      "key": "cabin_clean",
+      "question": "Cabin clean and free of loose items",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 17,
+      "key": "warning_triangle",
+      "question": "Warning triangle",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": true
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 18,
+      "key": "fire_extinguisher",
+      "question": "Fire extinguisher (if fitted)",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": true
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 19,
+      "key": "first_aid_kit",
+      "question": "First-aid kit",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": true
+    },
+    {
+      "stage": "pre_shift",
+      "sequence": 20,
+      "key": "jack_spanner",
+      "question": "Jack and wheel spanner",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": true
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 1,
+      "key": "post_tyres",
+      "question": "Tyres: no new damage",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 2,
+      "key": "post_lights",
+      "question": "Lights working",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 3,
+      "key": "post_warning_lights",
+      "question": "No red warning lights on the dashboard",
+      "responseType": "ok_defect",
+      "safetyCritical": true,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 4,
+      "key": "post_fuel_level",
+      "question": "Fuel level",
+      "responseType": "fuel_quarter",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 5,
+      "key": "post_cabin_clean",
+      "question": "Cabin clean, nothing left behind",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 6,
+      "key": "post_incident",
+      "question": "Any incident, accident or traffic fine during the shift?",
+      "responseType": "yes_no_detail",
+      "safetyCritical": false,
+      "allowNa": false
+    },
+    {
+      "stage": "post_shift",
+      "sequence": 7,
+      "key": "post_locked_keys",
+      "question": "Vehicle locked and keys returned",
+      "responseType": "ok_defect",
+      "safetyCritical": false,
+      "allowNa": false
+    }
+  ]
+}

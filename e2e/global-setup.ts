@@ -15,6 +15,10 @@ export default async function globalSetup() {
   await sa
     .from("companies")
     .upsert({ id: E2E_COMPANY_ID, name: "E2E synthetic company" });
+  // the starter checklist v1 (DEC-21): configuration every company needs before an inspection can begin
+  await sa.rpc("seed_starter_inspection_template", {
+    p_company_id: E2E_COMPANY_ID,
+  });
   const { data: existing } = await sa
     .from("branches")
     .select("id")

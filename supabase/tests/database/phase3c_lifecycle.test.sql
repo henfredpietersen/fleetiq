@@ -488,8 +488,10 @@ select is(public.allocation_no_show_allowed(now() - interval '30 minutes', now()
 select is(public.allocation_no_show_allowed(now() - interval '20 minutes', now(), 30), false, '... refused at +20');
 select is(public.allocation_no_show_allowed(now() - interval '20 minutes', now(), 15), true, '... allowed at +20 when the grace is 15');
 -- the transition functions read the settings (nothing hard-coded): swap the one function inside this transaction
-create or replace function public.allocation_settings(p_company_id uuid) returns table (open_before_start_minutes integer, no_show_grace_minutes integer)
-language sql stable set search_path = '' as $$ select 120, 10 $$;
+drop function public.allocation_settings(uuid);
+create function public.allocation_settings(p_company_id uuid) returns table (open_before_start_minutes integer, no_show_grace_minutes integer, pre_shift_late_minutes integer, post_shift_late_minutes integer)
+language sql stable set search_path = '' as $$ select 120, 10, 30, 60 $$;
+revoke all on function public.allocation_settings(uuid) from public, anon, authenticated;
 select tests.sc('set1', 'A1', now() + interval '100 minutes', now() + interval '9 hours');
 select tests.sc('set2', 'A1', now() - interval '12 minutes', now() + interval '9 hours', 'pre_inspection_pending');
 select tests.act_as('u-set1');

@@ -5,6 +5,7 @@ const LINKS = [
   { href: "/shifts/templates", label: "Shift templates" },
   { href: "/shifts/allocations", label: "Allocations" },
   { href: "/shifts/allocations/overrides", label: "Licence overrides" },
+  { href: "/shifts/inspections", label: "Inspections" },
 ];
 
 export function ShiftNav() {

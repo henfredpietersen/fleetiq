@@ -847,6 +847,557 @@ export type Database = {
           },
         ];
       };
+      inspection_photos: {
+        Row: {
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          evidence_file_id: string;
+          id: string;
+          inspection_id: string;
+          photo_category: string;
+          template_item_id: string | null;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          evidence_file_id: string;
+          id?: string;
+          inspection_id: string;
+          photo_category: string;
+          template_item_id?: string | null;
+          vehicle_id: string;
+        };
+        Update: {
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          evidence_file_id?: string;
+          id?: string;
+          inspection_id?: string;
+          photo_category?: string;
+          template_item_id?: string | null;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_photos_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_photos_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_photos_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: true;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_photos_inspection_id_company_id_fkey";
+            columns: ["inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_photos_template_item_id_company_id_fkey";
+            columns: ["template_item_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspection_template_items";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_photos_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      inspection_requests: {
+        Row: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          function_name: string;
+          id: string;
+          inspection_id: string;
+          request_hash: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          function_name: string;
+          id?: string;
+          inspection_id: string;
+          request_hash: string;
+        };
+        Update: {
+          actor_id?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          function_name?: string;
+          id?: string;
+          inspection_id?: string;
+          request_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_requests_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_requests_inspection_id_company_id_fkey";
+            columns: ["inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      inspection_responses: {
+        Row: {
+          comment: string | null;
+          company_id: string;
+          created_at: string;
+          device_answered_at: string | null;
+          id: string;
+          inspection_id: string;
+          response_value: string;
+          template_item_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          comment?: string | null;
+          company_id: string;
+          created_at?: string;
+          device_answered_at?: string | null;
+          id?: string;
+          inspection_id: string;
+          response_value: string;
+          template_item_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          comment?: string | null;
+          company_id?: string;
+          created_at?: string;
+          device_answered_at?: string | null;
+          id?: string;
+          inspection_id?: string;
+          response_value?: string;
+          template_item_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_responses_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_responses_inspection_id_company_id_fkey";
+            columns: ["inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_responses_template_item_id_company_id_fkey";
+            columns: ["template_item_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspection_template_items";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      inspection_template_items: {
+        Row: {
+          applies_to_stage: string;
+          company_id: string;
+          configuration: NonNullable<Json>;
+          created_at: string;
+          id: string;
+          item_key: string;
+          question: string;
+          required: boolean;
+          response_type: string;
+          sequence: number;
+          severity_rule: string;
+          template_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applies_to_stage: string;
+          company_id: string;
+          configuration?: NonNullable<Json>;
+          created_at?: string;
+          id?: string;
+          item_key: string;
+          question: string;
+          required?: boolean;
+          response_type: string;
+          sequence: number;
+          severity_rule?: string;
+          template_id: string;
+        };
+        Update: {
+          applies_to_stage?: string;
+          company_id?: string;
+          configuration?: NonNullable<Json>;
+          created_at?: string;
+          id?: string;
+          item_key?: string;
+          question?: string;
+          required?: boolean;
+          response_type?: string;
+          sequence?: number;
+          severity_rule?: string;
+          template_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_template_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_template_items_template_id_company_id_fkey";
+            columns: ["template_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspection_templates";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      inspection_templates: {
+        Row: {
+          active_status: string;
+          company_id: string;
+          created_at: string;
+          first_used_at: string | null;
+          id: string;
+          name: string;
+          vehicle_category: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active_status?: string;
+          company_id: string;
+          created_at?: string;
+          first_used_at?: string | null;
+          id?: string;
+          name: string;
+          vehicle_category?: string | null;
+          version: number;
+        };
+        Update: {
+          active_status?: string;
+          company_id?: string;
+          created_at?: string;
+          first_used_at?: string | null;
+          id?: string;
+          name?: string;
+          vehicle_category?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_templates_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inspections: {
+        Row: {
+          allocation_id: string;
+          branch_id: string;
+          captured_offline: boolean;
+          client_submission_id: string;
+          company_id: string;
+          completed_by_role: string;
+          created_at: string;
+          device_started_at: string | null;
+          device_submitted_at: string | null;
+          driver_id: string;
+          id: string;
+          inspection_stage: string;
+          late_flag: boolean;
+          on_behalf_reason: string | null;
+          safety_defect_flag: boolean;
+          shift_id: string;
+          started_at: string;
+          status: string;
+          submitted_at: string | null;
+          submitted_by: string;
+          template_id: string;
+          updated_at: string;
+          vehicle_confirmed: boolean;
+          vehicle_id: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id: string;
+          branch_id: string;
+          captured_offline?: boolean;
+          client_submission_id: string;
+          company_id: string;
+          completed_by_role?: string;
+          created_at?: string;
+          device_started_at?: string | null;
+          device_submitted_at?: string | null;
+          driver_id: string;
+          id?: string;
+          inspection_stage: string;
+          late_flag?: boolean;
+          on_behalf_reason?: string | null;
+          safety_defect_flag?: boolean;
+          shift_id: string;
+          started_at?: string;
+          status?: string;
+          submitted_at?: string | null;
+          submitted_by: string;
+          template_id: string;
+          updated_at?: string;
+          vehicle_confirmed?: boolean;
+          vehicle_id: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          allocation_id?: string;
+          branch_id?: string;
+          captured_offline?: boolean;
+          client_submission_id?: string;
+          company_id?: string;
+          completed_by_role?: string;
+          created_at?: string;
+          device_started_at?: string | null;
+          device_submitted_at?: string | null;
+          driver_id?: string;
+          id?: string;
+          inspection_stage?: string;
+          late_flag?: boolean;
+          on_behalf_reason?: string | null;
+          safety_defect_flag?: boolean;
+          shift_id?: string;
+          started_at?: string;
+          status?: string;
+          submitted_at?: string | null;
+          submitted_by?: string;
+          template_id?: string;
+          updated_at?: string;
+          vehicle_confirmed?: boolean;
+          vehicle_id?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspections_allocation_id_vehicle_id_driver_id_shift_id_br_fkey";
+            columns: [
+              "allocation_id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: [
+              "id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+          },
+          {
+            foreignKeyName: "inspections_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspections_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspections_submitted_by_company_id_fkey";
+            columns: ["submitted_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspections_template_id_company_id_fkey";
+            columns: ["template_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspection_templates";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspections_voided_by_company_id_fkey";
+            columns: ["voided_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_evidence: {
+        Row: {
+          allocation_id: string;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          driver_id: string;
+          evidence_file_id: string;
+          id: string;
+          inspection_id: string;
+          inspection_stage: string;
+          is_current: boolean;
+          processing_status: string;
+          retake_of_id: string | null;
+          shift_id: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id: string;
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          driver_id: string;
+          evidence_file_id: string;
+          id?: string;
+          inspection_id: string;
+          inspection_stage: string;
+          is_current?: boolean;
+          processing_status?: string;
+          retake_of_id?: string | null;
+          shift_id: string;
+          vehicle_id: string;
+        };
+        Update: {
+          allocation_id?: string;
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          driver_id?: string;
+          evidence_file_id?: string;
+          id?: string;
+          inspection_id?: string;
+          inspection_stage?: string;
+          is_current?: boolean;
+          processing_status?: string;
+          retake_of_id?: string | null;
+          shift_id?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_evidence_allocation_id_vehicle_id_driver_id_shift_fkey";
+            columns: [
+              "allocation_id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: [
+              "id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+          },
+          {
+            foreignKeyName: "odometer_evidence_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_evidence_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_evidence_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: true;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_evidence_inspection_id_allocation_id_inspection_s_fkey";
+            columns: ["inspection_id", "allocation_id", "inspection_stage"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "allocation_id", "inspection_stage"];
+          },
+          {
+            foreignKeyName: "odometer_evidence_retake_of_id_company_id_fkey";
+            columns: ["retake_of_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_evidence";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       permissions: {
         Row: {
           description: string | null;
@@ -2271,6 +2822,8 @@ export type Database = {
         Returns: {
           no_show_grace_minutes: number;
           open_before_start_minutes: number;
+          post_shift_late_minutes: number;
+          pre_shift_late_minutes: number;
         }[];
       };
       allocation_start_blockers: {
@@ -2345,6 +2898,24 @@ export type Database = {
         };
         Returns: string;
       };
+      attach_inspection_photo: {
+        Args: {
+          p_category: string;
+          p_client_submission_id: string;
+          p_evidence_file_id: string;
+          p_inspection_id: string;
+          p_template_item_id: string;
+        };
+        Returns: string;
+      };
+      attach_odometer_photo: {
+        Args: {
+          p_client_submission_id: string;
+          p_evidence_file_id: string;
+          p_inspection_id: string;
+        };
+        Returns: string;
+      };
       auth_complete_password_change: {
         Args: { p_profile: string };
         Returns: undefined;
@@ -2392,6 +2963,16 @@ export type Database = {
       authorise_staff_password_change: {
         Args: { p_actor: string; p_user: string };
         Returns: undefined;
+      };
+      begin_inspection: {
+        Args: {
+          p_allocation_id: string;
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_device_started_at: string;
+          p_stage: string;
+        };
+        Returns: string;
       };
       can_view_evidence: {
         Args: {
@@ -2730,6 +3311,96 @@ export type Database = {
         Args: { permission_key: string; target_branch_id: string };
         Returns: boolean;
       };
+      inspection_check_evidence: {
+        Args: {
+          p_evidence_file_id: string;
+          p_inspection_id: string;
+          p_purposes: string[];
+        };
+        Returns: undefined;
+      };
+      inspection_fail: {
+        Args: { p_detail?: string; p_message: string; p_sqlstate: string };
+        Returns: undefined;
+      };
+      inspection_is_late: {
+        Args: {
+          p_planned_end: string;
+          p_post_minutes: number;
+          p_pre_minutes: number;
+          p_shift_start: string;
+          p_stage: string;
+          p_submitted_at: string;
+        };
+        Returns: boolean;
+      };
+      inspection_load_for_driver: {
+        Args: { p_inspection_id: string };
+        Returns: {
+          allocation_id: string;
+          branch_id: string;
+          captured_offline: boolean;
+          client_submission_id: string;
+          company_id: string;
+          completed_by_role: string;
+          created_at: string;
+          device_started_at: string | null;
+          device_submitted_at: string | null;
+          driver_id: string;
+          id: string;
+          inspection_stage: string;
+          late_flag: boolean;
+          on_behalf_reason: string | null;
+          safety_defect_flag: boolean;
+          shift_id: string;
+          started_at: string;
+          status: string;
+          submitted_at: string | null;
+          submitted_by: string;
+          template_id: string;
+          updated_at: string;
+          vehicle_confirmed: boolean;
+          vehicle_id: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "inspections";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      inspection_record: {
+        Args: {
+          p_actor: string;
+          p_company: string;
+          p_csid: string;
+          p_function: string;
+          p_hash: string;
+          p_inspection_id: string;
+        };
+        Returns: undefined;
+      };
+      inspection_replay: {
+        Args: {
+          p_actor: string;
+          p_company: string;
+          p_csid: string;
+          p_function: string;
+          p_hash: string;
+        };
+        Returns: string;
+      };
+      inspection_response_valid: {
+        Args: { p_allow_na: boolean; p_response_type: string; p_value: string };
+        Returns: boolean;
+      };
+      inspection_template_for: {
+        Args: { p_vehicle_id: string };
+        Returns: string;
+      };
       is_staff_member: { Args: Record<PropertyKey, never>; Returns: boolean };
       issue_evidence_access: {
         Args: {
@@ -2751,6 +3422,32 @@ export type Database = {
       licence_evidence_owner_allows: {
         Args: { p_file_id: string };
         Returns: boolean;
+      };
+      list_inspections: {
+        Args: {
+          p_branch_id?: string;
+          p_from: string;
+          p_limit?: number;
+          p_to: string;
+        };
+        Returns: {
+          allocation_id: string;
+          allocation_status: string;
+          branch_id: string;
+          branch_name: string;
+          captured_offline: boolean;
+          completed_by_role: string;
+          inspection_id: string;
+          inspection_stage: string;
+          late_flag: boolean;
+          safety_defect_flag: boolean;
+          shift_date: string;
+          started_at: string;
+          status: string;
+          submitted_at: string;
+          vehicle_fleet_number: string;
+          vehicle_registration: string;
+        }[];
       };
       mark_evidence_slots_object_removed: {
         Args: { p_ids: string[] };
@@ -2775,6 +3472,10 @@ export type Database = {
           vehicle_model: string;
           vehicle_registration: string;
         }[];
+      };
+      my_inspection: {
+        Args: { p_allocation_id: string; p_stage: string };
+        Returns: Json;
       };
       record_driver_licence: {
         Args: {
@@ -2974,6 +3675,19 @@ export type Database = {
         Args: { p_reason: string; p_record_id: string };
         Returns: undefined;
       };
+      save_inspection_responses: {
+        Args: {
+          p_client_submission_id: string;
+          p_inspection_id: string;
+          p_responses: Json;
+          p_vehicle_confirmed: boolean;
+        };
+        Returns: string;
+      };
+      seed_starter_inspection_template: {
+        Args: { p_company_id: string };
+        Returns: string;
+      };
       service_config_lookup: {
         Args: { p_at: string; p_vehicle_id: string };
         Returns: {
@@ -3078,6 +3792,21 @@ export type Database = {
         };
         Returns: string;
       };
+      submit_inspection: {
+        Args: {
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_device_submitted_at: string;
+          p_inspection_id: string;
+        };
+        Returns: {
+          out_inspection_id: string;
+          out_late_flag: boolean;
+          out_replayed: boolean;
+          out_safety_defect_flag: boolean;
+          out_status: string;
+        }[];
+      };
       transition_allocation: {
         Args: {
           p_allocation_id: string;
@@ -3141,6 +3870,14 @@ export type Database = {
       verify_service_record: {
         Args: { p_decision: string; p_reason?: string; p_record_id: string };
         Returns: undefined;
+      };
+      void_inspection: {
+        Args: {
+          p_client_submission_id: string;
+          p_inspection_id: string;
+          p_reason: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

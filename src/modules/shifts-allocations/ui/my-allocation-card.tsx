@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   driverStatusLabel,
   STARTED_BY_SUPERVISOR,
@@ -76,15 +77,16 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
         <Badge variant="warning">{STARTED_BY_SUPERVISOR}</Badge>
       ) : null}
       {started ? (
-        <div
-          className="text-muted-foreground rounded-md border border-dashed p-3 text-sm"
-          data-testid="inspection-placeholder"
+        <Link
+          href={`/my-allocations/${a.id}/inspection/pre-shift`}
+          data-testid="pre-shift-inspection-link"
+          className={buttonVariants({
+            size: "lg",
+            className: "min-h-14 w-full text-base",
+          })}
         >
-          <p className="font-medium">
-            Pre-shift inspection — coming in Phase 4
-          </p>
-          <p>Placeholder only: nothing can be submitted here yet.</p>
-        </div>
+          Pre-shift inspection
+        </Link>
       ) : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {canOpen && status === "planned" ? (
