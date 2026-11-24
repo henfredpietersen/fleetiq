@@ -46,12 +46,16 @@ test("camera permission denied: the camera-needed message, call the supervisor, 
     page.getByRole("button", { name: /gallery|choose|upload|browse/i }),
   ).toHaveCount(0);
 
-  // the notice was declined, not acknowledged: nothing recorded
-  const { count } = await s.sa
-    .from("camera_notice_acknowledgements")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", s.driverProfileId);
-  expect(count).toBe(0);
+  // the notice was declined, not acknowledged: it is asked again next time
+  await cam.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Take odometer photo" }).click();
+  await expect(
+    page.getByTestId("camera").getByTestId("camera-notice"),
+  ).toBeVisible();
+  await page
+    .getByTestId("camera")
+    .getByRole("button", { name: "Close" })
+    .click();
   // and no photo exists
   const { count: files } = await s.sa
     .from("evidence_files")

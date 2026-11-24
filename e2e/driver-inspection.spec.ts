@@ -114,7 +114,11 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
   await expect(dp.getByTestId("inspection-submitted")).toContainText(
     "Inspection submitted — the vehicle is now in use.",
   );
-  await expect(dp.getByTestId("safety-notice")).toHaveCount(0);
+  // Tyres is a safety-critical item: the defect is reported plainly and never blocks (and it is not late)
+  await expect(dp.getByTestId("safety-notice")).toContainText(
+    "Safety defect reported — your supervisor has been told.",
+  );
+  await expect(dp.getByTestId("late-notice")).toHaveCount(0);
   await dp.getByRole("link", { name: "Back to my allocations" }).click();
   await expect(
     dp
@@ -153,7 +157,7 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     status: "submitted",
     device_flag: "issued_device",
     late_flag: false,
-    safety_defect_flag: false,
+    safety_defect_flag: true,
   });
 
   // --- supervisor reads it back
@@ -166,6 +170,9 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     .click();
   await expect(ap.getByTestId("inspection-badges")).toContainText(
     "Issued phone",
+  );
+  await expect(ap.getByTestId("inspection-badges")).toContainText(
+    "Safety defect",
   );
   await expect(
     ap.getByText("Cut on the left front sidewall").first(),
