@@ -11,6 +11,7 @@ import {
   reviewDamageSchema,
 } from "../domain/damage-schema";
 import { zoneLabel } from "../domain/damage-zones";
+import type { DamageRegisterItem } from "../domain/inspection-types";
 
 // Damage register services (DEC-42). Every call runs as the SIGNED-IN USER: the SQL functions authorise and re-check every rule
 // (who may report, review or repair; never your own report, DEC-24) — the UI hides actions but is never the boundary. zod first;
@@ -95,24 +96,6 @@ export async function markDamageRepaired(
   if (!data) return unavailable;
   return { ok: true, damageId: data };
 }
-
-export type DamageRegisterItem = {
-  id: string;
-  zone: string;
-  zoneLabel: string;
-  severity: string;
-  description: string;
-  status: string;
-  source: string;
-  reportedAt: string;
-  /** The signed-in user reported it themselves: they can never review or repair it (DEC-24). No other identity is read. */
-  reportedByMe: boolean;
-  reviewedAt: string | null;
-  reviewReason: string | null;
-  repairedAt: string | null;
-  repairNote: string | null;
-  photoIds: string[];
-};
 
 /**
  * The vehicle's damage register as the signed-in user may read it (RLS: allocation.manage / reports.view for the branch). Names are

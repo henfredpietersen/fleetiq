@@ -108,6 +108,14 @@ async function Content({
         </Alert>
       ) : null}
 
+      <Link
+        href={`/vehicles/${vehicle.id}/damage`}
+        className="w-fit text-sm underline"
+        data-testid="damage-register-link"
+      >
+        Damage register
+      </Link>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">

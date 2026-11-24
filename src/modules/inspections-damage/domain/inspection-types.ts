@@ -131,3 +131,21 @@ export const newDamageDoc = z.array(
   }),
 );
 export type InspectionNewDamage = z.infer<typeof newDamageDoc>[number];
+
+export type DamageRegisterItem = {
+  id: string;
+  zone: string;
+  zoneLabel: string;
+  severity: string;
+  description: string;
+  status: string;
+  source: string;
+  reportedAt: string;
+  /** The signed-in user reported it themselves: they can never review or repair it (DEC-24). No other identity is read. */
+  reportedByMe: boolean;
+  reviewedAt: string | null;
+  reviewReason: string | null;
+  repairedAt: string | null;
+  repairNote: string | null;
+  photoIds: string[];
+};

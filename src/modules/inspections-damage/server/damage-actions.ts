@@ -122,6 +122,16 @@ export async function beginOnBehalfAction(
   };
 }
 
+export async function voidInspectionAction(
+  input: unknown,
+): Promise<DamageReply> {
+  const r = await service.voidInspection(await db(), input);
+  if (!r.ok) return { ok: false, message: r.message };
+  revalidatePath("/shifts/inspections");
+  revalidatePath("/shifts/allocations");
+  return { ok: true, message: "Inspection voided." };
+}
+
 /** A damage photo, opened one at a time through the signed-URL path (can_view_evidence + the access log). */
 export async function openDamagePhotoAction(input: {
   evidenceFileId: string;

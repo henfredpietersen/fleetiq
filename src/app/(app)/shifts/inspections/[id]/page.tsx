@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { AppShell, Loading } from "@/components/app-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { VoidInspection } from "@/modules/inspections-damage/ui/void-inspection";
 import { requireSession } from "@/modules/identity-access/server/session";
 import { uuidField } from "@/modules/fleet-vehicles/domain/vehicle-schema";
 import { DEVICE_FLAG_LABEL } from "@/modules/drivers/domain/device-schema";
@@ -17,6 +18,14 @@ import {
 } from "@/modules/inspections-damage/domain/inspection-rules";
 import { getInspectionDetail } from "@/modules/inspections-damage/server/inspection-service";
 import { EvidencePhoto } from "@/modules/inspections-damage/ui/evidence-photo";
+import {
+  intervalText,
+  NO_FAULT_NOTE,
+} from "@/modules/inspections-damage/domain/damage-interval";
+import {
+  damageStatusLabel,
+  severityLabel,
+} from "@/modules/inspections-damage/domain/damage-zones";
 
 const when = (iso: string | null) =>
   iso
@@ -30,7 +39,7 @@ const when = (iso: string | null) =>
 type Params = Promise<{ id: string }>;
 
 async function Content({ params }: { params: Params }) {
-  await requireSession("full");
+  const ctx = await requireSession("full");
   await connection();
   const { id } = await params;
   if (!uuidField.safeParse(id).success) notFound();
@@ -48,9 +57,16 @@ async function Content({ params }: { params: Params }) {
     permission_key: "odometer.exception.review",
     target_branch_id: d.branchId,
   });
+  const { data: canManage } = await db.rpc("has_permission", {
+    permission_key: "allocation.manage",
+    target_branch_id: d.branchId,
+  });
+  const canVoid =
+    canManage === true && d.status !== "void" && d.submittedBy !== ctx.userId;
   const photosOf = (itemId: string) =>
     d.itemPhotos.filter((p) => p.templateItemId === itemId);
   const defects = d.answers.filter((a) => a.value === "defect");
+  const onBehalf = d.completedByRole === "supervisor_on_behalf";
 
   return (
     <>
@@ -68,18 +84,36 @@ async function Content({ params }: { params: Params }) {
         {d.capturedOffline ? (
           <Badge variant="outline">Captured offline</Badge>
         ) : null}
-        {d.deviceFlag && d.deviceFlag !== "issued_device" ? (
+        {d.newDamageFlag ? (
+          <Badge variant="warning" data-testid="new-damage-badge">
+            New damage
+          </Badge>
+        ) : null}
+        {onBehalf ? null : d.deviceFlag && d.deviceFlag !== "issued_device" ? (
           <Badge variant="warning" data-testid="device-flag">
             {DEVICE_FLAG_LABEL[d.deviceFlag] ?? d.deviceFlag}
           </Badge>
         ) : null}
-        {d.deviceFlag === "issued_device" ? (
+        {!onBehalf && d.deviceFlag === "issued_device" ? (
           <Badge variant="success">{DEVICE_FLAG_LABEL.issued_device}</Badge>
         ) : null}
         {d.completedByRole === "supervisor_on_behalf" ? (
-          <Badge variant="warning">Done by a supervisor</Badge>
+          <Badge variant="warning">Completed by supervisor</Badge>
         ) : null}
       </div>
+      {onBehalf ? (
+        <Alert
+          className="border-amber-600/40 text-amber-800"
+          data-testid="on-behalf-detail"
+        >
+          Completed on behalf of the driver by a supervisor — reason:{" "}
+          {d.onBehalfReason}.{" "}
+          <span data-testid="on-behalf-device-text">
+            Completed by supervisor on their own phone.
+          </span>
+        </Alert>
+      ) : null}
+      {canVoid ? <VoidInspection inspectionId={d.id} /> : null}
       {d.status === "void" ? (
         <Alert>
           This inspection was voided{d.voidReason ? `: ${d.voidReason}` : "."}
@@ -145,6 +179,47 @@ async function Content({ params }: { params: Params }) {
                   />
                 ))
               )}
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {d.newDamage.length > 0 ? (
+        <section
+          className="flex flex-col gap-3"
+          aria-label="Damage reported in this inspection"
+          data-testid="new-damage-section"
+        >
+          <h2 className="text-lg font-semibold">
+            Damage reported in this inspection
+          </h2>
+          <p className="text-muted-foreground text-sm">{NO_FAULT_NOTE}</p>
+          {d.newDamage.map((n) => (
+            <div
+              key={n.id}
+              className="flex flex-col gap-2 rounded-lg border p-3"
+              data-testid="new-damage-item"
+            >
+              <p className="flex flex-wrap items-center gap-2 font-medium">
+                {n.zone_label}
+                <Badge variant="outline">{severityLabel(n.severity)}</Badge>
+                <Badge variant="outline">{damageStatusLabel(n.status)}</Badge>
+              </p>
+              <p>{n.description}</p>
+              {intervalText(n.interval) ? (
+                <p className="text-sm" data-testid="damage-interval">
+                  {intervalText(n.interval)}
+                </p>
+              ) : null}
+              {n.photo_ids.map((f, k) => (
+                <EvidencePhoto
+                  key={f}
+                  evidenceFileId={f}
+                  inspectionId={d.id}
+                  label={`Damage photo ${k + 1}: ${n.zone_label}`}
+                  canSeeLocation={canSeeLocation === true}
+                />
+              ))}
             </div>
           ))}
         </section>

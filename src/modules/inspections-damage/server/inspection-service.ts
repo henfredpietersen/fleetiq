@@ -16,6 +16,7 @@ import {
 import {
   beginOnBehalfSchema,
   confirmKnownDamageSchema,
+  voidInspectionSchema,
 } from "../domain/damage-schema";
 import {
   myInspectionDoc,
@@ -84,6 +85,27 @@ export async function beginInspectionOnBehalf(
     p_reason: p.value.reason,
     p_device_started_at: nul<string>(p.value.deviceStartedAt),
     p_captured_offline: p.value.capturedOffline,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, inspectionId: data };
+}
+
+/**
+ * allocation.manage for the branch, with a reason, never the person who completed it (DEC-24; checked by the database). Nothing is
+ * deleted: the voided inspection and everything under it stay. A voided driver draft is how a supervisor takes over a post-shift
+ * inspection (DEC-09).
+ */
+export async function voidInspection(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ inspectionId: string }>> {
+  const p = parseInput(voidInspectionSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("void_inspection", {
+    p_inspection_id: p.value.inspectionId,
+    p_reason: p.value.reason,
     p_client_submission_id: p.value.clientSubmissionId,
   });
   if (error) return { ok: false, message: inspectionDbMessage(error) };
@@ -274,6 +296,8 @@ export type InspectionDetail = {
   make: string;
   model: string;
   vehicleConfirmed: boolean;
+  /** Who completed it: the signed-in user may never void their own (DEC-24). */
+  submittedBy: string;
   lateFlag: boolean;
   safetyDefectFlag: boolean;
   capturedOffline: boolean;
@@ -316,7 +340,7 @@ export async function getInspectionDetail(
   const { data: i, error } = await db
     .from("inspections")
     .select(
-      "id, inspection_stage, status, branch_id, vehicle_id, vehicle_confirmed, late_flag, safety_defect_flag, captured_offline, device_flag, completed_by_role, on_behalf_reason, new_damage_flag, known_damage_reviewed, started_at, submitted_at, device_started_at, device_submitted_at, void_reason",
+      "id, inspection_stage, status, branch_id, vehicle_id, vehicle_confirmed, submitted_by, late_flag, safety_defect_flag, captured_offline, device_flag, completed_by_role, on_behalf_reason, new_damage_flag, known_damage_reviewed, started_at, submitted_at, device_started_at, device_submitted_at, void_reason",
     )
     .eq("id", inspectionId)
     .maybeSingle();
@@ -382,6 +406,7 @@ export async function getInspectionDetail(
       make: veh.data?.make ?? "",
       model: veh.data?.model ?? "",
       vehicleConfirmed: i.vehicle_confirmed,
+      submittedBy: i.submitted_by,
       lateFlag: i.late_flag,
       safetyDefectFlag: i.safety_defect_flag,
       capturedOffline: i.captured_offline,

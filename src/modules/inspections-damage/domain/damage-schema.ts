@@ -100,3 +100,9 @@ export const damageSlotSchema = z.object({
   deviceKey: z.string().max(64).nullable().optional(),
   clientSubmissionId: uuidField,
 });
+
+export const voidInspectionSchema = z.object({
+  inspectionId: uuidField,
+  reason,
+  clientSubmissionId: uuidField,
+});
