@@ -119,7 +119,10 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     "Safety defect reported — your supervisor has been told.",
   );
   await expect(dp.getByTestId("late-notice")).toHaveCount(0);
-  await dp.getByRole("link", { name: "Back to my allocations" }).click();
+  await dp
+    .getByTestId("inspection-submitted")
+    .getByRole("link", { name: "Back to my allocations" })
+    .click();
   await expect(
     dp
       .getByTestId("my-allocation")
@@ -215,7 +218,10 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
   await expect(dp.getByTestId("inspection-submitted")).toContainText(
     "Post-shift inspection submitted.",
   );
-  await dp.getByRole("link", { name: "Back to my allocations" }).click();
+  await dp
+    .getByTestId("inspection-submitted")
+    .getByRole("link", { name: "Back to my allocations" })
+    .click();
   await expect(
     dp
       .getByTestId("my-allocation")
