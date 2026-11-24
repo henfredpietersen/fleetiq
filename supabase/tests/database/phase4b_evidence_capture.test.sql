@@ -127,6 +127,7 @@ select tests.reset();
 select is(tests.logs('loc'), 0, 'no location views logged yet');
 select is(tests.loc('sup1', 'loc'), '-26.204103|28.047305|12.5', 'a supervisor of the branch can see the location');
 select is(tests.logs('loc'), 1, '... and the view is logged (location_viewed)');
+select tests.reset();
 select is((select accessed_by from public.evidence_access_log where evidence_file_id = tests.fid('loc') and access_type = 'location_viewed' limit 1), tests.id('sup1'), '... against the reviewer');
 select is(tests.loc('bm1', 'loc'), '-26.204103|28.047305|12.5', 'a branch manager of the branch can see it');
 select is(tests.loc('fa', 'loc'), '-26.204103|28.047305|12.5', 'a fleet administrator can see it');

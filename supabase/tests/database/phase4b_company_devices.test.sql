@@ -34,7 +34,7 @@ create function tests.mk_driver(n text, comp text, emp text, branch text) return
   select tests.grant_role(n, 'driver', branch, 'boot');
 $$;
 create function tests.key(n text) returns uuid language sql immutable as $$ select md5('device-key-' || n)::uuid $$;
-create function tests.dev(n text) returns uuid language sql stable as $$ select id from public.company_devices where device_key = tests.key(n) $$;
+create function tests.dev(n text) returns uuid language sql stable security definer as $$ select id from public.company_devices where device_key = tests.key(n) $$;
 create function tests.reg(who text, branch text, k text, tag text default null, lbl text default null) returns text language sql as $$
   select tests.sqlstate_of(format('select public.register_company_device(%L, %L, %L, %L)', tests.id(branch), tests.key(k), tag, lbl)) $$;
 
