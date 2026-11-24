@@ -184,9 +184,11 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
   const odo = ap
     .getByTestId("evidence-photo")
     .filter({ hasText: "Odometer photo (current)" });
-  await odo.getByRole("button", { name: "Show photo" }).click();
+  await odo.getByRole("button", { name: "Show photo", exact: true }).click();
   await expect(odo.getByRole("img")).toBeVisible();
-  await odo.getByRole("button", { name: "Show photo location" }).click();
+  await odo
+    .getByRole("button", { name: "Show photo location", exact: true })
+    .click();
   await expect(odo.getByTestId("photo-location")).toContainText("-26.2041");
   const { count: viewed } = await s.sa
     .from("evidence_access_log")
