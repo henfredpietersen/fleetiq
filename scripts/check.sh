@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Token-saving verification: one PASS/FAIL line per step; on failure, only the
 # first 40 and last 60 lines of that step's output, then exit non-zero (fail fast).
-# Next.js prerender "Date.now()" warnings (and their stack frames) are dropped from the printed excerpt, so a failing
+# Next.js server output ([WebServer] lines, prerender "Date.now()" warnings and their stack frames) is dropped from the printed excerpt, so a failing
 # assertion is never pushed out of the 40/60-line window by them; the full log file keeps everything.
 # Usage: scripts/check.sh        -> typecheck, lint, unit tests
 #        scripts/check.sh e2e    -> Playwright (line reporter)
@@ -13,11 +13,13 @@ mkdir -p "$OUT"
 # Print a log without the Next.js prerender Date.now() noise (the warning line, its "at ..." frames and blank lines after it).
 quiet() {
   awk '
-    /Date\.now\(\)|next-prerender-current-time/ { skip = 1; hidden++; next }
+    /^\[WebServer\]/ || /^[0-9T:.Z-]+ \[WebServer\]/ { hidden++; next }
+    /^[[:space:]]+at .*\.next\/server/ { hidden++; next }
+    /Date\.now\(\)|next-prerender-current-time|blocking-prerender-current-time/ { skip = 1; hidden++; next }
     skip && /^[[:space:]]+at / { hidden++; next }
     skip && /^[[:space:]]*$/ { next }
     { skip = 0; print }
-    END { if (hidden > 0) printf "(%d lines of Next.js prerender Date.now() warnings hidden; see the full log)\n", hidden }
+    END { if (hidden > 0) printf "(%d lines of Next.js server / prerender Date.now() warnings hidden; see the full log)\n", hidden }
   ' "$1"
 }
 
