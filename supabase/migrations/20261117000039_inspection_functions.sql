@@ -305,7 +305,8 @@ begin
   end if;
   -- lock order: the allocation, then the inspection (begin_inspection locks the allocation first too)
   perform 1 from public.vehicle_allocations x
-   where x.id = (select y.allocation_id from public.inspections y where y.id = p_inspection_id) for update;
+   where x.company_id = public.current_company_id()
+     and x.id = (select y.allocation_id from public.inspections y where y.id = p_inspection_id and y.company_id = x.company_id) for update;
   i := public.inspection_load_for_driver(p_inspection_id);
   v_hash := md5(p_inspection_id::text);
   if public.inspection_replay(i.company_id, v_uid, p_client_submission_id, 'submit', v_hash) is not null then

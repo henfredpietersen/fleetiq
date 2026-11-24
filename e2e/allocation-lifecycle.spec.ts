@@ -175,10 +175,35 @@ test("start by the driver, start on behalf (badge), cancel with a reason", async
   await expect(card.getByTestId("allocation-status")).toHaveText(
     "Pre-inspection pending",
   );
-  await expect(card.getByTestId("inspection-placeholder")).toContainText(
-    "coming in Phase 4",
+
+  // 1b. Slice 4A: the driver opens the pre-shift inspection (answers only; the camera arrives in 4B, so it stops before photos)
+  await card.getByTestId("pre-shift-inspection-link").click();
+  await expect(dp).toHaveURL(/\/inspection\/pre-shift$/);
+  await dp.getByRole("button", { name: "Start inspection" }).click();
+  const items = dp.getByTestId("inspection-item");
+  await expect(items).toHaveCount(20);
+  await expect(dp.getByText("Wheel nuts present and tight")).toBeVisible();
+  const tyres = items.first();
+  await tyres.getByRole("radio", { name: "Defect" }).click();
+  await tyres.getByLabel(/^Comment:/).fill("Cut on the left front sidewall");
+  await expect(dp.getByTestId("photo-slots")).toContainText(
+    "Camera capture arrives in the next update",
   );
+  await expect(dp.getByTestId("submit-blocked")).toContainText(
+    "Submit stays disabled until the odometer photo is attached",
+  );
+  await expect(
+    dp.getByRole("button", { name: "Submit inspection" }),
+  ).toBeDisabled();
+  await dp.getByRole("button", { name: "Save answers" }).click();
+  await expect(dp.getByText("Answers saved.")).toBeVisible();
   await phone.close();
+
+  // 1c. the supervisor sees the draft in the inspections list
+  await page.goto(`/shifts/inspections?branch=${branch.id}&date=${day}`);
+  await expect(
+    page.getByTestId("inspection-row").filter({ hasText: people[0].fleet }),
+  ).toContainText("Draft");
 
   // 2. the supervisor starts B on the driver's behalf, with a reason
   await page.goto(board);

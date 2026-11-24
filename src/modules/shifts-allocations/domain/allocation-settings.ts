@@ -1,14 +1,20 @@
-// Allocation lifecycle settings (DEC-40: configurable defaults). ONE place in TypeScript, mirroring the SQL function
-// public.allocation_settings(company_id) (migration 032). Both move to the company settings table when Phase 4/5 adds one.
-// Every rule reads these; nothing hard-codes 60 or 30.
+// Allocation and inspection settings (DEC-40 start window / no-show grace, DEC-17 late windows: configurable defaults).
+// ONE place in TypeScript, mirroring the SQL function public.allocation_settings(company_id) (migrations 032, 037). Both
+// move to the company settings table when a later phase adds one. Every rule reads these; nothing hard-codes 60, 30 or 60.
 export type AllocationSettings = {
   openBeforeStartMinutes: number;
   noShowGraceMinutes: number;
+  /** DEC-17: a pre-shift inspection is late when submitted more than this many minutes after the shift start. */
+  preShiftLateMinutes: number;
+  /** DEC-17: a post-shift inspection is late when submitted more than this many minutes after the planned end. */
+  postShiftLateMinutes: number;
 };
 
 export const DEFAULT_ALLOCATION_SETTINGS: AllocationSettings = {
   openBeforeStartMinutes: 60,
   noShowGraceMinutes: 30,
+  preShiftLateMinutes: 30,
+  postShiftLateMinutes: 60,
 };
 
 export const allocationSettings = (): AllocationSettings =>
@@ -46,3 +52,21 @@ export const startOpensAt = (
   plannedStart: Date,
   s: AllocationSettings = allocationSettings(),
 ) => new Date(plannedStart.getTime() - s.openBeforeStartMinutes * MIN);
+
+/**
+ * DEC-17 late rule, strictly "more than": pre-shift = submitted after the shift start + preShiftLateMinutes; post-shift =
+ * submitted after the allocation's planned end + postShiftLateMinutes. Mirror of inspection_is_late() (migration 039).
+ * Judged on the SERVER submit time, never the device clock, and it never blocks a submission.
+ */
+export function inspectionIsLate(
+  stage: "pre_shift" | "post_shift",
+  submittedAt: Date,
+  shiftStart: Date,
+  plannedEnd: Date,
+  s: AllocationSettings = allocationSettings(),
+): boolean {
+  return stage === "pre_shift"
+    ? submittedAt.getTime() > shiftStart.getTime() + s.preShiftLateMinutes * MIN
+    : submittedAt.getTime() >
+        plannedEnd.getTime() + s.postShiftLateMinutes * MIN;
+}
