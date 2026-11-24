@@ -121,7 +121,6 @@ begin
   return next;
 end $$;
 
--- ---------------------------------------------------------------- void_inspection (allocation.manage; DEC-24)
 
 comment on function public.allocation_settings(uuid) is
   'DEC-40 start window (60) and no-show grace (30); DEC-17 (amended 2026-11-24) late windows, both measured from the ALLOCATION: pre-shift +30 min after planned_start_at, post-shift +60 min after planned_end_at. Configurable defaults; the one place.';

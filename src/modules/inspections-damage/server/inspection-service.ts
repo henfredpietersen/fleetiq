@@ -4,6 +4,8 @@ import type { Database } from "@/lib/database.types";
 import type { Outcome } from "@/modules/fleet-vehicles/domain/action-state";
 import { inspectionDbMessage } from "../domain/inspection-errors";
 import {
+  attachDefectSchema,
+  attachOdometerSchema,
   beginSchema,
   listInspectionsSchema,
   myInspectionSchema,
@@ -98,6 +100,61 @@ export async function submitInspection(
   };
 }
 
+export async function attachOdometerPhoto(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ photoId: string }>> {
+  const p = parseInput(attachOdometerSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("attach_odometer_photo", {
+    p_inspection_id: p.value.inspectionId,
+    p_evidence_file_id: p.value.evidenceFileId,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, photoId: data };
+}
+
+/** A condition/defect photo, linked to the checklist item it shows (the database requires one per Defect, IN004). */
+export async function attachDefectPhoto(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ photoId: string }>> {
+  const p = parseInput(attachDefectSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("attach_inspection_photo", {
+    p_inspection_id: p.value.inspectionId,
+    p_evidence_file_id: p.value.evidenceFileId,
+    p_category: "damage",
+    p_template_item_id: p.value.templateItemId,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, photoId: data };
+}
+
+/** The branch an inspection belongs to (the caller's own RLS decides whether they can see it at all). */
+export async function inspectionBranch(
+  db: Db,
+  inspectionId: string,
+): Promise<Outcome<{ branchId: string }>> {
+  const { data, error } = await db
+    .from("inspections")
+    .select("branch_id")
+    .eq("id", inspectionId)
+    .maybeSingle();
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) {
+    return {
+      ok: false,
+      message: "That inspection was not found, or you cannot access it.",
+    };
+  }
+  return { ok: true, branchId: data.branch_id };
+}
+
 /** The driver's form: items for the stage, current answers, photo slots, whether the odometer photo is present. */
 export async function getMyInspection(
   db: Db,
@@ -148,6 +205,7 @@ export async function listInspections(
       capturedOffline: r.captured_offline,
       completedByRole: r.completed_by_role,
       allocationStatus: r.allocation_status,
+      deviceFlag: r.device_flag ?? null,
     })),
   };
 }

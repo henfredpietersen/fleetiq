@@ -44,6 +44,11 @@ export async function requestUploadSlot(
     p_client_submission_id: req.clientSubmissionId,
     p_device_capture_at: req.deviceCaptureAt ?? undefined,
     p_ttl_minutes: deps.config.uploadSlotMinutes,
+    p_capture_latitude: req.location?.latitude,
+    p_capture_longitude: req.location?.longitude,
+    p_capture_location_accuracy_m: req.location?.accuracyM ?? undefined,
+    p_captured_offline: req.capturedOffline,
+    p_device_key: req.deviceKey ?? undefined,
   });
   if (error) return mapDbError(error);
   if (!data)

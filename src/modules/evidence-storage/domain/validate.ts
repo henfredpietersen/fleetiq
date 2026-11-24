@@ -22,7 +22,49 @@ export type UploadSlotRequest = {
   clientSubmissionId: string;
   /** Untrusted device time (ARCH §6.7); stored as declared, never used for decisions. */
   deviceCaptureAt: string | null;
+  /** DEC-29: where the phone says it was, optional and untrusted. Null when refused, slow or out of range: never blocks. */
+  location: CaptureLocation | null;
+  /** DEC-06: the phone had no connection when the photo was taken (as it reports). */
+  capturedOffline: boolean;
+  /** DEC-35: the random key this browser install keeps; untrusted, resolved to a registered device on the server. */
+  deviceKey: string | null;
 };
+
+export type CaptureLocation = {
+  latitude: number;
+  longitude: number;
+  accuracyM: number | null;
+};
+
+/** A usable location only: finite, in range, both coordinates. Anything else is dropped (capture never fails on it). */
+export function parseLocation(raw: unknown): CaptureLocation | null {
+  if (!raw || typeof raw !== "object") return null;
+  const l = raw as Record<string, unknown>;
+  const { latitude, longitude, accuracyM } = l;
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  )
+    return null;
+  const acc =
+    typeof accuracyM === "number" &&
+    Number.isFinite(accuracyM) &&
+    accuracyM >= 0 &&
+    accuracyM < 1_000_000
+      ? Math.round(accuracyM * 10) / 10
+      : null;
+  return {
+    latitude: Math.round(latitude * 1e6) / 1e6,
+    longitude: Math.round(longitude * 1e6) / 1e6,
+    accuracyM: acc,
+  };
+}
 
 /** Early, friendly validation. The database and the registration step re-check everything. */
 export function validateSlotRequest(
@@ -82,6 +124,9 @@ export function validateSlotRequest(
       sizeBytes: r.sizeBytes,
       clientSubmissionId: r.clientSubmissionId,
       deviceCaptureAt,
+      location: parseLocation(r.location),
+      capturedOffline: r.capturedOffline === true,
+      deviceKey: isUuid(r.deviceKey) ? r.deviceKey : null,
     },
   };
 }

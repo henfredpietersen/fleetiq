@@ -238,3 +238,12 @@ on conflict (id) do nothing;
 update public.inspection_templates set first_used_at = now()
  where company_id = '5eed0000-0000-4000-8000-000000000001' and first_used_at is null
    and exists (select 1 from public.inspections i where i.template_id = inspection_templates.id);
+
+-- ---------------------------------------------------------------- Slice 4B: one company device (SYNTHETIC)
+-- A made-up device key (no phone has it) assigned to the seeded driver T0001 so the register screen is not empty.
+-- No photos or evidence are seeded: nothing here pretends to be a real capture.
+insert into public.company_devices (id, company_id, branch_id, device_key, asset_tag, label, assigned_driver_id, assigned_from, created_by)
+values ('5eed0000-0000-4000-8000-000000000d01', '5eed0000-0000-4000-8000-000000000001', '5eed0000-0000-4000-8000-0000000000b1',
+        '5eed0000-0000-4000-8000-00000000d0d1', 'SYN-PHONE-001', 'Synthetic company phone 1',
+        '5eed0000-0000-4000-8000-000000000301', now(), '5eed0000-0000-4000-8000-0000000000a1')
+on conflict (id) do nothing;

@@ -14,6 +14,7 @@ import { uuidField } from "@/modules/fleet-vehicles/domain/vehicle-schema";
 import { stageFromSlug } from "@/modules/inspections-damage/domain/inspection-rules";
 import { getMyInspection } from "@/modules/inspections-damage/server/inspection-service";
 import { InspectionForm } from "@/modules/inspections-damage/ui/inspection-form";
+import { cameraNoticeAcknowledged } from "@/modules/evidence-storage/server/notice-query";
 
 type Params = Promise<{ allocationId: string; stage: string }>;
 
@@ -42,14 +43,20 @@ async function Content({ params }: { params: Params }) {
         </Link>
       </div>
     );
-  return <InspectionForm allocationId={allocationId} data={r.inspection} />;
+  return (
+    <InspectionForm
+      allocationId={allocationId}
+      data={r.inspection}
+      noticeAcknowledged={await cameraNoticeAcknowledged(db)}
+    />
+  );
 }
 
 export default function InspectionPage({ params }: { params: Params }) {
   return (
     <AuthShell
       title="Inspection"
-      description="Answer every item. Photos are added with the camera in the next update."
+      description="Answer every item and take the photos with the phone camera."
     >
       <Suspense fallback={<AuthLoading />}>
         <Content params={params} />

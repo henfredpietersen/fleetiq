@@ -9,6 +9,21 @@ export type SupportedMime = (typeof SUPPORTED_MIME)[number];
 /** Hard cap = the bucket's file_size_limit (migration 000011). Config can only be stricter. */
 export const BUCKET_MAX_BYTES = 15 * 1024 * 1024;
 
+/**
+ * In-app camera capture (AD-07, DEC-04, DEC-07). The frame is drawn to a canvas and encoded as JPEG: the long edge is
+ * `longEdgePx` (never enlarged), the aspect ratio is kept. DEC-07: the original is the app's capture and is never altered
+ * after upload. ONE place for the numbers; the camera and its tests read them from here.
+ */
+export const CAMERA_CAPTURE = {
+  mimeType: "image/jpeg",
+  longEdgePx: 1600,
+  jpegQuality: 0.85,
+  /** One geolocation request when the camera opens; slower than this = no location (never blocks capture). */
+  locationTimeoutMs: 4000,
+  /** A cached fix younger than this is acceptable. */
+  locationMaxAgeMs: 60_000,
+} as const;
+
 export type EvidenceConfig = {
   maxBytes: number;
   allowedMime: readonly SupportedMime[];

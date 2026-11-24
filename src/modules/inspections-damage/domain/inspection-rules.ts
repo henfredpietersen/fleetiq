@@ -80,5 +80,3 @@ export const INSPECTION_STATUS_LABELS: Record<string, string> = {
   submitted: "Submitted",
   void: "Void",
 };
-
-export const CAMERA_LATER_TEXT = "Camera capture arrives in the next update";

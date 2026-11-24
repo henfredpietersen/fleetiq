@@ -175,7 +175,10 @@ describe("upload -> verify -> register", () => {
 
     const { data: row } = await sa
       .from("evidence_files")
-      .select("*")
+      // explicit columns: the capture-location columns are not readable through the table, by design (DEC-29)
+      .select(
+        "company_id, branch_id, bucket, object_path, mime_type, capture_source, purpose, uploaded_by, exif_gps_stripped, width, height, legal_hold, sha256, size_bytes, device_capture_at, server_received_at, captured_offline, device_id",
+      )
       .eq("id", reg.evidence.evidenceFileId)
       .single();
     const stored = await storedBytes(row!.object_path);

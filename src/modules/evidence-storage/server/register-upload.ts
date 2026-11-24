@@ -46,7 +46,10 @@ export async function registerUpload(
   // 2. The slot, under RLS: only the requester can see it. Another user's id looks like "not found".
   const { data: slot, error: slotErr } = await db
     .from("evidence_upload_slots")
-    .select("*")
+    // explicit columns: the capture-location columns are not readable through the table (DEC-29, migration 042)
+    .select(
+      "id, bucket, object_path, purpose, branch_id, status, expires_at, evidence_file_id, declared_mime_type",
+    )
     .eq("id", input.slotId)
     .maybeSingle();
   if (slotErr) return mapDbError(slotErr);
