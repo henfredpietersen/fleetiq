@@ -166,13 +166,7 @@ describe("damage register (real storage, RLS and functions)", () => {
   );
   it("a maintenance administrator cannot upload a damage photo to storage", async () => {
     const ma = await makeStaff(w, "dmg-ma", "maintenance_admin", null);
-    await grant(
-      w,
-      ma.id,
-      "maintenance_admin",
-      null,
-      (await sa.from("profiles").select("id").limit(1).single()).data!.id,
-    );
+    await grant(w, ma.id, "maintenance_admin", null, bootId);
     const c = await signInStaff(ma.email, ma.password, "enrol");
     await expect(
       seedOnboardingDamage(c, vehicleId, w.branchId, [
