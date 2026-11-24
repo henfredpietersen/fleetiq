@@ -30,10 +30,15 @@ run_step() {
     echo "PASS  $name"
   else
     echo "FAIL  $name  (full log: $log)"
-    quiet "$log" >"$log.quiet"
-    head -n 40 "$log.quiet"
-    # Test runners print their failure summary last; keep it visible when the log is longer than the head.
-    if [ "$(wc -l <"$log.quiet")" -gt 40 ]; then echo "... (tail of the log)"; tail -n 60 "$log.quiet"; fi
+    quiet "$log" | grep -v '^[[:space:]]*$' >"$log.quiet"
+    # Up to 250 lines are printed whole (Playwright's per-test errors sit in the middle); longer logs get head 40 + tail 60.
+    if [ "$(wc -l <"$log.quiet")" -le 250 ]; then
+      cat "$log.quiet"
+    else
+      head -n 40 "$log.quiet"
+      echo "... (tail of the log)"
+      tail -n 60 "$log.quiet"
+    fi
     exit 1
   fi
 }

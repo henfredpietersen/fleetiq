@@ -48,6 +48,10 @@ test("end shift asks first: Cancel changes nothing, confirming starts the post-s
     .getByTestId("end-shift-confirm")
     .getByRole("button", { name: "Start post-shift inspection" })
     .click();
+  // the draft opens on "confirm the vehicle", then the checklist
+  await page
+    .getByRole("button", { name: "This is the vehicle I am inspecting" })
+    .click();
   await expect(page.getByTestId("inspection-item").first()).toBeVisible();
   const { data: moved } = await s.sa
     .from("vehicle_allocations")
