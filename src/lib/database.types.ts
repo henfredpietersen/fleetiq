@@ -3578,10 +3578,7 @@ export type Database = {
         Returns: boolean;
       };
       confirm_known_damage_reviewed: {
-        Args: {
-          p_client_submission_id: string;
-          p_inspection_id: string;
-        };
+        Args: { p_client_submission_id: string; p_inspection_id: string };
         Returns: string;
       };
       create_service_record: {
@@ -3698,14 +3695,8 @@ export type Database = {
         };
         Returns: string;
       };
-      damage_zone_label: {
-        Args: { p_zone: string };
-        Returns: string;
-      };
-      damage_zones: {
-        Args: Record<PropertyKey, never>;
-        Returns: string[];
-      };
+      damage_zone_label: { Args: { p_zone: string }; Returns: string };
+      damage_zones: { Args: Record<PropertyKey, never>; Returns: string[] };
       decide_approval: {
         Args: { p_approval_id: string; p_decision: string; p_notes?: string };
         Returns: {
@@ -3891,7 +3882,9 @@ export type Database = {
           driver_id: string;
           id: string;
           inspection_stage: string;
+          known_damage_reviewed: boolean;
           late_flag: boolean;
+          new_damage_flag: boolean;
           on_behalf_reason: string | null;
           safety_defect_flag: boolean;
           shift_id: string;

@@ -1,5 +1,5 @@
 import { devices, expect, test } from "@playwright/test";
-import { anonClient } from "../tests/integration/helpers";
+import { signInStaff } from "../tests/integration/helpers";
 import {
   answerChecklist,
   branchStaff,
@@ -74,15 +74,8 @@ test("onboarding damage, driver reports new damage, supervisor sees the interval
     .eq("vehicle_id", s.vehicleId)
     .single();
   expect(ob).toMatchObject({ source: "onboarding", status: "reported" });
-  const as1 = anonClient();
-  expect(
-    (
-      await as1.auth.signInWithPassword({
-        email: sup1.email,
-        password: sup1.password,
-      })
-    ).error,
-  ).toBeNull();
+  // a real AAL2 staff session (DEC-34), as the app uses: without it the refusal would be a permission one, not the DEC-24 one
+  const as1 = await signInStaff(sup1.email, sup1.password, "enrol");
   const own = await as1.rpc("review_damage", {
     p_item_id: ob!.id,
     p_decision: "verified",
