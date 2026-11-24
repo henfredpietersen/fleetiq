@@ -3,7 +3,9 @@
 -- Added:    damage_zones(), damage_zone_label() (the ONE zone list); vehicle_damage_items; vehicle_damage_evidence; damage_requests
 --           (idempotency ledger for review / repair); evidence_check_attachable() (the ONE evidence rule); damage_driver_has_live_allocation();
 --           triggers (validate, guard, no delete/truncate, audit, updated_at, "at least one photo", evidence append-only); RLS (reads only).
+-- Added (also): evidence_upload_allowed(purpose, branch) — the ONE upload-permission rule (see the end of this file).
 -- Replaced (CREATE OR REPLACE, same signature, ACL unchanged):
+--           evidence_slot_open_for_upload (the storage insert policy's check: its permission line now uses evidence_upload_allowed);
 --           inspection_check_evidence (now delegates to evidence_check_attachable; same messages and SQLSTATEs);
 --           request_evidence_upload_slot (ONE change: purpose 'damage' may also be requested by allocation.manage holders for the branch,
 --           because onboarding (DEC-42) is done by managers who do not all hold inspection.submit; every other purpose is unchanged).
@@ -365,7 +367,33 @@ comment on policy vdi_select on public.vehicle_damage_items is
   'DEC-42: allocation.manage or reports.view for the vehicle''s branch (supervisor, branch manager, fleet administrator, maintenance administrator, senior management read; DEC-23), and a driver for a vehicle while they hold a live allocation for it (pre_inspection_pending, in_use, post_inspection_pending). System administrators see nothing. The PHOTOS stay behind can_view_evidence and signed URLs: a driver sees the list, not other people''s photos (default to confirm).';
 
 
--- ---------------------------------------------------------------- request_evidence_upload_slot: damage photos for onboarding (see header)
+-- ---------------------------------------------------------------- the ONE upload-permission rule (DEC-23: no new permission keys)
+-- Uploading evidence needs the permission of the action it supports (evidence_upload_permission). One exception, DEC-42: damage photos
+-- for the day-one load are also allowed to allocation.manage holders (supervisor, branch manager, fleet administrator), because
+-- branch managers and fleet administrators do not hold inspection.submit. Used by the slot request AND the storage insert policy.
+create function public.evidence_upload_allowed(p_purpose text, p_branch_id uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select coalesce(public.has_permission(public.evidence_upload_permission(p_purpose), p_branch_id), false)
+      or (p_purpose = 'damage' and coalesce(public.has_permission('allocation.manage', p_branch_id), false))
+$$;
+revoke all on function public.evidence_upload_allowed(text, uuid) from public, anon;
+grant execute on function public.evidence_upload_allowed(text, uuid) to authenticated, service_role;
+
+-- the storage insert policy (011) calls this: same body as 010 except the permission line
+create or replace function public.evidence_slot_open_for_upload(p_bucket text, p_path text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.evidence_upload_slots s
+    where s.bucket = p_bucket and s.object_path = p_path
+      and s.requested_by = auth.uid()
+      and s.company_id = public.current_company_id()
+      and s.status = 'issued'
+      and s.expires_at > now()
+      and public.evidence_upload_allowed(s.purpose, s.branch_id)
+  )
+$$;
+
+-- ---------------------------------------------------------------- request_evidence_upload_slot: uses evidence_upload_allowed (see header)
 create or replace function public.request_evidence_upload_slot(
   p_purpose text, p_branch_id uuid, p_capture_source text, p_mime_type text, p_size_bytes bigint,
   p_client_submission_id uuid, p_device_capture_at timestamptz default null, p_ttl_minutes integer default 15,
@@ -397,8 +425,7 @@ begin
   if p_client_submission_id is null then
     raise exception 'client_submission_id is required' using errcode = '22023';
   end if;
-  if not (public.has_permission(v_perm, p_branch_id)
-          or (p_purpose = 'damage' and public.has_permission('allocation.manage', p_branch_id))) then
+  if not public.evidence_upload_allowed(p_purpose, p_branch_id) then
     raise exception 'not permitted to upload % evidence here', p_purpose using errcode = '42501';
   end if;
 

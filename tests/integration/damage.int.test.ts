@@ -19,14 +19,18 @@ let w: World;
 let sa: Db;
 let sup1: Db;
 let sup2: Db;
+let bm: Db;
+let fa: Db;
 let driverDb: Db;
 let vehicleId: string;
 let ids: string[];
+let bootId: string;
 
 beforeAll(async () => {
   w = await makeWorld();
   sa = admin();
   const boot = await makeStaff(w, "boot", "system_admin", null);
+  bootId = boot.id;
   const mk = async (label: string, role: string) => {
     const s = await makeStaff(w, label, role, w.branchId);
     await grant(w, s.id, role, w.branchId, boot.id);
@@ -34,6 +38,10 @@ beforeAll(async () => {
   };
   sup1 = await mk("dmg-sup1", "supervisor");
   sup2 = await mk("dmg-sup2", "supervisor");
+  bm = await mk("dmg-bm", "branch_manager"); // allocation.manage, no inspection.submit
+  const faUser = await makeStaff(w, "dmg-fa", "fleet_admin", null);
+  await grant(w, faUser.id, "fleet_admin", null, boot.id);
+  fa = await signInStaff(faUser.email, faUser.password, "enrol");
   const v = (
     await sa
       .from("vehicles")
@@ -108,5 +116,68 @@ describe("damage register (real storage, RLS and functions)", () => {
       p_client_submission_id: crypto.randomUUID(),
     });
     expect(r.error?.message).toContain("already attached");
+  });
+
+  // Review fix: onboarding must work for EVERY allocation.manage holder. Branch managers and fleet administrators do not hold
+  // inspection.submit (DEC-23), so the storage insert policy must accept their damage slots too — real storage, end to end.
+  it.each([
+    ["a branch manager", () => bm],
+    ["a fleet administrator", () => fa],
+  ])(
+    "%s records onboarding damage end to end (slot, storage upload, register, record) and a different reviewer verifies it",
+    async (_n, who) => {
+      const [id] = await seedOnboardingDamage(who(), vehicleId, w.branchId, [
+        {
+          zone: "roof",
+          severity: "minor",
+          description: "Synthetic example: dent in the roof",
+        },
+      ]);
+      const { data: item } = await sa
+        .from("vehicle_damage_items")
+        .select("source, status, vehicle_damage_evidence(evidence_file_id)")
+        .eq("id", id!)
+        .single();
+      expect(item).toMatchObject({ source: "onboarding", status: "reported" });
+      expect(item!.vehicle_damage_evidence).toHaveLength(1);
+      const own = await who().rpc("review_damage", {
+        p_item_id: id!,
+        p_decision: "verified",
+        p_reason: "",
+        p_client_submission_id: crypto.randomUUID(),
+      });
+      expect(own.error?.message).toContain(
+        "You cannot review damage you reported yourself",
+      );
+      const ok = await sup2.rpc("review_damage", {
+        p_item_id: id!,
+        p_decision: "verified",
+        p_reason: "",
+        p_client_submission_id: crypto.randomUUID(),
+      });
+      expect(ok.error).toBeNull();
+      const { data: after } = await sa
+        .from("vehicle_damage_items")
+        .select("status")
+        .eq("id", id!)
+        .single();
+      expect(after!.status).toBe("verified");
+    },
+  );
+  it("a maintenance administrator cannot upload a damage photo to storage", async () => {
+    const ma = await makeStaff(w, "dmg-ma", "maintenance_admin", null);
+    await grant(
+      w,
+      ma.id,
+      "maintenance_admin",
+      null,
+      (await sa.from("profiles").select("id").limit(1).single()).data!.id,
+    );
+    const c = await signInStaff(ma.email, ma.password, "enrol");
+    await expect(
+      seedOnboardingDamage(c, vehicleId, w.branchId, [
+        { zone: "roof", severity: "minor", description: "Synthetic: refused" },
+      ]),
+    ).rejects.toThrow();
   });
 });
