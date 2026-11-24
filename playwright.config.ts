@@ -15,6 +15,10 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "off",
     screenshot: "only-on-failure",
+    // Without a bound, a click on a missing or disabled element waits for the whole test timeout and the log only says
+    // "Test timeout exceeded". Bounded actions fail in seconds and name the locator.
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
   },
   projects: [
     // Mobile-first: driver portal targets mid-range phones.
