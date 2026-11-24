@@ -3547,6 +3547,8 @@ export type Database = {
           company_id: string;
           completed_by_role: string;
           created_at: string;
+          device_flag: string | null;
+          device_id: string | null;
           device_started_at: string | null;
           device_submitted_at: string | null;
           driver_id: string;
@@ -3629,10 +3631,10 @@ export type Database = {
       list_company_devices: {
         Args: { p_branch_id?: string };
         Returns: {
+          asset_tag: string;
           assigned_driver_id: string;
           assigned_from: string;
           assigned_to: string;
-          asset_tag: string;
           branch_id: string;
           branch_name: string;
           driver_employee_number: string;
