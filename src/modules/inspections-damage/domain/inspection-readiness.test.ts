@@ -8,6 +8,7 @@ import {
 
 const input = (c: (typeof fixture.cases)[number]): ReadinessInput => ({
   vehicleConfirmed: c.confirmed,
+  knownDamageReviewed: (c as { known?: boolean }).known ?? true,
   registration: fixture.registration,
   items: fixture.items as ReadinessInput["items"],
   answers: c.answers as ReadinessInput["answers"],
@@ -15,7 +16,7 @@ const input = (c: (typeof fixture.cases)[number]): ReadinessInput => ({
   odometerPhoto: c.odometer,
 });
 
-describe("submit readiness matches the server rules (IN001-IN006)", () => {
+describe("submit readiness matches the server rules (IN001-IN007)", () => {
   for (const c of fixture.cases) {
     it(c.name, () => {
       const codes = submitBlockers(input(c)).map((b) => b.code);

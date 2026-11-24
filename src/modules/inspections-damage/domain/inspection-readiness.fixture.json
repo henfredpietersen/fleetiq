@@ -1,5 +1,5 @@
 {
-  "_comment": "Cases for submitBlockers(), written from the rules in submit_inspection() (IN001-IN006). The expected codes are the SQLSTATEs the server raises, in the order it checks them.",
+  "_comment": "Cases for submitBlockers(), written from the rules in submit_inspection() (IN001-IN007). The expected codes are the SQLSTATEs the server raises, in the order it checks them.",
   "registration": "T4B-GP",
   "items": [
     {
@@ -29,9 +29,15 @@
       "name": "everything fine",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "ok" },
-        "fuel": { "value": "1/2" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -41,9 +47,15 @@
       "name": "vehicle not confirmed",
       "confirmed": false,
       "answers": {
-        "tyres": { "value": "ok" },
-        "fuel": { "value": "1/2" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -60,7 +72,14 @@
     {
       "name": "one item missing",
       "confirmed": true,
-      "answers": { "tyres": { "value": "ok" }, "fuel": { "value": "1/2" } },
+      "answers": {
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        }
+      },
       "photos": [],
       "odometer": true,
       "expect": ["IN002"]
@@ -69,9 +88,15 @@
       "name": "defect without comment or photo",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "defect" },
-        "fuel": { "value": "E" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "defect"
+        },
+        "fuel": {
+          "value": "E"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -81,9 +106,16 @@
       "name": "defect with a blank comment is still missing the comment",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "defect", "comment": "   " },
-        "fuel": { "value": "E" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "defect",
+          "comment": "   "
+        },
+        "fuel": {
+          "value": "E"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": ["tyres"],
       "odometer": true,
@@ -93,9 +125,16 @@
       "name": "defect with comment but no photo",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "defect", "comment": "Cut sidewall" },
-        "fuel": { "value": "E" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "defect",
+          "comment": "Cut sidewall"
+        },
+        "fuel": {
+          "value": "E"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -105,9 +144,16 @@
       "name": "defect with comment and photo",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "defect", "comment": "Cut sidewall" },
-        "fuel": { "value": "E" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "defect",
+          "comment": "Cut sidewall"
+        },
+        "fuel": {
+          "value": "E"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": ["tyres"],
       "odometer": true,
@@ -117,9 +163,15 @@
       "name": "Yes without details",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "ok" },
-        "fuel": { "value": "1/2" },
-        "incident": { "value": "yes" }
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "yes"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -129,9 +181,16 @@
       "name": "Yes with details",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "ok" },
-        "fuel": { "value": "1/2" },
-        "incident": { "value": "yes", "comment": "Scraped a gate post" }
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "yes",
+          "comment": "Scraped a gate post"
+        }
       },
       "photos": [],
       "odometer": true,
@@ -141,24 +200,54 @@
       "name": "no odometer photo",
       "confirmed": true,
       "answers": {
-        "tyres": { "value": "ok" },
-        "fuel": { "value": "1/2" },
-        "incident": { "value": "no" }
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
       },
       "photos": [],
       "odometer": false,
       "expect": ["IN006"]
     },
     {
-      "name": "everything wrong at once, in the server's order",
+      "name": "everything wrong at once, in the server's order (IN007 follows IN001)",
       "confirmed": false,
       "answers": {
-        "tyres": { "value": "defect" },
-        "incident": { "value": "yes" }
+        "tyres": {
+          "value": "defect"
+        },
+        "incident": {
+          "value": "yes"
+        }
       },
       "photos": [],
       "odometer": false,
-      "expect": ["IN001", "IN002", "IN003", "IN004", "IN005", "IN006"]
+      "expect": ["IN001", "IN007", "IN002", "IN003", "IN004", "IN005", "IN006"],
+      "known": false
+    },
+    {
+      "name": "known damage list not confirmed",
+      "confirmed": true,
+      "known": false,
+      "answers": {
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
+      },
+      "photos": [],
+      "odometer": true,
+      "expect": ["IN007"]
     }
   ]
 }

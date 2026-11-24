@@ -300,7 +300,8 @@ begin
     'allocation_status', a.status, 'stage', p_stage, 'vehicle', v_vehicle,
     'inspection', case when i.id is null then null else jsonb_build_object(
         'id', i.id, 'status', i.status, 'vehicle_confirmed', i.vehicle_confirmed, 'known_damage_reviewed', i.known_damage_reviewed,
-        'completed_by_role', i.completed_by_role, 'on_behalf_reason', i.on_behalf_reason, 'late_flag', i.late_flag,
+        'completed_by_role', i.completed_by_role, 'on_behalf_reason', i.on_behalf_reason,
+        'viewer_is_completer', i.submitted_by = auth.uid(), 'late_flag', i.late_flag,
         'safety_defect_flag', i.safety_defect_flag, 'captured_offline', i.captured_offline,
         'started_at', i.started_at, 'submitted_at', i.submitted_at) end,
     'items', v_items, 'photo_slots', v_slots, 'odometer_photo_present', v_odo,

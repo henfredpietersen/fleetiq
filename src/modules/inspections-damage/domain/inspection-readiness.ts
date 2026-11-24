@@ -1,6 +1,6 @@
 // What still stands between the driver and Submit (PRD §5.7). ONE place in TypeScript, mirroring the checks inside the SQL
-// function public.submit_inspection() (migrations 039/040/043), in the SAME ORDER and with the SAME messages and codes
-// (IN001–IN006), which stays the final word: the database re-checks everything and its own refusal is shown as is.
+// function public.submit_inspection() (migrations 039/040/043/047), in the SAME ORDER and with the SAME messages and codes
+// (IN001–IN007), which stays the final word: the database re-checks everything and its own refusal is shown as is.
 // Submit is enabled only when this list is empty, so the button never promises something the server would refuse.
 import type { ResponseType } from "./inspection-rules";
 
@@ -14,6 +14,8 @@ export type ReadinessItem = {
 export type ReadinessAnswer = { value?: string; comment?: string };
 export type ReadinessInput = {
   vehicleConfirmed: boolean;
+  /** DEC-42: the person completing the inspection confirmed they checked the vehicle's known damage list. */
+  knownDamageReviewed: boolean;
   registration: string;
   /** Items for this stage, in checklist order. */
   items: ReadinessItem[];
@@ -24,7 +26,7 @@ export type ReadinessInput = {
   odometerPhoto: boolean;
 };
 export type Blocker = {
-  code: "IN001" | "IN002" | "IN003" | "IN004" | "IN005" | "IN006";
+  code: "IN001" | "IN002" | "IN003" | "IN004" | "IN005" | "IN006" | "IN007";
   message: string;
   /** Checklist item the blocker is about (not set for the vehicle and odometer blockers). */
   itemId?: string;
@@ -40,6 +42,13 @@ export function submitBlockers(i: ReadinessInput): Blocker[] {
     out.push({
       code: "IN001",
       message: `Confirm that you are inspecting the vehicle shown (${i.registration}) before you submit.`,
+    });
+  }
+  if (!i.knownDamageReviewed) {
+    out.push({
+      code: "IN007",
+      message:
+        "Confirm that you checked the vehicle's known damage list before you submit.",
     });
   }
   const unanswered = items.filter(

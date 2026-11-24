@@ -19,6 +19,11 @@ export const myInspectionDoc = z.object({
       id: z.string(),
       status: z.enum(["draft", "submitted", "void"]),
       vehicle_confirmed: z.boolean(),
+      known_damage_reviewed: z.boolean(),
+      completed_by_role: z.enum(["driver", "supervisor_on_behalf"]),
+      on_behalf_reason: z.string().nullable(),
+      /** false for the driver while a supervisor completes the inspection on their behalf: read-only for them. */
+      viewer_is_completer: z.boolean(),
       late_flag: z.boolean(),
       safety_defect_flag: z.boolean(),
       captured_offline: z.boolean(),
@@ -49,8 +54,35 @@ export const myInspectionDoc = z.object({
     }),
   ),
   odometer_photo_present: z.boolean(),
+  known_damage_reviewed: z.boolean(),
+  /** DEC-42: the vehicle's open damage (reported or verified). No photos, no names. */
+  known_damage: z.array(
+    z.object({
+      id: z.string(),
+      zone: z.string(),
+      zone_label: z.string(),
+      severity: z.string(),
+      description: z.string(),
+      status: z.string(),
+      reported_at: z.string(),
+      source: z.string(),
+      reported_now: z.boolean(),
+    }),
+  ),
+  /** Damage reported in THIS inspection. */
+  new_damage: z.array(
+    z.object({
+      id: z.string(),
+      zone: z.string(),
+      zone_label: z.string(),
+      severity: z.string(),
+      description: z.string(),
+      reported_at: z.string(),
+    }),
+  ),
 });
 export type MyInspection = z.infer<typeof myInspectionDoc>;
+export type KnownDamage = MyInspection["known_damage"][number];
 export type InspectionItem = MyInspection["items"][number];
 
 export type InspectionListRow = {
@@ -72,4 +104,30 @@ export type InspectionListRow = {
   allocationStatus: string;
   /** DEC-35: issued_device | other_device | unknown_device | no_issued_device; null while a draft. */
   deviceFlag: string | null;
+  newDamageFlag: boolean;
+  knownDamageReviewed: boolean;
 };
+
+/** inspection_new_damage(): damage reported in one inspection, for the supervisor (no names). */
+export const newDamageDoc = z.array(
+  z.object({
+    id: z.string(),
+    zone: z.string(),
+    zone_label: z.string(),
+    severity: z.string(),
+    description: z.string(),
+    status: z.string(),
+    reported_at: z.string(),
+    stage: z.string(),
+    photo_ids: z.array(z.string()),
+    interval: z
+      .object({
+        previous_allocation_id: z.string().nullable(),
+        previous_allocation_planned_start_at: z.string().nullable(),
+        previous_allocation_planned_end_at: z.string().nullable(),
+        previous_post_shift_submitted_at: z.string().nullable(),
+      })
+      .nullable(),
+  }),
+);
+export type InspectionNewDamage = z.infer<typeof newDamageDoc>[number];
