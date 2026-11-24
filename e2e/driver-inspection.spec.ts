@@ -78,6 +78,7 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
   await dp
     .getByRole("button", { name: "This is the vehicle I am inspecting" })
     .click();
+  await dp.getByRole("button", { name: "I have checked this list" }).click();
   await expect(dp.getByTestId("inspection-item")).toHaveCount(20);
   await answerChecklist(dp, {
     firstItemDefect: "Cut on the left front sidewall",
@@ -209,6 +210,7 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
   await dp
     .getByRole("button", { name: "This is the vehicle I am inspecting" })
     .click();
+  await dp.getByRole("button", { name: "I have checked this list" }).click();
   await answerChecklist(dp);
   await dp.getByRole("button", { name: "Next", exact: true }).click(); // no defects: straight to the odometer
   await takeCameraPhoto(
