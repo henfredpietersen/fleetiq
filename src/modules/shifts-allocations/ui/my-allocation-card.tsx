@@ -88,6 +88,31 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
           Pre-shift inspection
         </Link>
       ) : null}
+      {status === "in_use" ? (
+        <Link
+          href={`/my-allocations/${a.id}/inspection/post-shift`}
+          data-testid="post-shift-inspection-link"
+          className={buttonVariants({
+            size: "lg",
+            variant: "outline",
+            className: "min-h-14 w-full text-base",
+          })}
+        >
+          End shift — post-shift inspection
+        </Link>
+      ) : null}
+      {status === "post_inspection_pending" ? (
+        <Link
+          href={`/my-allocations/${a.id}/inspection/post-shift`}
+          data-testid="post-shift-inspection-link"
+          className={buttonVariants({
+            size: "lg",
+            className: "min-h-14 w-full text-base",
+          })}
+        >
+          Post-shift inspection
+        </Link>
+      ) : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       {canOpen && status === "planned" ? (
         <Button

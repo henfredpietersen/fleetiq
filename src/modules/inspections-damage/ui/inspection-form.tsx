@@ -182,7 +182,36 @@ export function InspectionForm({
         </div>
       ) : null}
 
-      {!insp ? (
+      {!insp &&
+      data.stage === "post_shift" &&
+      data.allocation_status === "in_use" ? (
+        <div className="flex flex-col gap-3" data-testid="end-shift-confirm">
+          <Alert className="border-amber-600/40 text-amber-800">
+            Start the post-shift inspection? This ends your use of{" "}
+            {v.fleet_number} / {v.registration}. You cannot go back to driving
+            it on this allocation.
+          </Alert>
+          <Button
+            type="button"
+            size="lg"
+            className="min-h-14 w-full text-base"
+            disabled={pending}
+            onClick={begin}
+          >
+            {pending ? "Starting…" : "Start post-shift inspection"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="min-h-14 w-full text-base"
+            disabled={pending}
+            onClick={() => router.push("/my-allocations")}
+          >
+            Cancel
+          </Button>
+        </div>
+      ) : !insp ? (
         <>
           <Alert>
             This is the {stageLabel(data.stage).toLowerCase()} checklist for

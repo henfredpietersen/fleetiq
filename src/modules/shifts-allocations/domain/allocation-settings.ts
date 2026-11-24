@@ -4,9 +4,9 @@
 export type AllocationSettings = {
   openBeforeStartMinutes: number;
   noShowGraceMinutes: number;
-  /** DEC-17: a pre-shift inspection is late when submitted more than this many minutes after the shift start. */
+  /** DEC-17 (amended 2026-11-24): a pre-shift inspection is late when submitted more than this many minutes after the ALLOCATION's planned start. */
   preShiftLateMinutes: number;
-  /** DEC-17: a post-shift inspection is late when submitted more than this many minutes after the planned end. */
+  /** DEC-17: a post-shift inspection is late when submitted more than this many minutes after the allocation's planned end. */
   postShiftLateMinutes: number;
 };
 
@@ -54,19 +54,21 @@ export const startOpensAt = (
 ) => new Date(plannedStart.getTime() - s.openBeforeStartMinutes * MIN);
 
 /**
- * DEC-17 late rule, strictly "more than": pre-shift = submitted after the shift start + preShiftLateMinutes; post-shift =
- * submitted after the allocation's planned end + postShiftLateMinutes. Mirror of inspection_is_late() (migration 039).
+ * DEC-17 late rule (amended 2026-11-24), strictly "more than", both measured from the ALLOCATION: pre-shift = submitted after
+ * the allocation's planned start + preShiftLateMinutes; post-shift = submitted after its planned end + postShiftLateMinutes.
+ * Mirror of inspection_is_late() (migration 039) as called by submit_inspection() since migration 040.
  * Judged on the SERVER submit time, never the device clock, and it never blocks a submission.
  */
 export function inspectionIsLate(
   stage: "pre_shift" | "post_shift",
   submittedAt: Date,
-  shiftStart: Date,
+  plannedStart: Date,
   plannedEnd: Date,
   s: AllocationSettings = allocationSettings(),
 ): boolean {
   return stage === "pre_shift"
-    ? submittedAt.getTime() > shiftStart.getTime() + s.preShiftLateMinutes * MIN
+    ? submittedAt.getTime() >
+        plannedStart.getTime() + s.preShiftLateMinutes * MIN
     : submittedAt.getTime() >
         plannedEnd.getTime() + s.postShiftLateMinutes * MIN;
 }
