@@ -147,6 +147,7 @@ export async function driverScenario(opts: {
     fleet,
     branchId: branch.id,
     allocationId: alloc.data!.id,
+    vehicleId: v.id,
     day,
     bootId: boot.id,
     driverProfileId: drv.id,
@@ -157,7 +158,7 @@ export async function driverScenario(opts: {
 export async function staffSignIn(
   page: Page,
   staff: { email: string; password: string },
-) {
+): Promise<string> {
   await page.goto("/staff/sign-in");
   await page.getByLabel("Email").fill(staff.email);
   await page.getByLabel("Password").fill(staff.password);
@@ -168,6 +169,7 @@ export async function staffSignIn(
   await page.getByLabel("6-digit code").fill(totp(secret));
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page).not.toHaveURL(/\/mfa$/);
+  return secret; // lets a spec step a direct API client up to AAL2 on the same authenticator
 }
 
 /**
@@ -223,4 +225,16 @@ export async function answerChecklist(
     }
     await item.getByRole("radio", { name: "No", exact: true }).click();
   }
+}
+
+/** A staff member in the scenario's branch with a branch-scoped role (the matrix of DEC-23 decides what they can do). */
+export async function branchStaff(
+  s: Awaited<ReturnType<typeof driverScenario>>,
+  label: string,
+  role: "supervisor" | "branch_manager" | "fleet_admin" | "maintenance_admin",
+) {
+  const { makeStaff, grant } = await import("../tests/integration/helpers");
+  const u = await makeStaff(s.w, label, role, s.branchId);
+  await grant(s.w, u.id, role, s.branchId, s.bootId);
+  return u;
 }

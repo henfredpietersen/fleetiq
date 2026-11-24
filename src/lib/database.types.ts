@@ -525,6 +525,62 @@ export type Database = {
           },
         ];
       };
+      damage_requests: {
+        Row: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          damage_item_id: string;
+          function_name: string;
+          id: string;
+          request_hash: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          damage_item_id: string;
+          function_name: string;
+          id?: string;
+          request_hash: string;
+        };
+        Update: {
+          actor_id?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          damage_item_id?: string;
+          function_name?: string;
+          id?: string;
+          request_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "damage_requests_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "damage_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "damage_requests_damage_item_id_company_id_fkey";
+            columns: ["damage_item_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_damage_items";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       departments: {
         Row: {
           branch_id: string | null;
@@ -1323,7 +1379,9 @@ export type Database = {
           driver_id: string;
           id: string;
           inspection_stage: string;
+          known_damage_reviewed: boolean;
           late_flag: boolean;
+          new_damage_flag: boolean;
           on_behalf_reason: string | null;
           safety_defect_flag: boolean;
           shift_id: string;
@@ -1355,7 +1413,9 @@ export type Database = {
           driver_id: string;
           id?: string;
           inspection_stage: string;
+          known_damage_reviewed?: boolean;
           late_flag?: boolean;
+          new_damage_flag?: boolean;
           on_behalf_reason?: string | null;
           safety_defect_flag?: boolean;
           shift_id: string;
@@ -1386,7 +1446,9 @@ export type Database = {
           driver_id?: string;
           id?: string;
           inspection_stage?: string;
+          known_damage_reviewed?: boolean;
           late_flag?: boolean;
+          new_damage_flag?: boolean;
           on_behalf_reason?: string | null;
           safety_defect_flag?: boolean;
           shift_id?: string;
@@ -2521,6 +2583,222 @@ export type Database = {
           },
         ];
       };
+      vehicle_damage_evidence: {
+        Row: {
+          added_at: string;
+          added_by: string;
+          company_id: string;
+          damage_item_id: string;
+          evidence_file_id: string;
+          id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          added_at?: string;
+          added_by: string;
+          company_id: string;
+          damage_item_id: string;
+          evidence_file_id: string;
+          id?: string;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string;
+          company_id?: string;
+          damage_item_id?: string;
+          evidence_file_id?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_damage_evidence_added_by_company_id_fkey";
+            columns: ["added_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_evidence_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_evidence_damage_item_id_company_id_fkey";
+            columns: ["damage_item_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_damage_items";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_evidence_evidence_file_id_fkey";
+            columns: ["evidence_file_id"];
+            isOneToOne: true;
+            referencedRelation: "evidence_files";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vehicle_damage_items: {
+        Row: {
+          branch_id: string;
+          captured_offline: boolean;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          description: string;
+          device_reported_at: string | null;
+          id: string;
+          incident_id: string | null;
+          interval_previous_allocation_id: string | null;
+          interval_previous_inspection_id: string | null;
+          repair_note: string | null;
+          repaired_at: string | null;
+          repaired_by: string | null;
+          reported_at: string;
+          reported_by: string;
+          reported_in_inspection_id: string | null;
+          reported_stage: string | null;
+          review_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          severity: string;
+          source: string;
+          status: string;
+          updated_at: string;
+          vehicle_id: string;
+          zone: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          branch_id: string;
+          captured_offline?: boolean;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          description: string;
+          device_reported_at?: string | null;
+          id?: string;
+          incident_id?: string | null;
+          interval_previous_allocation_id?: string | null;
+          interval_previous_inspection_id?: string | null;
+          repair_note?: string | null;
+          repaired_at?: string | null;
+          repaired_by?: string | null;
+          reported_at?: string;
+          reported_by: string;
+          reported_in_inspection_id?: string | null;
+          reported_stage?: string | null;
+          review_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          severity: string;
+          source: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_id: string;
+          zone: string;
+        };
+        Update: {
+          branch_id?: string;
+          captured_offline?: boolean;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          description?: string;
+          device_reported_at?: string | null;
+          id?: string;
+          incident_id?: string | null;
+          interval_previous_allocation_id?: string | null;
+          interval_previous_inspection_id?: string | null;
+          repair_note?: string | null;
+          repaired_at?: string | null;
+          repaired_by?: string | null;
+          reported_at?: string;
+          reported_by?: string;
+          reported_in_inspection_id?: string | null;
+          reported_stage?: string | null;
+          review_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          severity?: string;
+          source?: string;
+          status?: string;
+          updated_at?: string;
+          vehicle_id?: string;
+          zone?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_damage_items_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_interval_previous_allocation_id_compa_fkey";
+            columns: ["interval_previous_allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_interval_previous_inspection_id_compa_fkey";
+            columns: ["interval_previous_inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_repaired_by_company_id_fkey";
+            columns: ["repaired_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_reported_by_company_id_fkey";
+            columns: ["reported_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_reported_in_inspection_id_vehicle_id__fkey";
+            columns: [
+              "reported_in_inspection_id",
+              "vehicle_id",
+              "reported_stage",
+            ];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "vehicle_id", "inspection_stage"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_reviewed_by_company_id_fkey";
+            columns: ["reviewed_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vehicle_damage_items_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       vehicle_documents: {
         Row: {
           company_id: string;
@@ -3157,6 +3435,16 @@ export type Database = {
         };
         Returns: string;
       };
+      begin_inspection_on_behalf: {
+        Args: {
+          p_allocation_id: string;
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_device_started_at: string;
+          p_reason: string;
+        };
+        Returns: string;
+      };
       camera_notice_acknowledged: {
         Args: { p_notice_version: string };
         Returns: boolean;
@@ -3289,6 +3577,10 @@ export type Database = {
         Args: { p_id: string; p_result?: Json; p_worker: string };
         Returns: boolean;
       };
+      confirm_known_damage_reviewed: {
+        Args: { p_client_submission_id: string; p_inspection_id: string };
+        Returns: string;
+      };
       create_service_record: {
         Args: {
           p_client_submission_id: string;
@@ -3380,6 +3672,31 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      damage_check_input: {
+        Args: {
+          p_description: string;
+          p_files: string[];
+          p_severity: string;
+          p_zone: string;
+        };
+        Returns: string;
+      };
+      damage_driver_has_live_allocation: {
+        Args: { p_vehicle_id: string };
+        Returns: boolean;
+      };
+      damage_replay: {
+        Args: {
+          p_actor: string;
+          p_company: string;
+          p_csid: string;
+          p_function: string;
+          p_hash: string;
+        };
+        Returns: string;
+      };
+      damage_zone_label: { Args: { p_zone: string }; Returns: string };
+      damage_zones: { Args: Record<PropertyKey, never>; Returns: string[] };
       decide_approval: {
         Args: { p_approval_id: string; p_decision: string; p_notes?: string };
         Returns: {
@@ -3464,6 +3781,17 @@ export type Database = {
           longitude: number;
         }[];
       };
+      evidence_check_attachable: {
+        Args: {
+          p_actor: string;
+          p_allow_inspection: string;
+          p_branch: string;
+          p_company: string;
+          p_evidence_file_id: string;
+          p_purposes: string[];
+        };
+        Returns: undefined;
+      };
       evidence_object_readable: {
         Args: { p_bucket: string; p_path: string };
         Returns: boolean;
@@ -3474,6 +3802,10 @@ export type Database = {
       };
       evidence_slot_open_for_upload: {
         Args: { p_bucket: string; p_path: string };
+        Returns: boolean;
+      };
+      evidence_upload_allowed: {
+        Args: { p_branch_id: string; p_purpose: string };
         Returns: boolean;
       };
       evidence_upload_permission: {
@@ -3554,7 +3886,9 @@ export type Database = {
           driver_id: string;
           id: string;
           inspection_stage: string;
+          known_damage_reviewed: boolean;
           late_flag: boolean;
+          new_damage_flag: boolean;
           on_behalf_reason: string | null;
           safety_defect_flag: boolean;
           shift_id: string;
@@ -3576,6 +3910,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      inspection_new_damage: {
+        Args: { p_inspection_id: string };
+        Returns: Json;
       };
       inspection_record: {
         Args: {
@@ -3662,7 +4000,9 @@ export type Database = {
           device_flag: string;
           inspection_id: string;
           inspection_stage: string;
+          known_damage_reviewed: boolean;
           late_flag: boolean;
+          new_damage_flag: boolean;
           safety_defect_flag: boolean;
           shift_date: string;
           started_at: string;
@@ -3671,6 +4011,14 @@ export type Database = {
           vehicle_fleet_number: string;
           vehicle_registration: string;
         }[];
+      };
+      mark_damage_repaired: {
+        Args: {
+          p_client_submission_id: string;
+          p_item_id: string;
+          p_note: string;
+        };
+        Returns: string;
       };
       mark_evidence_slots_object_removed: {
         Args: { p_ids: string[] };
@@ -3715,6 +4063,17 @@ export type Database = {
         };
         Returns: string;
       };
+      record_onboarding_damage: {
+        Args: {
+          p_client_submission_id: string;
+          p_description: string;
+          p_evidence_file_ids: string[];
+          p_severity: string;
+          p_vehicle_id: string;
+          p_zone: string;
+        };
+        Returns: string;
+      };
       register_company_device: {
         Args: {
           p_asset_tag: string;
@@ -3744,6 +4103,19 @@ export type Database = {
           p_reason: string;
         };
         Returns: undefined;
+      };
+      report_damage: {
+        Args: {
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_description: string;
+          p_device_reported_at: string;
+          p_evidence_file_ids: string[];
+          p_inspection_id: string;
+          p_severity: string;
+          p_zone: string;
+        };
+        Returns: string;
       };
       request_allocation: {
         Args: {
@@ -3917,6 +4289,15 @@ export type Database = {
       reverse_service_verification: {
         Args: { p_reason: string; p_record_id: string };
         Returns: undefined;
+      };
+      review_damage: {
+        Args: {
+          p_client_submission_id: string;
+          p_decision: string;
+          p_item_id: string;
+          p_reason: string;
+        };
+        Returns: string;
       };
       save_inspection_responses: {
         Args: {

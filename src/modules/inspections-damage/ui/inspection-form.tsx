@@ -13,6 +13,9 @@ import {
 } from "@/modules/evidence-storage/ui/camera-capture";
 import { getDeviceKey } from "@/modules/evidence-storage/ui/device-key";
 import { registerEvidenceUploadAction } from "@/modules/evidence-storage/server/actions";
+import { confirmKnownDamageAction } from "../server/damage-actions";
+import { DamageReporter } from "./damage-report";
+import { damageStatusLabel, severityLabel } from "../domain/damage-zones";
 import {
   beginInspectionAction,
   saveAnswersAction,
@@ -38,7 +41,8 @@ import {
 } from "./photo-upload";
 
 type Answer = { value?: string; comment?: string };
-type Step = "vehicle" | "checklist" | "defects" | "odometer" | "review";
+type Step =
+  "vehicle" | "damage" | "checklist" | "defects" | "odometer" | "review";
 type PhotoState = {
   status: "sending" | "failed" | "done";
   message?: string;
@@ -52,6 +56,7 @@ type Target = {
 
 const STEP_LABEL: Record<Step, string> = {
   vehicle: "Confirm the vehicle",
+  damage: "Known damage on this vehicle",
   checklist: "Checklist",
   defects: "Defect photos",
   odometer: "Odometer photo",
@@ -99,10 +104,13 @@ export function InspectionForm({
   allocationId,
   data,
   noticeAcknowledged,
+  mode = "driver",
 }: {
   allocationId: string;
   data: MyInspection;
   noticeAcknowledged: boolean;
+  /** "on_behalf" (DEC-09): a supervisor completing the post-shift inspection for the driver, with a permanent banner. */
+  mode?: "driver" | "on_behalf";
 }) {
   const router = useRouter();
   const insp = data.inspection;
@@ -120,8 +128,16 @@ export function InspectionForm({
     ),
   );
   const [confirmed, setConfirmed] = useState(insp?.vehicle_confirmed ?? false);
+  const [knownReviewed, setKnownReviewed] = useState(
+    insp?.known_damage_reviewed ?? false,
+  );
+  const [reporting, setReporting] = useState(false);
   const [step, setStep] = useState<Step>(
-    insp?.vehicle_confirmed ? "checklist" : "vehicle",
+    !insp?.vehicle_confirmed
+      ? "vehicle"
+      : insp.known_damage_reviewed
+        ? "checklist"
+        : "damage",
   );
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
     null,
@@ -230,6 +246,7 @@ export function InspectionForm({
     data.odometer_photo_present || photos.odo?.status === "done";
   const blockers: Blocker[] = submitBlockers({
     vehicleConfirmed: confirmed,
+    knownDamageReviewed: knownReviewed,
     registration: v.registration,
     items: data.items.map((i) => ({
       id: i.template_item_id,
@@ -248,6 +265,7 @@ export function InspectionForm({
   });
   const steps: Step[] = [
     "vehicle",
+    "damage",
     "checklist",
     ...(defects.length > 0 ? (["defects"] as Step[]) : []),
     "odometer",
@@ -390,6 +408,37 @@ export function InspectionForm({
     );
   };
 
+  async function confirmKnown() {
+    if (!insp) return;
+    setMessage(null);
+    setBusy(true);
+    try {
+      const r = await confirmKnownDamageAction({
+        inspectionId: insp.id,
+        clientSubmissionId: idFor("known"),
+      });
+      if (r.ok) {
+        setKnownReviewed(true);
+        setStep("checklist");
+      } else setMessage({ ok: false, text: r.message });
+    } catch {
+      setMessage({ ok: false, text: noConnection });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const onBehalf = insp?.completed_by_role === "supervisor_on_behalf";
+  const banner = onBehalf ? (
+    <Alert
+      className="border-amber-600/40 text-amber-800"
+      role="status"
+      data-testid="on-behalf-banner"
+    >
+      Completing on behalf of the driver — reason: {insp?.on_behalf_reason}
+    </Alert>
+  ) : null;
+
   const header = (
     <div>
       <p className="text-lg font-semibold">
@@ -400,16 +449,18 @@ export function InspectionForm({
       </p>
     </div>
   );
+  const backHref =
+    mode === "on_behalf" ? "/shifts/allocations" : "/my-allocations";
   const back = (
     <Link
-      href="/my-allocations"
+      href={backHref}
       className={buttonVariants({
         variant: "outline",
         size: "lg",
         className: "min-h-14 w-full text-base",
       })}
     >
-      Back to my allocations
+      {mode === "on_behalf" ? "Back to allocations" : "Back to my allocations"}
     </Link>
   );
 
@@ -420,11 +471,17 @@ export function InspectionForm({
     return (
       <div className="flex flex-col gap-4" data-testid="inspection-submitted">
         {header}
+        {banner}
         <Alert variant="success" role="status">
           {data.stage === "pre_shift"
             ? "Inspection submitted — the vehicle is now in use."
             : "Post-shift inspection submitted."}
         </Alert>
+        {data.stage === "pre_shift" && data.new_damage.length > 0 ? (
+          <Alert role="status" data-testid="new-damage-notice">
+            New damage recorded — your supervisor will review it.
+          </Alert>
+        ) : null}
         {late ? (
           <Alert
             role="status"
@@ -450,8 +507,9 @@ export function InspectionForm({
         ) : null}
         {data.stage === "post_shift" ? (
           <p className="text-muted-foreground text-sm">
-            Your shift is over. The allocation now waits for closure by your
-            supervisor.
+            {mode === "on_behalf"
+              ? "The driver's shift is over. The allocation now waits for closure."
+              : "Your shift is over. The allocation now waits for closure by your supervisor."}
           </p>
         ) : null}
         {back}
@@ -541,10 +599,26 @@ export function InspectionForm({
     );
   }
 
+  // ---- a supervisor is completing this inspection on the driver's behalf: read-only for everyone else (the database refuses their writes)
+  if (onBehalf && !insp?.viewer_is_completer) {
+    return (
+      <div className="flex flex-col gap-4" data-testid="on-behalf-readonly">
+        {header}
+        {banner}
+        <Alert>
+          Your supervisor is completing this post-shift inspection for you.
+          There is nothing more for you to do.
+        </Alert>
+        {back}
+      </div>
+    );
+  }
+
   // ---- the draft, one task per screen
   return (
     <div className="flex flex-col gap-5" data-testid="inspection-form">
       {header}
+      {banner}
       <div
         className="flex items-center justify-between text-sm"
         data-testid="progress"
@@ -588,7 +662,7 @@ export function InspectionForm({
                 });
                 if (r.ok) {
                   lastSaved.current = JSON.stringify([payload, true]);
-                  setStep("checklist");
+                  setStep("damage");
                 } else {
                   setConfirmed(false);
                   setMessage({ ok: false, text: r.message });
@@ -603,6 +677,86 @@ export function InspectionForm({
           >
             This is the vehicle I am inspecting
           </Button>
+        </div>
+      ) : null}
+
+      {step === "damage" ? (
+        <div className="flex flex-col gap-4" data-testid="damage-step">
+          <p className="text-sm">
+            This is the damage already recorded for this vehicle. Check it
+            against the vehicle before you go on.
+          </p>
+          {data.known_damage.length === 0 ? (
+            <p className="rounded-lg border p-3" data-testid="no-known-damage">
+              No damage recorded yet
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2" aria-label="Known damage">
+              {data.known_damage.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex flex-col gap-1 rounded-lg border p-3"
+                  data-testid="known-damage-item"
+                >
+                  <p className="flex flex-wrap items-center gap-2 font-medium">
+                    {d.zone_label}
+                    <Badge variant="outline">{severityLabel(d.severity)}</Badge>
+                    {d.reported_now ? (
+                      <Badge variant="warning">Reported now</Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {damageStatusLabel(d.status)}
+                      </Badge>
+                    )}
+                  </p>
+                  <p className="text-sm">{d.description}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Recorded {d.reported_at.slice(0, 10)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+          {reporting ? (
+            <DamageReporter
+              inspectionId={insp.id}
+              noticeAcknowledged={noticeOk}
+              onNoticeAcknowledged={() => setNoticeOk(true)}
+              onCancel={() => setReporting(false)}
+              onReported={() => {
+                setReporting(false);
+                setMessage({
+                  ok: true,
+                  text: "Damage reported. It is in the list above.",
+                });
+                router.refresh();
+              }}
+            />
+          ) : (
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              className="min-h-14 w-full text-base"
+              disabled={busy}
+              onClick={() => setReporting(true)}
+            >
+              Report new damage
+            </Button>
+          )}
+          {!reporting ? (
+            <Button
+              type="button"
+              size="lg"
+              className="min-h-14 w-full text-base"
+              disabled={busy}
+              onClick={() =>
+                knownReviewed ? setStep("checklist") : void confirmKnown()
+              }
+            >
+              {knownReviewed ? "Next" : "I have checked this list"}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -765,6 +919,25 @@ export function InspectionForm({
 
       {step === "review" ? (
         <div className="flex flex-col gap-4" data-testid="review-step">
+          {data.new_damage.length > 0 ? (
+            <section
+              className="flex flex-col gap-2 rounded-lg border p-3"
+              data-testid="review-new-damage"
+            >
+              <p className="font-medium">
+                New damage reported in this inspection ({data.new_damage.length}
+                )
+              </p>
+              <ul className="flex flex-col gap-1 text-sm">
+                {data.new_damage.map((d) => (
+                  <li key={d.id}>
+                    {d.zone_label} · {severityLabel(d.severity)} —{" "}
+                    {d.description}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           {blockers.length === 0 ? (
             <Alert variant="success" role="status">
               Everything is in place. You can submit.
@@ -784,11 +957,13 @@ export function InspectionForm({
                         setStep(
                           b.code === "IN001"
                             ? "vehicle"
-                            : b.code === "IN006"
-                              ? "odometer"
-                              : b.code === "IN004"
-                                ? "defects"
-                                : "checklist",
+                            : b.code === "IN007"
+                              ? "damage"
+                              : b.code === "IN006"
+                                ? "odometer"
+                                : b.code === "IN004"
+                                  ? "defects"
+                                  : "checklist",
                         )
                       }
                     >

@@ -84,6 +84,13 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   const branch = viewable.find((b) => b.id === f.branchId) ?? viewable[0];
   const date = f.date ?? localDate(new Date());
 
+  // DEC-09: completing the post-shift inspection for the driver needs allocation.manage AND inspection.submit for the branch
+  const { data: canSubmit } = branch.canManage
+    ? await db.rpc("has_permission", {
+        permission_key: "inspection.submit",
+        target_branch_id: branch.id,
+      })
+    : { data: false };
   const [board, pick] = await Promise.all([
     getBoard(db, branch.id, date),
     branch.canManage ? getAllocatable(db, branch.id) : null,
@@ -216,6 +223,9 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                                 plannedEndAt={a.plannedEndAt}
                                 openedOnBehalf={a.openedOnBehalf}
                                 canManage={branch.canManage}
+                                canCompleteOnBehalf={
+                                  branch.canManage && canSubmit === true
+                                }
                                 startWindowOpen={startWindowOpen(
                                   new Date(a.plannedStartAt),
                                   new Date(a.plannedEndAt),

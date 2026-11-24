@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { OnBehalfStart } from "@/modules/inspections-damage/ui/on-behalf-start";
 import { fromLocalInput, toLocalInput } from "../domain/format";
 import { STARTED_BY_SUPERVISOR } from "../domain/allocation-text";
 import {
@@ -24,6 +25,8 @@ export type RowActionProps = {
   plannedEndAt: string;
   openedOnBehalf: boolean;
   canManage: boolean;
+  /** DEC-09: allocation.manage AND inspection.submit for the branch (the database re-checks). */
+  canCompleteOnBehalf?: boolean;
   /** Computed on the server from the same settings the database uses; the database re-checks. */
   startWindowOpen: boolean;
   startOpensAtLabel: string;
@@ -169,6 +172,10 @@ export function AllocationRowActions(p: RowActionProps) {
         <span className="text-muted-foreground text-xs">
           Start opens {p.startOpensAtLabel}
         </span>
+      ) : null}
+      {p.canCompleteOnBehalf &&
+      (p.status === "in_use" || p.status === "post_inspection_pending") ? (
+        <OnBehalfStart allocationId={p.id} label={p.label} />
       ) : null}
       {canNoShow ? (
         <Button

@@ -37,7 +37,7 @@ function setup(opts: {
   const user = fakeClient({
     user: opts.user,
     slot: opts.slot === undefined ? slotRow() : opts.slot,
-    rpc: { has_permission: () => ({ data: opts.allowed ?? true }) },
+    rpc: { evidence_upload_allowed: () => ({ data: opts.allowed ?? true }) },
   });
   const elevated = fakeClient({
     objects: opts.object ? { [PATH]: opts.object } : {},
@@ -267,15 +267,17 @@ describe("registerUpload — verify, then register", () => {
     expect(built()).toBe(0);
   });
 
-  it("checks the permission for the slot's purpose and branch", async () => {
+  it("asks the database's one upload rule for the slot's purpose and branch", async () => {
     const { deps, user } = setup({ object: jpeg({}) });
     await registerUpload(deps, { slotId: SLOT });
-    expect(called(user.calls, "rpc:has_permission")[0]!.args[0]).toEqual({
-      permission_key: "inspection.submit",
-      target_branch_id: BRANCH,
+    expect(
+      called(user.calls, "rpc:evidence_upload_allowed")[0]!.args[0],
+    ).toEqual({
+      p_purpose: "odometer",
+      p_branch_id: BRANCH,
     });
     expect(names(user.calls).indexOf("getUser")).toBeLessThan(
-      names(user.calls).indexOf("rpc:has_permission"),
+      names(user.calls).indexOf("rpc:evidence_upload_allowed"),
     );
   });
 });

@@ -37,6 +37,12 @@ import { listInspections } from "@/modules/inspections-damage/server/inspection-
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const first = (v: string | string[] | undefined) =>
   Array.isArray(v) ? v[0] : v;
+const DEVICE_FILTERS = [
+  "issued_device",
+  "other_device",
+  "unknown_device",
+  "no_issued_device",
+] as const;
 // Africa/Johannesburg is UTC+2 all year (no DST): local midnight is `${date}T00:00:00+02:00`.
 const dayStart = (d: string) => `${d}T00:00:00+02:00`;
 const addDays = (d: string, n: number) =>
@@ -71,17 +77,35 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   const f = parsed.success ? parsed.data : {};
   const branch = viewable.find((b) => b.id === f.branchId) ?? viewable[0];
   const date = f.date ?? localDate(new Date());
-  const r = await listInspections(db, {
+  const loaded = await listInspections(db, {
     from: dayStart(date),
     to: dayStart(addDays(date, 1)),
     branchId: branch.id,
   });
-  if (!r.ok)
+  if (!loaded.ok)
     return (
       <Alert variant="destructive">
-        The inspections could not be loaded. {r.message}
+        The inspections could not be loaded. {loaded.message}
       </Alert>
     );
+  // filters (all optional, combined with AND); an unknown value is ignored
+  const on = (k: string) => first(sp[k]) === "1";
+  const deviceF = DEVICE_FILTERS.find((d) => d === first(sp.device));
+  const rows = loaded.rows.filter(
+    (i) =>
+      (!on("late") || i.lateFlag) &&
+      (!on("safety") || i.safetyDefectFlag) &&
+      (!on("newdamage") || i.newDamageFlag) &&
+      (!on("onbehalf") || i.completedByRole === "supervisor_on_behalf") &&
+      (!deviceF || i.deviceFlag === deviceF),
+  );
+  const filtered =
+    on("late") ||
+    on("safety") ||
+    on("newdamage") ||
+    on("onbehalf") ||
+    !!deviceF;
+  const r = { rows };
 
   return (
     <>
@@ -109,14 +133,47 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
           <Label htmlFor="date">Date</Label>
           <Input id="date" name="date" type="date" defaultValue={date} />
         </div>
+        <fieldset className="flex flex-wrap items-end gap-4">
+          <legend className="sr-only">Show only</legend>
+          {(
+            [
+              ["late", "Late"],
+              ["safety", "Safety defect"],
+              ["newdamage", "New damage"],
+              ["onbehalf", "Completed by supervisor"],
+            ] as const
+          ).map(([k, label]) => (
+            <label key={k} className="flex min-h-10 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name={k}
+                value="1"
+                defaultChecked={on(k)}
+              />
+              {label}
+            </label>
+          ))}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="device">Device flag</Label>
+            <Select id="device" name="device" defaultValue={deviceF ?? ""}>
+              <option value="">Any</option>
+              {DEVICE_FILTERS.map((d) => (
+                <option key={d} value={d}>
+                  {DEVICE_FLAG_LABEL[d] ?? d}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </fieldset>
         <Button type="submit" variant="outline">
           Apply
         </Button>
       </form>
       {r.rows.length === 0 ? (
         <Alert>
-          No inspections were started at {branch.name} on{" "}
-          {formatShiftDate(date)}.
+          {filtered
+            ? `No inspections at ${branch.name} on ${formatShiftDate(date)} match those filters.`
+            : `No inspections were started at ${branch.name} on ${formatShiftDate(date)}.`}
         </Alert>
       ) : (
         <Table aria-label="Inspections">
@@ -155,7 +212,15 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
                     {i.capturedOffline ? (
                       <Badge variant="outline">Offline</Badge>
                     ) : null}
-                    {i.deviceFlag && i.deviceFlag !== "issued_device" ? (
+                    {i.newDamageFlag ? (
+                      <Badge variant="warning">New damage</Badge>
+                    ) : null}
+                    {i.completedByRole === "supervisor_on_behalf" ? (
+                      <Badge variant="outline">Completed by supervisor</Badge>
+                    ) : null}
+                    {i.completedByRole !== "supervisor_on_behalf" &&
+                    i.deviceFlag &&
+                    i.deviceFlag !== "issued_device" ? (
                       <Badge variant="warning">
                         {DEVICE_FLAG_LABEL[i.deviceFlag] ?? i.deviceFlag}
                       </Badge>

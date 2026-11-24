@@ -52,6 +52,7 @@ test("end shift asks first: Cancel changes nothing, confirming starts the post-s
   await page
     .getByRole("button", { name: "This is the vehicle I am inspecting" })
     .click();
+  await page.getByRole("button", { name: "I have checked this list" }).click();
   await expect(page.getByTestId("inspection-item").first()).toBeVisible();
   const { data: moved } = await s.sa
     .from("vehicle_allocations")

@@ -186,6 +186,7 @@ test("start by the driver, start on behalf (badge), cancel with a reason", async
   await dp
     .getByRole("button", { name: "This is the vehicle I am inspecting" })
     .click();
+  await dp.getByRole("button", { name: "I have checked this list" }).click();
   const items = dp.getByTestId("inspection-item");
   await expect(items).toHaveCount(20);
   await expect(dp.getByText("Wheel nuts present and tight")).toBeVisible();

@@ -256,6 +256,9 @@ describe("getMyInspection", () => {
       },
     ],
     odometer_photo_present: false,
+    known_damage_reviewed: false,
+    known_damage: [],
+    new_damage: [],
   };
   it("parses the document", async () => {
     const { db, calls } = fake({ data: doc });
@@ -296,6 +299,9 @@ describe("listInspections", () => {
       captured_offline: false,
       completed_by_role: "driver",
       allocation_status: "in_use",
+      device_flag: null,
+      new_damage_flag: true,
+      known_damage_reviewed: true,
     };
     const { db, calls } = fake({ data: [row] });
     const r = await listInspections(db, {
@@ -307,6 +313,7 @@ describe("listInspections", () => {
       lateFlag: true,
       safetyDefectFlag: true,
       fleetNumber: "FL-001",
+      newDamageFlag: true,
     });
     expect(calls[0].args).toEqual({
       p_from: "2026-11-18T00:00:00+02:00",

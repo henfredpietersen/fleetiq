@@ -31,6 +31,7 @@ test("camera permission denied: the camera-needed message, call the supervisor, 
   await page
     .getByRole("button", { name: "This is the vehicle I am inspecting" })
     .click();
+  await page.getByRole("button", { name: "I have checked this list" }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click(); // checklist -> odometer
   await page.getByRole("button", { name: "Take odometer photo" }).click();
 

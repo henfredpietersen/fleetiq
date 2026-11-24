@@ -14,8 +14,15 @@ import {
   submitSchema,
 } from "../domain/inspection-schema";
 import {
+  beginOnBehalfSchema,
+  confirmKnownDamageSchema,
+  voidInspectionSchema,
+} from "../domain/damage-schema";
+import {
   myInspectionDoc,
+  newDamageDoc,
   type InspectionListRow,
+  type InspectionNewDamage,
   type MyInspection,
 } from "../domain/inspection-types";
 
@@ -40,6 +47,65 @@ export async function beginInspection(
     p_stage: p.value.stage,
     p_device_started_at: nul<string>(p.value.deviceStartedAt),
     p_captured_offline: p.value.capturedOffline,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, inspectionId: data };
+}
+
+/** DEC-42: "I have checked the known damage list" (idempotent). */
+export async function confirmKnownDamage(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ inspectionId: string }>> {
+  const p = parseInput(confirmKnownDamageSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("confirm_known_damage_reviewed", {
+    p_inspection_id: p.value.inspectionId,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, inspectionId: data };
+}
+
+/**
+ * DEC-09: a supervisor (allocation.manage + inspection.submit, not the driver) begins the POST-shift inspection on the driver's
+ * behalf, with a reason. The database re-checks every rule, including "void the driver's draft first".
+ */
+export async function beginInspectionOnBehalf(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ inspectionId: string }>> {
+  const p = parseInput(beginOnBehalfSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("begin_inspection_on_behalf", {
+    p_allocation_id: p.value.allocationId,
+    p_reason: p.value.reason,
+    p_device_started_at: nul<string>(p.value.deviceStartedAt),
+    p_captured_offline: p.value.capturedOffline,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (!data) return unavailable;
+  return { ok: true, inspectionId: data };
+}
+
+/**
+ * allocation.manage for the branch, with a reason, never the person who completed it (DEC-24; checked by the database). Nothing is
+ * deleted: the voided inspection and everything under it stay. A voided driver draft is how a supervisor takes over a post-shift
+ * inspection (DEC-09).
+ */
+export async function voidInspection(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ inspectionId: string }>> {
+  const p = parseInput(voidInspectionSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("void_inspection", {
+    p_inspection_id: p.value.inspectionId,
+    p_reason: p.value.reason,
     p_client_submission_id: p.value.clientSubmissionId,
   });
   if (error) return { ok: false, message: inspectionDbMessage(error) };
@@ -206,6 +272,8 @@ export async function listInspections(
       completedByRole: r.completed_by_role,
       allocationStatus: r.allocation_status,
       deviceFlag: r.device_flag ?? null,
+      newDamageFlag: r.new_damage_flag,
+      knownDamageReviewed: r.known_damage_reviewed,
     })),
   };
 }
@@ -228,11 +296,19 @@ export type InspectionDetail = {
   make: string;
   model: string;
   vehicleConfirmed: boolean;
+  /** Who completed it: the signed-in user may never void their own (DEC-24). */
+  submittedBy: string;
   lateFlag: boolean;
   safetyDefectFlag: boolean;
   capturedOffline: boolean;
   deviceFlag: string | null;
   completedByRole: string;
+  /** DEC-09: why the supervisor completed it (null for a driver's own inspection). */
+  onBehalfReason: string | null;
+  newDamageFlag: boolean;
+  knownDamageReviewed: boolean;
+  /** Damage reported in this inspection, with the interval for pre-shift reports. */
+  newDamage: InspectionNewDamage[];
   /** Server times. */
   startedAt: string;
   submittedAt: string | null;
@@ -264,7 +340,7 @@ export async function getInspectionDetail(
   const { data: i, error } = await db
     .from("inspections")
     .select(
-      "id, inspection_stage, status, branch_id, vehicle_id, vehicle_confirmed, late_flag, safety_defect_flag, captured_offline, device_flag, completed_by_role, started_at, submitted_at, device_started_at, device_submitted_at, void_reason",
+      "id, inspection_stage, status, branch_id, vehicle_id, vehicle_confirmed, submitted_by, late_flag, safety_defect_flag, captured_offline, device_flag, completed_by_role, on_behalf_reason, new_damage_flag, known_damage_reviewed, started_at, submitted_at, device_started_at, device_submitted_at, void_reason",
     )
     .eq("id", inspectionId)
     .maybeSingle();
@@ -275,7 +351,7 @@ export async function getInspectionDetail(
       message: "That inspection was not found, or you cannot access it.",
     };
   }
-  const [veh, resp, odo, photos] = await Promise.all([
+  const [veh, resp, odo, photos, dmg] = await Promise.all([
     db
       .from("vehicles")
       .select("fleet_number, registration_number, make, model")
@@ -297,8 +373,12 @@ export async function getInspectionDetail(
       .select("evidence_file_id, template_item_id, photo_category, created_at")
       .eq("inspection_id", i.id)
       .order("created_at"),
+    db.rpc("inspection_new_damage", { p_inspection_id: i.id }),
   ]);
-  if (veh.error || resp.error || odo.error || photos.error) return unavailable;
+  if (veh.error || resp.error || odo.error || photos.error || dmg.error)
+    return unavailable;
+  const newDamage = newDamageDoc.safeParse(dmg.data ?? []);
+  if (!newDamage.success) return unavailable;
   const answers = (resp.data ?? [])
     .map((r) => {
       const it = Array.isArray(r.inspection_template_items)
@@ -326,11 +406,16 @@ export async function getInspectionDetail(
       make: veh.data?.make ?? "",
       model: veh.data?.model ?? "",
       vehicleConfirmed: i.vehicle_confirmed,
+      submittedBy: i.submitted_by,
       lateFlag: i.late_flag,
       safetyDefectFlag: i.safety_defect_flag,
       capturedOffline: i.captured_offline,
       deviceFlag: i.device_flag,
       completedByRole: i.completed_by_role,
+      onBehalfReason: i.on_behalf_reason,
+      newDamageFlag: i.new_damage_flag,
+      knownDamageReviewed: i.known_damage_reviewed,
+      newDamage: newDamage.data,
       startedAt: i.started_at,
       submittedAt: i.submitted_at,
       deviceStartedAt: i.device_started_at,
