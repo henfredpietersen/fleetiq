@@ -85,6 +85,8 @@ test("start by the driver, start on behalf (badge), cancel with a reason", async
       .eq("id", v.id);
     const emp = `LD${run}${tag}`;
     const drv = await makeDriver(w, emp, PIN, { branchId: branch.id });
+    // real drivers hold the driver role (inspection.submit) from creation; the inspection functions check it
+    await grant(w, drv.id, "driver", branch.id, boot.id);
     const row = (
       await sa
         .from("drivers")
