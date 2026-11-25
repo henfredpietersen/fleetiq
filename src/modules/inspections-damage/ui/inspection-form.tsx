@@ -165,10 +165,20 @@ function FormBody({
   // what the server has confirmed since this form opened (the page data catches up after the refresh)
   const [attached, setAttached] = useState<Set<string>>(new Set());
   const [submitConfirmed, setSubmitConfirmed] = useState(false);
+  // re-read the server's data once something was confirmed; with no connection that waits (a failed page refresh would reload the page)
+  const refreshDue = useRef(false);
   const refresh = useCallback(() => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      refreshDue.current = true;
+      return;
+    }
+    refreshDue.current = false;
     if (onSynced) onSynced();
     else router.refresh();
   }, [onSynced, router]);
+  useEffect(() => {
+    if (sync.online && refreshDue.current) refresh();
+  }, [sync.online, refresh]);
 
   useEffect(
     () =>

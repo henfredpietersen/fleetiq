@@ -15,20 +15,32 @@ import { useSync } from "./sync-manager";
 
 export const ACTIVE_PROFILE_KEY = "fleetiq:active-profile";
 
-/** Registers the service worker once, and asks it to keep the offline shell while there is a connection. */
+/** Registers the service worker (public/sw.js). Without one everything still works online. */
 export function registerServiceWorker() {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator))
     return;
-  void navigator.serviceWorker
-    .register("/sw.js", { scope: "/" })
-    .then(() => navigator.serviceWorker.ready)
-    .then((reg) => {
-      if (navigator.onLine) reg.active?.postMessage({ type: "warm" });
-    })
-    .catch(() => {
-      /* no service worker: everything still works online */
-    });
+  void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+    /* no service worker: everything still works online */
+  });
 }
+
+/** Asks the worker to keep the offline shell and the scripts it needs. Once per tab session, only while idle and online. */
+function warmOfflineShell() {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator))
+    return;
+  try {
+    if (sessionStorage.getItem("fleetiq:shell-warmed")) return;
+    sessionStorage.setItem("fleetiq:shell-warmed", "1");
+  } catch {
+    /* private mode: warm anyway */
+  }
+  void navigator.serviceWorker.ready
+    .then((reg) => reg.active?.postMessage({ type: "warm" }))
+    .catch(() => undefined);
+}
+
+/** How long a screen sits idle before the offline shell is fetched, so it never competes with the driver's own requests. */
+const WARM_AFTER_MS = 20_000;
 
 function ConflictPanel({
   s,
@@ -116,6 +128,12 @@ export function SyncBar({ profileId }: { profileId: string }) {
       /* private mode: the offline shell then asks to sign in with a connection first */
     }
   }, [profileId]);
+  const idle = state.ready && state.online && state.items.length === 0;
+  useEffect(() => {
+    if (!idle) return;
+    const t = setTimeout(warmOfflineShell, WARM_AFTER_MS);
+    return () => clearTimeout(t);
+  }, [idle]);
 
   const banner = bannerFor({
     online: state.online,

@@ -121,7 +121,9 @@ export function CameraCapture({
       await acknowledgeCameraNoticeAction();
       onNoticeAcknowledged();
     } catch {
-      /* the notice never blocks the camera */
+      // The notice never blocks the camera. With no connection the acknowledgement is not recorded on the server (it asks again on
+      // the next page load that has a connection); within this screen the driver is not asked again.
+      onNoticeAcknowledged();
     }
     setPhase("starting");
   }

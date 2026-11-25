@@ -136,7 +136,8 @@ select is(tests.sqlstate_of(format('select public.report_sync_conflict(%L, null,
 -- the manager completing the post-shift inspection on the driver's behalf can report; another manager cannot
 select tests.act_as('sup1');
 insert into kv select 'obi', public.begin_inspection_on_behalf(tests.al('ob'), 'Driver ended the shift without finishing', null, false, tests.csid('ob-b'));
-select ok((select public.report_sync_conflict(tests.al('ob'), (select v from kv where k = 'obi'), 'submit', 'IN002', 'a required item is not answered', null, tests.csid('r8'))) is not null, 'report: the on-behalf completer reports a refusal');
+insert into kv select 'r8', public.report_sync_conflict(tests.al('ob'), (select v from kv where k = 'obi'), 'submit', 'IN002', 'a required item is not answered', null, tests.csid('r8'));
+select ok((select v from kv where k = 'r8') is not null, 'report: the on-behalf completer reports a refusal');
 select tests.act_as('sup2');
 select is(tests.sqlstate_of(format('select public.report_sync_conflict(%L, null, ''submit'', ''IN002'', ''x'', null, %L)', tests.al('ob'), tests.csid('r9'))), '42501', 'report: another manager of the branch (not the completer) is refused');
 select tests.reset();
