@@ -137,6 +137,7 @@ export class SyncManager {
   }
 
   stop() {
+    if (typeof window === "undefined") return;
     this.runner?.stop();
     window.removeEventListener("online", this.onOnline);
     window.removeEventListener("offline", this.onOffline);
@@ -301,6 +302,8 @@ let current: SyncManager | null = null;
 
 /** The one manager for this profile. A different profile (another driver signed in on this phone) stops the previous manager. */
 export function getSyncManager(profileId: string): SyncManager {
+  // on the server (SSR) nothing is shared between requests: a throwaway, never started manager
+  if (typeof window === "undefined") return new SyncManager(profileId);
   if (current && current.profileId === profileId) return current;
   current?.stop();
   current = new SyncManager(profileId);
