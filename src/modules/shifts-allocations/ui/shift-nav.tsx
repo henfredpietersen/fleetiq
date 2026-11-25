@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { MissingLateLink } from "@/modules/inspections-damage/offline/ui/missing-late-link";
 
 const LINKS = [
   { href: "/shifts", label: "Shifts" },
@@ -23,6 +25,18 @@ export function ShiftNav() {
           {l.label}
         </Link>
       ))}
+      <Suspense
+        fallback={
+          <Link
+            href="/shifts/missing"
+            className="text-sm font-medium hover:underline"
+          >
+            Missing / Late
+          </Link>
+        }
+      >
+        <MissingLateLink />
+      </Suspense>
     </nav>
   );
 }

@@ -9,8 +9,6 @@ import {
 import { createEvidenceDeps } from "@/modules/evidence-storage/server/factory";
 import { handleSync } from "@/modules/inspections-damage/offline/server/sync-handler";
 
-export const dynamic = "force-dynamic";
-
 const noStore = { "Cache-Control": "no-store" };
 
 export async function POST(request: Request) {
