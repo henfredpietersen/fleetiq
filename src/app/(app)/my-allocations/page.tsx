@@ -13,6 +13,7 @@ import { formatShiftDate } from "@/modules/shifts-allocations/domain/format";
 import { localDate } from "@/modules/shifts-allocations/domain/shift-times";
 import { listMyAllocations } from "@/modules/shifts-allocations/server/lifecycle-service";
 import { MyAllocationCard } from "@/modules/shifts-allocations/ui/my-allocation-card";
+import { SyncBar } from "@/modules/inspections-damage/offline/ui/sync-bar";
 
 // Africa/Johannesburg is UTC+2 all year (no DST): local midnight is `${date}T00:00:00+02:00`.
 const dayStart = (d: string) => `${d}T00:00:00+02:00`;
@@ -22,7 +23,7 @@ const addDays = (d: string, n: number) =>
     .slice(0, 10);
 
 async function Content() {
-  await requireSession("full");
+  const ctx = await requireSession("full");
   await connection();
   const db = await createSupabaseServerClient();
   const today = localDate(new Date());
@@ -50,10 +51,13 @@ async function Content() {
     );
   if (r.allocations.length === 0)
     return (
-      <Alert>
-        You have no allocations today or in the next 7 days. Your supervisor
-        allocates vehicles to you.
-      </Alert>
+      <div className="flex flex-col gap-3">
+        <SyncBar profileId={ctx.userId} />
+        <Alert>
+          You have no allocations today or in the next 7 days. Your supervisor
+          allocates vehicles to you.
+        </Alert>
+      </div>
     );
   // group by the local date of the planned start
   const groups = new Map<string, typeof r.allocations>();
@@ -63,6 +67,7 @@ async function Content() {
   }
   return (
     <div className="flex flex-col gap-6">
+      <SyncBar profileId={ctx.userId} />
       {[...groups.entries()].map(([d, list]) => (
         <section key={d} aria-label={formatShiftDate(d)}>
           <h2 className="mb-2 text-base font-semibold">
@@ -75,6 +80,7 @@ async function Content() {
               <MyAllocationCard
                 key={`${a.id}:${a.status}:${a.postShiftSubmitted}:${a.canOpen}`}
                 a={a}
+                profileId={ctx.userId}
               />
             ))}
           </ul>

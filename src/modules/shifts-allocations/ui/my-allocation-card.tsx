@@ -11,6 +11,9 @@ import {
   STARTED_BY_SUPERVISOR,
 } from "../domain/allocation-text";
 import { formatShiftWindow } from "../domain/format";
+import { effectiveAllocation } from "@/modules/inspections-damage/offline/domain/overlay";
+import { ScopeStatusLine } from "@/modules/inspections-damage/offline/ui/sync-bar";
+import { useSync } from "@/modules/inspections-damage/offline/ui/sync-manager";
 import { transitionAction } from "../server/lifecycle-actions";
 import type { MyAllocation } from "../domain/lifecycle-types";
 
@@ -19,12 +22,30 @@ import type { MyAllocation } from "../domain/lifecycle-types";
  * decides (window, licence, shift). The submission id is created once per card and reused on every retry, so a dropped
  * connection followed by a second tap cannot start twice. The database's refusal message is shown as is.
  */
-export function MyAllocationCard({ a }: { a: MyAllocation }) {
+export function MyAllocationCard({
+  a,
+  profileId,
+}: {
+  a: MyAllocation;
+  profileId: string;
+}) {
   const submissionId = useRef(crypto.randomUUID());
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState(a.status);
+  const [serverStatus, setStatus] = useState(a.status);
   const [canOpen, setCanOpen] = useState(a.canOpen);
+  const { state, manager } = useSync(profileId);
+  // unsent inspections move the card on, marked "not sent yet" (the phone's queue is the record of that work)
+  const eff = effectiveAllocation(
+    {
+      id: a.id,
+      status: serverStatus,
+      postShiftSubmitted: a.postShiftSubmitted,
+    },
+    state.items,
+  );
+  const status = eff.status;
+  const postShiftSubmitted = eff.postShiftSubmitted;
   const started = status === "pre_inspection_pending";
 
   function open() {
@@ -39,6 +60,7 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
         if (r.ok) {
           setStatus("pre_inspection_pending");
           setCanOpen(false);
+          void manager.refreshSnapshot(); // the phone keeps this allocation's checklist and known damage from now on
         } else setError(r.message);
       } catch {
         setError(
@@ -63,7 +85,7 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
           </p>
         </div>
         <Badge variant="outline" data-testid="allocation-status">
-          {status === "post_inspection_pending" && a.postShiftSubmitted
+          {status === "post_inspection_pending" && postShiftSubmitted
             ? AWAITING_CLOSURE
             : driverStatusLabel(status)}
         </Badge>
@@ -79,6 +101,8 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
       {a.openedOnBehalf && !started && status !== "planned" ? (
         <Badge variant="warning">{STARTED_BY_SUPERVISOR}</Badge>
       ) : null}
+      <ScopeStatusLine profileId={profileId} scope={`${a.id}:pre_shift`} />
+      <ScopeStatusLine profileId={profileId} scope={`${a.id}:post_shift`} />
       {started ? (
         <Link
           href={`/my-allocations/${a.id}/inspection/pre-shift`}
@@ -104,7 +128,7 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
           End shift — post-shift inspection
         </Link>
       ) : null}
-      {status === "post_inspection_pending" && !a.postShiftSubmitted ? (
+      {status === "post_inspection_pending" && !postShiftSubmitted ? (
         <Link
           href={`/my-allocations/${a.id}/inspection/post-shift`}
           data-testid="post-shift-inspection-link"
@@ -117,7 +141,16 @@ export function MyAllocationCard({ a }: { a: MyAllocation }) {
         </Link>
       ) : null}
       {error ? <Alert variant="destructive">{error}</Alert> : null}
-      {canOpen && status === "planned" ? (
+      {canOpen && status === "planned" && !state.online ? (
+        // DEC-40: starting an allocation needs a connection (the inspection can then be completed offline)
+        <p
+          className="text-muted-foreground rounded-md border p-3 text-sm"
+          data-testid="start-needs-connection"
+        >
+          Starting needs a connection
+        </p>
+      ) : null}
+      {canOpen && status === "planned" && state.online ? (
         <Button
           type="button"
           size="lg"

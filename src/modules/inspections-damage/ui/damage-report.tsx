@@ -26,6 +26,7 @@ import {
   MAX_DAMAGE_PHOTOS,
   SEVERITY_LABELS,
 } from "../domain/damage-zones";
+import type { ItemPayload } from "../offline/domain/types";
 import {
   newPendingDamagePhoto,
   sendDamagePhoto,
@@ -56,6 +57,16 @@ type PhotoRow = {
   pending: PendingDamagePhoto;
   status: "sending" | "failed" | "done";
   message?: string;
+  /** Inspection mode: the photo is kept on the phone and goes with the report through the queue. */
+  local?: { blobId: string; slotCsid: string };
+};
+
+/** Inspection mode: the report and its photos are saved on the phone and sent by the queue (DEC-06). */
+export type DamageQueue = {
+  enqueue(
+    payload: ItemPayload,
+    blobs?: { id: string; blob: Blob }[],
+  ): Promise<void>;
 };
 
 /**
@@ -65,6 +76,7 @@ type PhotoRow = {
  * Nothing here says or implies who is at fault.
  */
 export function DamageReporter({
+  queue,
   inspectionId,
   vehicleId,
   noticeAcknowledged,
@@ -73,6 +85,7 @@ export function DamageReporter({
   onCancel,
   submitLabel = "Report this damage",
 }: {
+  queue?: DamageQueue;
   inspectionId?: string;
   vehicleId?: string;
   noticeAcknowledged: boolean;
@@ -130,6 +143,21 @@ export function DamageReporter({
   }
   function onUse(c: CameraResult) {
     setCamera(false);
+    if (queue) {
+      setPhotos((s) => [
+        ...s,
+        {
+          key: crypto.randomUUID(),
+          pending: newPendingDamagePhoto(c),
+          status: "done",
+          local: {
+            blobId: crypto.randomUUID(),
+            slotCsid: crypto.randomUUID(),
+          },
+        },
+      ]);
+      return;
+    }
     const row: PhotoRow = {
       key: crypto.randomUUID(),
       pending: newPendingDamagePhoto(c),
@@ -142,6 +170,46 @@ export function DamageReporter({
   async function submit() {
     setMessage(null);
     setBusy(true);
+    if (queue) {
+      try {
+        await queue.enqueue(
+          {
+            kind: "report_damage",
+            zone,
+            severity,
+            description,
+            photos: photos.map((p) => ({
+              slotCsid: p.local!.slotCsid,
+              photo: {
+                blobId: p.local!.blobId,
+                size: p.pending.photo.blob.size,
+                width: p.pending.photo.width,
+                height: p.pending.photo.height,
+                capturedAt: p.pending.photo.capturedAt,
+                location: p.pending.photo.location,
+                capturedOffline: p.pending.photo.capturedOffline,
+              },
+            })),
+          },
+          photos.map((p) => ({
+            id: p.local!.blobId,
+            blob: p.pending.photo.blob,
+          })),
+        );
+        setZone("");
+        setSeverity("");
+        setDescription("");
+        setPhotos([]);
+        onReported();
+      } catch {
+        setMessage(
+          "This could not be saved on the phone. Check the phone's storage and try again.",
+        );
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     try {
       const body = {
         zone,
@@ -251,7 +319,11 @@ export function DamageReporter({
                 <span role="status">Sending…</span>
               ) : null}
               {p.status === "done" ? (
-                <Badge variant="success">Attached</Badge>
+                p.local ? (
+                  <Badge variant="outline">Saved on this phone</Badge>
+                ) : (
+                  <Badge variant="success">Attached</Badge>
+                )
               ) : null}
               {p.status === "failed" ? (
                 <>

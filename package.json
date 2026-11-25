@@ -16,7 +16,8 @@
     "check:e2e": "bash scripts/check.sh e2e",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
     "test:int": "vitest run --config vitest.integration.config.ts --reporter=default",
-    "job:evidence-cleanup": "node --env-file-if-exists=.env.local --conditions=react-server src/jobs/run.ts evidence-cleanup"
+    "job:evidence-cleanup": "node --env-file-if-exists=.env.local --conditions=react-server src/jobs/run.ts evidence-cleanup",
+    "job:inspection-watch": "node --env-file-if-exists=.env.local --conditions=react-server src/jobs/run.ts inspection-watch"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -39,7 +39,8 @@ export async function reportDamage(
     p_captured_offline: p.value.capturedOffline,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, damageId: data };
 }
@@ -59,7 +60,8 @@ export async function recordOnboardingDamage(
     p_evidence_file_ids: p.value.evidenceFileIds,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, damageId: data };
 }
@@ -76,7 +78,8 @@ export async function reviewDamage(
     p_reason: nul<string>(p.value.reason),
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, damageId: data };
 }
@@ -92,7 +95,8 @@ export async function markDamageRepaired(
     p_note: p.value.note,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, damageId: data };
 }
@@ -114,7 +118,8 @@ export async function listVehicleDamage(
     .eq("vehicle_id", vehicleId)
     .order("reported_at", { ascending: false })
     .limit(500);
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   return {
     ok: true,
     items: (data ?? []).map((d) => ({

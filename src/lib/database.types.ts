@@ -1260,6 +1260,107 @@ export type Database = {
           },
         ];
       };
+      inspection_sync_conflicts: {
+        Row: {
+          allocation_id: string;
+          branch_id: string;
+          client_submission_id: string;
+          company_id: string;
+          device_time: string | null;
+          function_name: string;
+          id: string;
+          inspection_id: string | null;
+          refusal_code: string;
+          refusal_message: string;
+          reported_at: string;
+          reported_by: string;
+          resolution_note: string | null;
+          resolve_client_submission_id: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id: string;
+          branch_id: string;
+          client_submission_id: string;
+          company_id: string;
+          device_time?: string | null;
+          function_name: string;
+          id?: string;
+          inspection_id?: string | null;
+          refusal_code: string;
+          refusal_message: string;
+          reported_at?: string;
+          reported_by: string;
+          resolution_note?: string | null;
+          resolve_client_submission_id?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Update: {
+          allocation_id?: string;
+          branch_id?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          device_time?: string | null;
+          function_name?: string;
+          id?: string;
+          inspection_id?: string | null;
+          refusal_code?: string;
+          refusal_message?: string;
+          reported_at?: string;
+          reported_by?: string;
+          resolution_note?: string | null;
+          resolve_client_submission_id?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_sync_conflicts_allocation_id_company_id_fkey";
+            columns: ["allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_sync_conflicts_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_sync_conflicts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inspection_sync_conflicts_inspection_id_company_id_fkey";
+            columns: ["inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_sync_conflicts_reported_by_company_id_fkey";
+            columns: ["reported_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_sync_conflicts_resolved_by_company_id_fkey";
+            columns: ["resolved_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       inspection_template_items: {
         Row: {
           applies_to_stage: string;
@@ -1356,6 +1457,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inspection_templates_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inspection_watch_findings: {
+        Row: {
+          allocation_id: string;
+          branch_id: string;
+          company_id: string;
+          detected_at: string;
+          finding: string;
+          id: string;
+          inspection_stage: string;
+          resolution: string | null;
+          resolved_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id: string;
+          branch_id: string;
+          company_id: string;
+          detected_at?: string;
+          finding: string;
+          id?: string;
+          inspection_stage: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+        };
+        Update: {
+          allocation_id?: string;
+          branch_id?: string;
+          company_id?: string;
+          detected_at?: string;
+          finding?: string;
+          id?: string;
+          inspection_stage?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inspection_watch_findings_allocation_id_company_id_fkey";
+            columns: ["allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_watch_findings_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "inspection_watch_findings_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
@@ -3854,6 +4014,19 @@ export type Database = {
         };
         Returns: string;
       };
+      inspection_due_status: {
+        Args: {
+          p_allocation_status: string;
+          p_now: string;
+          p_planned_end_at: string;
+          p_planned_start_at: string;
+          p_post_minutes: number;
+          p_pre_minutes: number;
+          p_stage: string;
+          p_submitted_at: string;
+        };
+        Returns: string;
+      };
       inspection_fail: {
         Args: { p_detail?: string; p_message: string; p_sqlstate: string };
         Returns: undefined;
@@ -4024,6 +4197,28 @@ export type Database = {
         Args: { p_ids: string[] };
         Returns: number;
       };
+      list_overdue_inspections: {
+        Args: { p_branch_id?: string };
+        Returns: {
+          allocation_id: string;
+          allocation_status: string;
+          branch_id: string;
+          branch_name: string;
+          captured_offline: boolean;
+          conflict_id: string;
+          due_by: string;
+          function_name: string;
+          inspection_stage: string;
+          kind: string;
+          minutes_overdue: number;
+          planned_at: string;
+          refusal_code: string;
+          refusal_message: string;
+          reported_at: string;
+          vehicle_fleet_number: string;
+          vehicle_registration: string;
+        }[];
+      };
       my_allocations: {
         Args: { p_from: string; p_to: string };
         Returns: {
@@ -4114,6 +4309,18 @@ export type Database = {
           p_inspection_id: string;
           p_severity: string;
           p_zone: string;
+        };
+        Returns: string;
+      };
+      report_sync_conflict: {
+        Args: {
+          p_allocation_id: string;
+          p_client_submission_id: string;
+          p_device_time: string;
+          p_function_name: string;
+          p_inspection_id: string;
+          p_refusal_code: string;
+          p_refusal_message: string;
         };
         Returns: string;
       };
@@ -4286,6 +4493,14 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      resolve_sync_conflict: {
+        Args: {
+          p_client_submission_id: string;
+          p_id: string;
+          p_note: string;
+        };
+        Returns: string;
+      };
       reverse_service_verification: {
         Args: { p_reason: string; p_record_id: string };
         Returns: undefined;
@@ -4298,6 +4513,10 @@ export type Database = {
           p_reason: string;
         };
         Returns: string;
+      };
+      run_inspection_watch: {
+        Args: { p_company_id: string; p_now?: string };
+        Returns: Json;
       };
       save_inspection_responses: {
         Args: {

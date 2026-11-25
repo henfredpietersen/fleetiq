@@ -83,7 +83,7 @@ describe("reportDamage", () => {
         hint: "user_message",
       },
     });
-    expect(await reportDamage(db, report)).toEqual({
+    expect(await reportDamage(db, report)).toMatchObject({
       ok: false,
       message: "Photos must come from the in-app camera.",
     });
@@ -131,7 +131,7 @@ describe("onboarding, review, repair, known-damage confirmation, on-behalf start
       decision: "verified",
       clientSubmissionId: id(2),
     });
-    expect(r).toEqual({
+    expect(r).toMatchObject({
       ok: false,
       message:
         "You cannot review damage you reported yourself; another manager must verify or dispute it.",
