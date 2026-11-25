@@ -81,6 +81,7 @@ begin
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
   perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 create function tests.submit(label text, stage text default 'pre_shift', c text default null) returns text language sql as $$
@@ -91,6 +92,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.record_driver_reading(tests.ins(label, 'post_shift'), 1000, null, false, gen_random_uuid());
   perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
@@ -141,6 +143,7 @@ begin
   v := public.begin_inspection(tests.al(label), stage, null, false, tests.csid(label || stage || 'b0'));
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's0'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o0'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 
@@ -442,6 +445,7 @@ select is((select known_damage_reviewed from public.inspections where id = tests
 select tests.act_as('u-p1');
 select public.save_inspection_responses(tests.ins('p1'), tests.answers('pre_shift'), true, tests.csid('p1-ans'));
 select public.attach_odometer_photo(tests.ins('p1'), tests.id('f-fo-p1-pre'), tests.csid('p1-odo'));
+select public.record_driver_reading(tests.ins('p1'), 1000, null, false, gen_random_uuid());
 select is(tests.submit('p1', 'pre_shift', 'p1-sub'), null, 'submit: a pre-shift inspection with new damage submits (never blocks)');
 select tests.reset();
 select is((select new_damage_flag from public.inspections where id = tests.ins('p1')), true, 'new_damage_flag: true on a pre-shift inspection that reported new damage');

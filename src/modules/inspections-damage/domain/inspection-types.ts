@@ -54,6 +54,19 @@ export const myInspectionDoc = z.object({
     }),
   ),
   odometer_photo_present: z.boolean(),
+  /** 5A (DEC-05): the driver's own typed reading and a plain status. Never an OCR value, a check or a reviewer. Older 24-hour snapshots have none. */
+  reading: z
+    .object({
+      driver_reading_km: z.number().nullable(),
+      status: z.enum([
+        "entered",
+        "sent_for_checking",
+        "accepted",
+        "needs_supervisor",
+      ]),
+    })
+    .nullish()
+    .transform((v) => v ?? null),
   known_damage_reviewed: z.boolean(),
   /** DEC-42: the vehicle's open damage (reported or verified). No photos, no names. */
   known_damage: z.array(

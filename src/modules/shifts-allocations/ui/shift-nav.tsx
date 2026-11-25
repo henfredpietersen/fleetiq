@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { MissingLateLink } from "@/modules/inspections-damage/offline/ui/missing-late-link";
+import { OdometerReviewLink } from "@/modules/odometer-mileage/ui/odometer-nav-link";
 
 const LINKS = [
   { href: "/shifts", label: "Shifts" },
@@ -36,6 +37,9 @@ export function ShiftNav() {
         }
       >
         <MissingLateLink />
+      </Suspense>
+      <Suspense fallback={null}>
+        <OdometerReviewLink />
       </Suspense>
     </nav>
   );

@@ -238,3 +238,10 @@ export async function branchStaff(
   await grant(s.w, u.id, role, s.branchId, s.bootId);
   return u;
 }
+
+/** 5A (DEC-05): type the odometer reading shown in the photo (whole km, digits only). The field is enabled once the photo is saved. */
+export async function enterReading(page: Page, km: number | string) {
+  const f = page.getByLabel("Odometer reading (km)");
+  await expect(f).toBeEnabled();
+  await f.fill(String(km));
+}

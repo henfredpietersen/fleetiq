@@ -5,6 +5,7 @@ import {
   branchStaff,
   driverScenario,
   driverSignIn,
+  enterReading,
   staffSignIn,
   takeCameraPhoto,
 } from "./scenario";
@@ -156,6 +157,7 @@ test("onboarding damage, driver reports new damage, supervisor sees the interval
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     dp.getByTestId("odometer-step").getByText("Attached", { exact: true }),
   ).toBeVisible();

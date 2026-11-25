@@ -50,6 +50,19 @@ export const saveSchema = z.object({
   clientSubmissionId: uuidField,
 });
 
+/** 5A (DEC-05, DEC-12): the driver's typed reading, whole km, at most 7 digits. The database re-checks everything. */
+export const recordReadingSchema = z.object({
+  inspectionId: uuidField,
+  readingKm: z
+    .number({ error: "Enter the reading as whole kilometres." })
+    .int("Enter the reading as whole kilometres, using digits only.")
+    .min(0, "A reading cannot be negative.")
+    .max(9_999_999, "A reading has at most 7 digits."),
+  deviceTime: optionalIso,
+  ...deviceFields,
+  clientSubmissionId: uuidField,
+});
+
 export const submitSchema = z.object({
   inspectionId: uuidField,
   deviceSubmittedAt: optionalIso,

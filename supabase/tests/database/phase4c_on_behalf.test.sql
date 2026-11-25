@@ -81,6 +81,7 @@ begin
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
   perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 create function tests.submit(label text, stage text default 'pre_shift', c text default null) returns text language sql as $$
@@ -91,6 +92,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.record_driver_reading(tests.ins(label, 'post_shift'), 1000, null, false, gen_random_uuid());
   perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
@@ -205,6 +207,7 @@ select is(public.attach_odometer_photo((select v from kv where k = 'w1'), tests.
 select matches(tests.err_of(format('select * from public.submit_inspection(%L, null, false, %L)', (select v from kv where k = 'w1'), tests.csid('w1-x1'))), '^IN007:', 'submit on behalf: the known damage list must be confirmed too (IN007)');
 select is(public.confirm_known_damage_reviewed((select v from kv where k = 'w1'), tests.csid('w1-k')), (select v from kv where k = 'w1'), 'completer: the supervisor confirms the known damage list');
 select is(tests.sqlstate_of(format('select public.void_inspection(%L, ''x'', %L)', (select v from kv where k = 'w1'), tests.csid('w1-v1'))), '42501', 'DEC-24: the supervisor cannot void the inspection they completed');
+select public.record_driver_reading((select v from kv where k = 'w1'), 1000, null, false, gen_random_uuid());   -- 5A: the completer's reading (IN015)
 select is(tests.sqlstate_of(format('select * from public.submit_inspection(%L, ''2026-01-01 06:00+00'', false, %L)', (select v from kv where k = 'w1'), tests.csid('w1-x2'))), null::text, 'submit on behalf: succeeds (a device flag never blocks)');
 select tests.reset();
 select is((select status || '/' || completed_by_role from public.inspections where id = (select v from kv where k = 'w1')), 'submitted/supervisor_on_behalf', 'submit: submitted, still flagged as completed by the supervisor');

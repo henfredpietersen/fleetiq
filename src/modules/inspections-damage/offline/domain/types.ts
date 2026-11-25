@@ -2,7 +2,13 @@
 // is only ever read, shown or sent for that profile (DEC-43: never under another user's session).
 export type Stage = "pre_shift" | "post_shift";
 export type ItemKind =
-  "begin" | "save" | "confirm_known" | "photo" | "report_damage" | "submit";
+  | "begin"
+  | "save"
+  | "confirm_known"
+  | "photo"
+  | "reading"
+  | "report_damage"
+  | "submit";
 
 export type PhotoMeta = {
   blobId: string;
@@ -32,6 +38,8 @@ export type ItemPayload =
   | { kind: "begin" }
   | { kind: "save"; responses: SaveAnswer[]; vehicleConfirmed: boolean }
   | { kind: "confirm_known" }
+  /** 5A (DEC-05, DEC-06): the driver's typed odometer reading, in whole km. Sent after the odometer photo, in the same order. */
+  | { kind: "reading"; km: number }
   | {
       kind: "photo";
       target: PhotoTarget;

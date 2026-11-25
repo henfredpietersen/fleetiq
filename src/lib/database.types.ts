@@ -1688,6 +1688,126 @@ export type Database = {
           },
         ];
       };
+      odometer_readings: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          accepted_lifetime_km: number | null;
+          accepted_reading_km: number | null;
+          acceptance_method: string | null;
+          allocation_id: string;
+          approval_id: string | null;
+          branch_id: string;
+          captured_offline: boolean;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          device_entered_at: string | null;
+          driver_id: string;
+          driver_profile_id: string;
+          driver_reading_km: number | null;
+          entered_by: string;
+          exception_summary: string | null;
+          full_review_note: string | null;
+          full_review_requested_by: string | null;
+          id: string;
+          inspection_id: string;
+          inspection_stage: string;
+          ocr_reading_km: number | null;
+          ocr_result_id: string | null;
+          odometer_evidence_id: string | null;
+          reading_status: string;
+          review_kind: string | null;
+          review_status: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          row_version: number;
+          segment_id: string;
+          shift_id: string;
+          submitted_at: string;
+          supersedes_reading_id: string | null;
+          updated_at: string;
+          validated_at: string | null;
+          validation: Json | null;
+          validation_settings_id: string | null;
+          validation_settings_version: number | null;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      odometer_exceptions: {
+        Row: {
+          allocation_id: string | null;
+          approval_id: string | null;
+          assigned_to: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          description: string;
+          driver_id: string | null;
+          exception_type: string;
+          id: string;
+          inspection_id: string | null;
+          odometer_reading_id: string | null;
+          resolution_summary: string | null;
+          resolved_at: string | null;
+          severity: string;
+          status: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      odometer_reading_events: {
+        Row: {
+          actor_id: string | null;
+          approval_id: string | null;
+          branch_id: string;
+          company_id: string;
+          event_type: string;
+          id: string;
+          metadata: Json;
+          new_value: Json | null;
+          occurred_at: string;
+          odometer_reading_id: string;
+          previous_value: Json | null;
+          reason: string | null;
+        };
+        ComputedFields: never;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      odometer_validation_settings: {
+        Row: {
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          max_km_per_allocation: number | null;
+          ocr_driver_tolerance_km: number;
+          ocr_min_confidence: number | null;
+          post_shift_late_minutes: number;
+          pre_shift_late_minutes: number;
+          reason: string | null;
+          stale_reading_days: number;
+          unaccounted_tolerance_km: number;
+          vehicle_category: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       odometer_evidence: {
         Row: {
           allocation_id: string;
@@ -4206,6 +4326,92 @@ export type Database = {
           vehicle_fleet_number: string;
           vehicle_registration: string;
         }[];
+      };
+      list_odometer_review: {
+        Args: { p_branch_id?: string; p_limit?: number; p_queue: string };
+        Returns: {
+          allocation_id: string;
+          blocked_reason: string | null;
+          branch_id: string;
+          branch_name: string;
+          can_decide: boolean;
+          captured_offline: boolean;
+          checks: Json;
+          driver_name: string | null;
+          driver_reading_km: number | null;
+          evidence_file_id: string | null;
+          failed_checks: string[];
+          fleet_number: string;
+          full_review_note: string | null;
+          inspection_id: string;
+          inspection_stage: string;
+          late_flag: boolean;
+          planned_end_at: string;
+          planned_start_at: string;
+          previous_accepted_at: string | null;
+          previous_accepted_km: number | null;
+          reading_id: string;
+          registration: string;
+          review_kind: string;
+          submitted_at: string;
+          validated_at: string | null;
+          vehicle_id: string;
+        }[];
+      };
+      odometer_review_counts: {
+        Args: { p_branch_id?: string };
+        Returns: { full_review: number; quick_check: number }[];
+      };
+      odometer_review_detail: {
+        Args: { p_reading_id: string };
+        Returns: Json;
+      };
+      quick_check_accept: {
+        Args: { p_client_submission_id: string; p_items: Json };
+        Returns: Json;
+      };
+      record_driver_reading: {
+        Args: {
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_device_time: string;
+          p_inspection_id: string;
+          p_reading_km: number;
+        };
+        Returns: string;
+      };
+      review_reading: {
+        Args: {
+          p_accepted_km: number | null;
+          p_client_submission_id: string;
+          p_decision: string;
+          p_reading_id: string;
+          p_reason: string;
+        };
+        Returns: Json;
+      };
+      send_to_full_review: {
+        Args: {
+          p_client_submission_id: string;
+          p_note: string;
+          p_reading_id: string;
+        };
+        Returns: Json;
+      };
+      set_validation_settings: {
+        Args: {
+          p_client_submission_id: string;
+          p_max_km_per_allocation: number | null;
+          p_ocr_driver_tolerance_km: number;
+          p_ocr_min_confidence: number | null;
+          p_post_shift_late_minutes: number;
+          p_pre_shift_late_minutes: number;
+          p_reason: string;
+          p_stale_reading_days: number;
+          p_unaccounted_tolerance_km: number;
+          p_vehicle_category: string | null;
+        };
+        Returns: string;
       };
       mark_damage_repaired: {
         Args: {

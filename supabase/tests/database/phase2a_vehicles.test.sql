@@ -104,7 +104,7 @@ select ok(not has_column_privilege('authenticated', 'public.vehicles', 'current_
 select ok(not has_table_privilege('anon', 'public.vehicles', 'SELECT') and not has_table_privilege('anon', 'public.approvals', 'SELECT'),
           'anon has no access');
 select is(public.approval_decide_permission('branch_transfer'), 'vehicle.transfer.approve', 'branch_transfer is decided with vehicle.transfer.approve (DEC-31)');
-select is(public.approval_decide_permission('odometer_exception'), null, 'types without a handler fail closed');
+select is(public.approval_decide_permission('odometer_correction'), null, 'types without a handler fail closed');
 
 -- ================================================================ 2. vehicles: uniqueness + CHECKs (direct, as owner)
 insert into public.vehicles (id, company_id, current_branch_id, fleet_number, registration_number, make, model, vehicle_category, vin)

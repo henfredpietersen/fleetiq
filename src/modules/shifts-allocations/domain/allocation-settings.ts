@@ -1,6 +1,7 @@
 // Allocation and inspection settings (DEC-40 start window / no-show grace, DEC-17 late windows: configurable defaults).
-// ONE place in TypeScript, mirroring the SQL function public.allocation_settings(company_id) (migrations 032, 037). Both
-// move to the company settings table when a later phase adds one. Every rule reads these; nothing hard-codes 60, 30 or 60.
+// ONE place in TypeScript, mirroring the SQL function public.allocation_settings(company_id) (migrations 032, 037, 051). Since 5A the
+// SQL function takes the two LATE minutes from the company-default row of odometer_validation_settings in effect now (these are its
+// seeded defaults); the start window (60) and no-show grace (30) stay constants. Every rule reads these; nothing hard-codes 60, 30 or 60.
 export type AllocationSettings = {
   openBeforeStartMinutes: number;
   noShowGraceMinutes: number;

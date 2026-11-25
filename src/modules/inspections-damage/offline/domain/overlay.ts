@@ -19,6 +19,8 @@ export type Overlay = {
   data: MyInspection;
   beginQueued: boolean;
   odometerQueued: boolean;
+  /** 5A: the reading the driver typed that the server has not confirmed yet (null = none waiting). */
+  readingQueuedKm: number | null;
   defectPhotosQueued: Set<string>;
   damageQueued: PendingDamage[];
   submitQueued: boolean;
@@ -87,6 +89,17 @@ export function applyQueue(
   const odometerQueued = items.some(
     (i) => i.payload.kind === "photo" && i.payload.target.kind === "odometer",
   );
+  const readings = items.filter((i) => i.payload.kind === "reading");
+  const lastReading = readings[readings.length - 1];
+  const readingQueuedKm =
+    lastReading && lastReading.payload.kind === "reading"
+      ? lastReading.payload.km
+      : null;
+  if (readingQueuedKm !== null)
+    data = {
+      ...data,
+      reading: { driver_reading_km: readingQueuedKm, status: "entered" },
+    };
   const defectPhotosQueued = new Set<string>();
   for (const i of items)
     if (i.payload.kind === "photo" && i.payload.target.kind === "defect")
@@ -109,6 +122,7 @@ export function applyQueue(
     data,
     beginQueued: !!begin,
     odometerQueued,
+    readingQueuedKm,
     defectPhotosQueued,
     damageQueued,
     submitQueued: items.some((i) => i.kind === "submit"),

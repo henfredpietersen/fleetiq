@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   CameraCapture,
@@ -25,6 +27,11 @@ import {
   isLocalInspectionId,
   type Overlay,
 } from "../offline/domain/overlay";
+import {
+  digitsOnly,
+  parseReading,
+  READING_MAX_DIGITS,
+} from "@/modules/odometer-mileage/domain/reading-input";
 import { scopeOf, type ItemPayload } from "../offline/domain/types";
 import { ScopeStatusLine } from "../offline/ui/sync-bar";
 import { useSync, type SyncManager } from "../offline/ui/sync-manager";
@@ -165,6 +172,13 @@ function FormBody({
   // what the server has confirmed since this form opened (the page data catches up after the refresh)
   const [attached, setAttached] = useState<Set<string>>(new Set());
   const [submitConfirmed, setSubmitConfirmed] = useState(false);
+  // 5A (DEC-05): the driver's own typed reading, whole km, digits only; there is never an OCR value on this phone
+  const [readingText, setReadingText] = useState(() =>
+    data.reading?.driver_reading_km != null
+      ? String(data.reading.driver_reading_km)
+      : "",
+  );
+  const [readingError, setReadingError] = useState<string | null>(null);
   // re-read the server's data once something was confirmed; with no connection that waits (a failed page refresh would reload the page)
   const refreshDue = useRef(false);
   const refresh = useCallback(() => {
@@ -312,6 +326,7 @@ function FormBody({
         .map((d) => d.template_item_id),
     ),
     odometerPhoto: odometerDone,
+    readingEntered: data.reading?.driver_reading_km != null,
   });
   const steps: Step[] = [
     "vehicle",
@@ -362,6 +377,26 @@ function FormBody({
       setMessage({ ok: false, text: notSaved });
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Saves the typed reading on the phone (the queue sends it after the photo). false = the value is not acceptable (the message is shown). */
+  async function commitReading(): Promise<boolean> {
+    if (!insp || !draft) return true;
+    if (readingText.trim() === "") return true;
+    const p = parseReading(readingText);
+    if (!p.ok) {
+      setReadingError(p.message);
+      return false;
+    }
+    setReadingError(null);
+    if (data.reading?.driver_reading_km === p.km) return true;
+    try {
+      await enqueue({ kind: "reading", km: p.km });
+      return true;
+    } catch {
+      setMessage({ ok: false, text: notSaved });
+      return false;
     }
   }
 
@@ -514,6 +549,17 @@ function FormBody({
             ? "Inspection submitted — the vehicle is now in use."
             : "Post-shift inspection submitted."}
         </Alert>
+        {data.reading ? (
+          <Alert role="status" data-testid="reading-status">
+            Odometer reading (
+            {data.reading.driver_reading_km?.toLocaleString("en-ZA")} km):{" "}
+            {data.reading.status === "accepted"
+              ? "Accepted"
+              : data.reading.status === "needs_supervisor"
+                ? "Needs a supervisor"
+                : "Reading sent for checking"}
+          </Alert>
+        ) : null}
         {data.stage === "pre_shift" && data.new_damage.length > 0 ? (
           <Alert role="status" data-testid="new-damage-notice">
             New damage recorded — your supervisor will review it.
@@ -957,12 +1003,52 @@ function FormBody({
             "Take odometer photo",
             "Retake odometer photo",
           )}
+          <div className="flex flex-col gap-2" data-testid="reading-field">
+            <Label htmlFor="odometer-reading" className="text-base">
+              Odometer reading (km)
+            </Label>
+            <Input
+              id="odometer-reading"
+              name="odometer_reading"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              maxLength={READING_MAX_DIGITS}
+              className="h-16 text-center text-3xl font-semibold tracking-wider"
+              placeholder="e.g. 123456"
+              value={readingText}
+              disabled={busy || !odometerDone || !draft}
+              aria-invalid={readingError ? true : undefined}
+              aria-describedby="odometer-reading-help"
+              onChange={(e) => {
+                setReadingText(digitsOnly(e.target.value));
+                setReadingError(null);
+              }}
+              onBlur={() => void commitReading()}
+            />
+            <p
+              id="odometer-reading-help"
+              className="text-muted-foreground text-sm"
+            >
+              {odometerDone
+                ? "Type the number you can read on the odometer in your photo, in whole kilometres."
+                : "Take the odometer photo first, then type the reading shown in it."}
+            </p>
+            {readingError ? (
+              <Alert variant="destructive" role="alert">
+                {readingError}
+              </Alert>
+            ) : null}
+          </div>
           <Button
             type="button"
             size="lg"
             className="min-h-14 w-full text-base"
             disabled={busy}
-            onClick={next}
+            onClick={async () => {
+              if (!(await commitReading())) return;
+              await next();
+            }}
           >
             Next
           </Button>
@@ -971,6 +1057,27 @@ function FormBody({
 
       {step === "review" ? (
         <div className="flex flex-col gap-4" data-testid="review-step">
+          <section
+            className="flex flex-col gap-1 rounded-lg border p-3"
+            data-testid="review-reading"
+          >
+            <p className="text-muted-foreground text-sm">
+              Odometer reading you typed
+            </p>
+            <p className="text-2xl font-semibold">
+              {data.reading?.driver_reading_km != null
+                ? `${data.reading.driver_reading_km.toLocaleString("en-ZA")} km`
+                : "Not entered yet"}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-1 min-h-12 w-fit"
+              onClick={() => setStep("odometer")}
+            >
+              Change the reading
+            </Button>
+          </section>
           {data.new_damage.length + ov.damageQueued.length > 0 ? (
             <section
               className="flex flex-col gap-2 rounded-lg border p-3"
@@ -1017,7 +1124,7 @@ function FormBody({
                             ? "vehicle"
                             : b.code === "IN007"
                               ? "damage"
-                              : b.code === "IN006"
+                              : b.code === "IN006" || b.code === "IN015"
                                 ? "odometer"
                                 : b.code === "IN004"
                                   ? "defects"

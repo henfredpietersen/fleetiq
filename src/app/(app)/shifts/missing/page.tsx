@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { connection } from "next/server";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,10 @@ import { ShiftNav } from "@/modules/shifts-allocations/ui/shift-nav";
 import { stageLabel } from "@/modules/inspections-damage/domain/inspection-rules";
 import { listOverdue } from "@/modules/inspections-damage/offline/server/conflict-service";
 import { ResolveConflict } from "@/modules/inspections-damage/offline/ui/resolve-conflict";
+import {
+  reviewBranches,
+  reviewCounts,
+} from "@/modules/odometer-mileage/server/review-service";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const first = (v: string | string[] | undefined) =>
@@ -71,8 +76,37 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
     (r) => r.kind === "overdue" && (!stageF || r.stage === stageF),
   );
   const conflicts = loaded.rows.filter((r) => r.kind === "sync_conflict");
+  // 5A: the odometer readings waiting for a check, beside the missing / late list (shown to people who may review readings)
+  const reviewable = await reviewBranches(db);
+  const odo =
+    reviewable.ok && reviewable.branches.length > 0
+      ? await reviewCounts(db, branchF?.id)
+      : null;
   return (
     <>
+      {odo?.ok ? (
+        <section
+          aria-label="Odometer readings waiting"
+          className="flex flex-wrap items-center gap-4 rounded-lg border p-4"
+          data-testid="odometer-counts"
+        >
+          <p className="font-medium">Odometer readings waiting for a check:</p>
+          <Link
+            href="/odometer/review?tab=quick_check"
+            className="underline"
+            data-testid="count-quick"
+          >
+            Quick check ({odo.quickCheck})
+          </Link>
+          <Link
+            href="/odometer/review?tab=full"
+            className="underline"
+            data-testid="count-full"
+          >
+            Full review ({odo.fullReview})
+          </Link>
+        </section>
+      ) : null}
       <form
         method="get"
         className="flex flex-wrap items-end gap-4"

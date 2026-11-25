@@ -81,6 +81,7 @@ begin
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
   perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 create function tests.submit(label text, stage text default 'pre_shift', c text default null) returns text language sql as $$
@@ -91,6 +92,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.record_driver_reading(tests.ins(label, 'post_shift'), 1000, null, false, gen_random_uuid());
   perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
@@ -259,6 +261,7 @@ select is(tests.sqlstate_of($$insert into public.odometer_evidence (company_id, 
 
 -- ================================================================ 6. submit: success, flags, allocation in_use + started_at
 select tests.act_as('u-p1');
+select public.record_driver_reading(tests.ins('p1'), 1000, null, false, gen_random_uuid());   -- 5A: the driver's reading (IN015)
 select is(tests.submit('p1', 'pre_shift', 's-ok'), null, 'submit: succeeds once everything is in place (a late/safety defect never blocks)');
 select tests.reset();
 select is((select status from public.inspections where id = tests.ins('p1')), 'submitted', '... status submitted');
@@ -355,6 +358,7 @@ select tests.act_as('u-off'); select public.begin_inspection(tests.al('off'), 'p
 select public.save_inspection_responses(tests.ins('off'), tests.answers('pre_shift'), true, tests.csid('off-s'));
 select public.confirm_known_damage_reviewed(tests.ins('off'), tests.csid('off-k'));
 select public.attach_odometer_photo(tests.ins('off'), tests.id('f-fo-off-pre'), tests.csid('off-o'));
+select public.record_driver_reading(tests.ins('off'), 1000, null, false, gen_random_uuid());
 select is((select out_late_flag from public.submit_inspection(tests.ins('off'), '2026-01-01 04:30+00', true, tests.csid('off-x'))), true, 'offline submit: late is judged on the server time, not the device clock');
 select tests.reset();
 select is((select captured_offline from public.inspections where id = tests.ins('off')), true, '... captured_offline = true');
