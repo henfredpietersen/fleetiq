@@ -258,11 +258,10 @@ test("(a) weak connection: start online, the whole pre-shift offline, send in or
   await dp.getByRole("button", { name: "I have checked this list" }).click();
   await answerChecklist(dp);
   await next(dp); // no defects: straight to the odometer
-  // the notice acknowledgement could not be recorded offline earlier, so the page asks again
+  // (the acknowledgement made offline was recorded once the connection was back: the notice does not come again)
   await takeCameraPhoto(
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
-    { acknowledge: true },
   );
   await next(dp);
   await expect(dp.getByTestId("review-step")).toContainText(
