@@ -106,10 +106,11 @@ describe("beginInspection", () => {
       stage: "pre_shift",
       clientSubmissionId: C,
     });
-    expect(r).toEqual({
+    expect(r).toMatchObject({
       ok: false,
       message:
         "the pre-shift inspection can only be started once the allocation has been started",
+      code: expect.any(String), // the offline queue classifies on the stable code (retry vs conflict)
     });
   });
 });
@@ -208,7 +209,7 @@ describe("submitInspection", () => {
       inspectionId: I,
       clientSubmissionId: C,
     });
-    expect(r).toEqual({
+    expect(r).toMatchObject({
       ok: false,
       message:
         "The odometer photo is required: take a photo of the odometer before you submit.",
@@ -400,7 +401,7 @@ describe("attachOdometerPhoto / attachDefectPhoto", () => {
       evidenceFileId: F,
       clientSubmissionId: C,
     });
-    expect(r).toEqual({
+    expect(r).toMatchObject({
       ok: false,
       message:
         "Photos for an inspection must be taken with the in-app camera; gallery, file and imported images are not accepted.",

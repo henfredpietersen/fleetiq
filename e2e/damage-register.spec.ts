@@ -140,8 +140,11 @@ test("onboarding damage, driver reports new damage, supervisor sees the interval
     dp.getByRole("button", { name: "Take a photo of the damage" }),
     { acknowledge: true },
   );
+  // in an inspection the photo is kept on the phone and goes with the report through the queue (DEC-06)
   await expect(
-    dp.getByTestId("damage-reporter").getByText("Attached", { exact: true }),
+    dp
+      .getByTestId("damage-reporter")
+      .getByText("Saved on this phone", { exact: true }),
   ).toBeVisible();
   await dp.getByRole("button", { name: "Report this damage" }).click();
   await expect(known).toHaveCount(2);

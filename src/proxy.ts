@@ -12,7 +12,14 @@ import {
 // office users: short; both configurable). Authorisation proper is NOT decided here — that is
 // has_permission()/RLS and the server guards in requireSession().
 
-const PUBLIC_PATHS = new Set(["/sign-in", "/staff/sign-in"]);
+// /offline and /sw.js hold no data (the offline shell draws from the phone's own storage; the worker is a static script), so a signed-out
+// phone can still fetch them: the service worker must be installable and the shell must open with no session on the wire.
+const PUBLIC_PATHS = new Set([
+  "/sign-in",
+  "/staff/sign-in",
+  "/offline",
+  "/sw.js",
+]);
 
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

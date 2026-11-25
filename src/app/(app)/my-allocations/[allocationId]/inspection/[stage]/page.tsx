@@ -15,11 +15,12 @@ import { stageFromSlug } from "@/modules/inspections-damage/domain/inspection-ru
 import { getMyInspection } from "@/modules/inspections-damage/server/inspection-service";
 import { InspectionForm } from "@/modules/inspections-damage/ui/inspection-form";
 import { cameraNoticeAcknowledged } from "@/modules/evidence-storage/server/notice-query";
+import { SyncBar } from "@/modules/inspections-damage/offline/ui/sync-bar";
 
 type Params = Promise<{ allocationId: string; stage: string }>;
 
 async function Content({ params }: { params: Params }) {
-  await requireSession("full");
+  const ctx = await requireSession("full");
   await connection();
   const { allocationId, stage: slug } = await params;
   const stage = stageFromSlug(slug);
@@ -44,11 +45,15 @@ async function Content({ params }: { params: Params }) {
       </div>
     );
   return (
-    <InspectionForm
-      allocationId={allocationId}
-      data={r.inspection}
-      noticeAcknowledged={await cameraNoticeAcknowledged(db)}
-    />
+    <>
+      <SyncBar profileId={ctx.userId} />
+      <InspectionForm
+        allocationId={allocationId}
+        data={r.inspection}
+        noticeAcknowledged={await cameraNoticeAcknowledged(db)}
+        profileId={ctx.userId}
+      />
+    </>
   );
 }
 

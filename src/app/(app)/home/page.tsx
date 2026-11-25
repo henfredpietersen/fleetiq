@@ -2,10 +2,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireSession } from "@/modules/identity-access/server/session";
-import { signOutAction } from "@/modules/identity-access/server/actions";
+import { SignOutButton } from "@/modules/inspections-damage/offline/ui/sign-out-button";
+import { SyncBar } from "@/modules/inspections-damage/offline/ui/sync-bar";
 import {
   AuthLoading,
   AuthShell,
@@ -93,11 +94,10 @@ async function Content() {
           This phone
         </Link>
       ) : null}
-      <form action={signOutAction}>
-        <Button type="submit" variant="outline" size="lg" className="w-full">
-          Sign out
-        </Button>
-      </form>
+      {ctx.profile.userType === "driver" ? (
+        <SyncBar profileId={ctx.userId} />
+      ) : null}
+      <SignOutButton profileId={ctx.userId} />
     </>
   );
 }

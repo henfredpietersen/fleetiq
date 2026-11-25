@@ -11,21 +11,8 @@ import {
   CameraCapture,
   type CameraResult,
 } from "@/modules/evidence-storage/ui/camera-capture";
-import { getDeviceKey } from "@/modules/evidence-storage/ui/device-key";
-import { registerEvidenceUploadAction } from "@/modules/evidence-storage/server/actions";
-import { confirmKnownDamageAction } from "../server/damage-actions";
 import { DamageReporter } from "./damage-report";
 import { damageStatusLabel, severityLabel } from "../domain/damage-zones";
-import {
-  beginInspectionAction,
-  saveAnswersAction,
-  submitInspectionAction,
-} from "../server/inspection-actions";
-import {
-  attachDefectPhotoAction,
-  attachOdometerPhotoAction,
-  requestPhotoSlotAction,
-} from "../server/photo-actions";
 import { submitBlockers, type Blocker } from "../domain/inspection-readiness";
 import {
   needsComment,
@@ -34,20 +21,17 @@ import {
 } from "../domain/inspection-rules";
 import type { InspectionItem, MyInspection } from "../domain/inspection-types";
 import {
-  newPendingPhoto,
-  sendPhoto,
-  type PendingPhoto,
-  type PhotoApi,
-} from "./photo-upload";
+  applyQueue,
+  isLocalInspectionId,
+  type Overlay,
+} from "../offline/domain/overlay";
+import { scopeOf, type ItemPayload } from "../offline/domain/types";
+import { ScopeStatusLine } from "../offline/ui/sync-bar";
+import { useSync, type SyncManager } from "../offline/ui/sync-manager";
 
 type Answer = { value?: string; comment?: string };
 type Step =
   "vehicle" | "damage" | "checklist" | "defects" | "odometer" | "review";
-type PhotoState = {
-  status: "sending" | "failed" | "done";
-  message?: string;
-  pending?: PendingPhoto;
-};
 type Target = {
   key: string;
   kind: "odometer" | "defect";
@@ -62,57 +46,88 @@ const STEP_LABEL: Record<Step, string> = {
   odometer: "Odometer photo",
   review: "Review and submit",
 };
-const noConnection =
-  "No connection. Check your signal and tap again: it will not be done twice.";
-
-const api: PhotoApi = {
-  requestSlot: (i) => requestPhotoSlotAction(i),
-  put: async (url, blob) => {
-    try {
-      const body = new FormData();
-      body.append("cacheControl", "3600");
-      body.append("", blob);
-      return (await fetch(url, { method: "PUT", body })).ok;
-    } catch {
-      return false;
-    }
-  },
-  register: (slotId) => registerEvidenceUploadAction({ slotId }),
-  attach: (i) =>
-    i.kind === "odometer"
-      ? attachOdometerPhotoAction({
-          inspectionId: i.inspectionId,
-          evidenceFileId: i.evidenceFileId,
-          clientSubmissionId: i.clientSubmissionId,
-        })
-      : attachDefectPhotoAction({
-          inspectionId: i.inspectionId,
-          evidenceFileId: i.evidenceFileId,
-          templateItemId: i.templateItemId,
-          clientSubmissionId: i.clientSubmissionId,
-        }),
-};
+const notSaved =
+  "This could not be saved on the phone. Check the phone's storage and try again.";
 
 /**
- * The driver's inspection (mobile first: one task per screen, large tap targets). Steps: confirm the vehicle -> checklist ->
- * defect photos (one per Defect item) -> odometer photo -> review -> Submit. Answers save as the driver goes
- * (save_inspection_responses is idempotent), so a reload resumes the draft from my_inspection. Every photo comes from the
- * in-app camera: there is no file picker or gallery anywhere here (DEC-04, DEC-41). Submit is enabled only when the server's own
- * rules would pass (submitBlockers mirrors them) and every refusal message from the server is shown as is (IN001–IN014).
+ * The driver's inspection (mobile first: one task per screen, large tap targets). Steps: confirm the vehicle -> known damage ->
+ * checklist -> defect photos (one per Defect item) -> odometer photo -> review -> Submit.
+ *
+ * EVERY write goes through the phone's queue (DEC-06, ARCH §6.9), online or offline: the action is saved on the phone first with
+ * its own client_submission_id, then sent in order, retried with the same id and cleared only after the server confirms. The form
+ * shows the server's data with the queued items applied on top (applyQueue), so it works with no connection from the snapshot.
+ * Every photo comes from the in-app camera: there is no file picker or gallery anywhere here (DEC-04, DEC-41). Submit is enabled
+ * only when the server's own rules would pass (submitBlockers mirrors them); the server's refusals are shown as they are.
  */
 export function InspectionForm({
   allocationId,
   data,
   noticeAcknowledged,
   mode = "driver",
+  profileId,
+  onSynced,
 }: {
   allocationId: string;
+  /** The server's data (the live page, or the snapshot taken while online). */
   data: MyInspection;
   noticeAcknowledged: boolean;
   /** "on_behalf" (DEC-09): a supervisor completing the post-shift inspection for the driver, with a permanent banner. */
   mode?: "driver" | "on_behalf";
+  profileId: string;
+  /** Called when the server has confirmed something that changes what the page shows (default: re-read the page). */
+  onSynced?: () => void;
+}) {
+  const { state, manager } = useSync(profileId);
+  const scope = scopeOf(allocationId, data.stage);
+  const ov = useMemo(
+    () => applyQueue(data, state.items, scope),
+    [data, state.items, scope],
+  );
+  if (!state.ready)
+    return (
+      <p role="status" className="text-muted-foreground text-sm">
+        Loading your inspection…
+      </p>
+    );
+  return (
+    <FormBody
+      key={scope}
+      allocationId={allocationId}
+      ov={ov}
+      noticeAcknowledged={noticeAcknowledged}
+      mode={mode}
+      profileId={profileId}
+      manager={manager}
+      scope={scope}
+      sync={{ online: state.online }}
+      onSynced={onSynced}
+    />
+  );
+}
+
+function FormBody({
+  allocationId,
+  ov,
+  noticeAcknowledged,
+  mode,
+  profileId,
+  manager,
+  scope,
+  sync,
+  onSynced,
+}: {
+  allocationId: string;
+  ov: Overlay;
+  noticeAcknowledged: boolean;
+  mode: "driver" | "on_behalf";
+  profileId: string;
+  manager: SyncManager;
+  scope: string;
+  sync: { online: boolean };
+  onSynced?: () => void;
 }) {
   const router = useRouter();
+  const data = ov.data;
   const insp = data.inspection;
   const draft = insp?.status === "draft";
   const v = data.vehicle;
@@ -145,22 +160,62 @@ export function InspectionForm({
   const [saveState, setSaveState] = useState<"saved" | "saving" | "failed">(
     "saved",
   );
-  const [photos, setPhotos] = useState<Record<string, PhotoState>>({});
   const [camera, setCamera] = useState<Target | null>(null);
   const [noticeOk, setNoticeOk] = useState(noticeAcknowledged);
-  const [done, setDone] = useState<{ late: boolean; safety: boolean } | null>(
-    null,
-  );
-  const deviceKey = useRef<string | null>(null);
+  // what the server has confirmed since this form opened (the page data catches up after the refresh)
+  const [attached, setAttached] = useState<Set<string>>(new Set());
+  const [submitConfirmed, setSubmitConfirmed] = useState(false);
+  // re-read the server's data once something was confirmed; with no connection that waits (a failed page refresh would reload the page)
+  const refreshDue = useRef(false);
+  const refresh = useCallback(() => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      refreshDue.current = true;
+      return;
+    }
+    refreshDue.current = false;
+    if (onSynced) onSynced();
+    else router.refresh();
+  }, [onSynced, router]);
   useEffect(() => {
-    void getDeviceKey().then((k) => (deviceKey.current = k));
-  }, []);
+    if (sync.online && refreshDue.current) refresh();
+  }, [sync.online, refresh]);
 
-  // one id per distinct save payload / user action, reused on every retry (DEC-06)
-  const ids = useRef<Record<string, string>>({});
-  const idFor = (k: string) => (ids.current[k] ??= crypto.randomUUID());
-  const forget = (k: string) => delete ids.current[k];
-  const offline = () => typeof navigator !== "undefined" && !navigator.onLine;
+  useEffect(
+    () =>
+      manager.onItemDone((item) => {
+        if (item.scope !== scope) return;
+        const p = item.payload;
+        if (p.kind === "photo")
+          setAttached((s) =>
+            new Set(s).add(
+              p.target.kind === "odometer"
+                ? "odo"
+                : `item:${p.target.templateItemId}`,
+            ),
+          );
+        if (p.kind === "submit") setSubmitConfirmed(true);
+        if (
+          p.kind === "begin" ||
+          p.kind === "submit" ||
+          p.kind === "report_damage"
+        )
+          refresh();
+      }),
+    [manager, scope, refresh],
+  );
+
+  const enqueue = useCallback(
+    (payload: ItemPayload, blobs?: { id: string; blob: Blob }[]) =>
+      manager.enqueue({
+        allocationId,
+        stage: data.stage,
+        inspectionId:
+          insp && !isLocalInspectionId(insp.id) ? insp.id : undefined,
+        payload,
+        blobs,
+      }),
+    [manager, allocationId, data.stage, insp],
+  );
 
   const payload = useMemo(
     () =>
@@ -198,34 +253,27 @@ export function InspectionForm({
     ]),
   );
 
+  // answers are saved on the phone as the driver goes (the queue sends them in order)
   const persist = useCallback(async (): Promise<boolean> => {
     if (!insp || !draft) return true;
     if (payloadKey === lastSaved.current) return true;
     setSaveState("saving");
     try {
-      const r = await saveAnswersAction({
-        inspectionId: insp.id,
+      await enqueue({
+        kind: "save",
         responses: payload,
         vehicleConfirmed: confirmed,
-        clientSubmissionId: idFor("save:" + payloadKey),
       });
-      if (r.ok) {
-        lastSaved.current = payloadKey;
-        setSaveState("saved");
-        return true;
-      }
-      setSaveState("failed");
-      setMessage({ ok: false, text: r.message });
-      return false;
+      lastSaved.current = payloadKey;
+      setSaveState("saved");
+      return true;
     } catch {
       setSaveState("failed");
-      setMessage({ ok: false, text: noConnection });
+      setMessage({ ok: false, text: notSaved });
       return false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [insp, draft, payloadKey, payload, confirmed]);
+  }, [insp, draft, payloadKey, payload, confirmed, enqueue]);
 
-  // save as the driver goes
   useEffect(() => {
     if (!draft || payloadKey === lastSaved.current) return;
     const t = setTimeout(() => void persist(), 700);
@@ -237,13 +285,15 @@ export function InspectionForm({
       i.response_type === "ok_defect" &&
       answers[i.template_item_id]?.value === "defect",
   );
-  const filledItem = (id: string) =>
-    photos[`item:${id}`]?.status === "done" ||
+  const defectQueued = (id: string) => ov.defectPhotosQueued.has(id);
+  const defectAttached = (id: string) =>
+    attached.has(`item:${id}`) ||
     data.photo_slots.some(
       (s) => s.kind === "defect_photo" && s.template_item_id === id && s.filled,
     );
-  const odometerDone =
-    data.odometer_photo_present || photos.odo?.status === "done";
+  const filledItem = (id: string) => defectQueued(id) || defectAttached(id);
+  const odometerAttached = data.odometer_photo_present || attached.has("odo");
+  const odometerDone = odometerAttached || ov.odometerQueued;
   const blockers: Blocker[] = submitBlockers({
     vehicleConfirmed: confirmed,
     knownDamageReviewed: knownReviewed,
@@ -286,19 +336,30 @@ export function InspectionForm({
     setMessage(null);
     setBusy(true);
     try {
-      const r = await beginInspectionAction({
-        allocationId,
-        stage: data.stage,
-        deviceStartedAt: new Date().toISOString(),
-        capturedOffline: offline(),
-        clientSubmissionId: idFor("begin"),
-      });
-      if (r.ok) {
-        forget("begin");
-        router.refresh();
-      } else setMessage({ ok: false, text: r.message });
+      await enqueue({ kind: "begin" });
     } catch {
-      setMessage({ ok: false, text: noConnection });
+      setMessage({ ok: false, text: notSaved });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmVehicle() {
+    if (!insp) return;
+    setMessage(null);
+    setConfirmed(true);
+    setBusy(true);
+    try {
+      await enqueue({
+        kind: "save",
+        responses: payload,
+        vehicleConfirmed: true,
+      });
+      lastSaved.current = JSON.stringify([payload, true]);
+      setStep("damage");
+    } catch {
+      setConfirmed(false);
+      setMessage({ ok: false, text: notSaved });
     } finally {
       setBusy(false);
     }
@@ -310,99 +371,80 @@ export function InspectionForm({
     setBusy(true);
     try {
       if (!(await persist())) return;
-      const r = await submitInspectionAction({
-        inspectionId: insp.id,
-        deviceSubmittedAt: new Date().toISOString(),
-        capturedOffline: offline(),
-        clientSubmissionId: idFor("submit"),
-      });
-      if (r.ok) {
-        forget("submit");
-        setDone({ late: !!r.lateFlag, safety: !!r.safetyDefectFlag });
-        router.refresh();
-      } else setMessage({ ok: false, text: r.message });
+      await enqueue({ kind: "submit" });
     } catch {
-      setMessage({ ok: false, text: noConnection });
+      setMessage({ ok: false, text: notSaved });
     } finally {
       setBusy(false);
     }
   }
 
-  async function send(t: Target, pending: PendingPhoto) {
-    if (!insp) return;
-    setPhotos((p) => ({ ...p, [t.key]: { status: "sending", pending } }));
-    const r = await sendPhoto(
-      pending,
-      { inspectionId: insp.id, deviceKey: deviceKey.current },
-      api,
-    );
-    if (r.ok) {
-      setPhotos((p) => ({ ...p, [t.key]: { status: "done" } }));
-      router.refresh();
-    } else {
-      setPhotos((p) => ({
-        ...p,
-        [t.key]: {
-          status: "failed",
-          message: r.retry ? "Not sent — Retry" : r.message,
-          pending: r.retry ? pending : undefined,
-        },
-      }));
-    }
-  }
-  function onUse(t: Target, c: CameraResult) {
+  async function onUse(t: Target, c: CameraResult) {
     setCamera(null);
-    void send(
-      t,
-      newPendingPhoto(
-        c,
-        t.kind === "odometer"
-          ? { kind: "odometer" }
-          : { kind: "defect", templateItemId: t.item!.template_item_id },
-      ),
-    );
+    setMessage(null);
+    const blobId = crypto.randomUUID();
+    try {
+      await enqueue(
+        {
+          kind: "photo",
+          target:
+            t.kind === "odometer"
+              ? { kind: "odometer" }
+              : { kind: "defect", templateItemId: t.item!.template_item_id },
+          photo: {
+            blobId,
+            size: c.blob.size,
+            width: c.width,
+            height: c.height,
+            capturedAt: c.capturedAt,
+            location: c.location,
+            capturedOffline: c.capturedOffline,
+          },
+          attachCsid: crypto.randomUUID(),
+        },
+        [{ id: blobId, blob: c.blob }],
+      );
+      // a retake: the new photo is what counts until the server confirms it
+      setAttached((s) => {
+        const n = new Set(s);
+        n.delete(t.key);
+        return n;
+      });
+    } catch {
+      setMessage({ ok: false, text: notSaved });
+    }
   }
 
   const photoButton = (t: Target, label: string, retakeLabel: string) => {
-    const st = photos[t.key];
-    const filled =
+    const queued =
       t.kind === "odometer"
-        ? odometerDone
-        : filledItem(t.item!.template_item_id);
+        ? ov.odometerQueued
+        : defectQueued(t.item!.template_item_id);
+    const attachedNow =
+      t.kind === "odometer"
+        ? odometerAttached
+        : defectAttached(t.item!.template_item_id);
+    const filled = queued || attachedNow;
     return (
       <div className="flex flex-col gap-2">
-        {st?.status === "sending" ? (
-          <p role="status">Sending the photo…</p>
-        ) : null}
-        {st?.status === "failed" ? (
-          <Alert variant="destructive" role="alert">
-            {st.message}
-          </Alert>
-        ) : null}
-        {filled ? (
+        {queued ? (
+          <Badge variant="outline" className="w-fit" data-testid="photo-queued">
+            Saved on this phone
+          </Badge>
+        ) : attachedNow ? (
           <Badge variant="success" className="w-fit">
             Attached
           </Badge>
-        ) : null}
-        {st?.status === "failed" && st.pending ? (
-          <Button
-            type="button"
-            size="lg"
-            className="min-h-14 w-full text-base"
-            onClick={() => void send(t, st.pending!)}
-          >
-            Retry
-          </Button>
         ) : null}
         <Button
           type="button"
           size="lg"
           variant={filled ? "outline" : "default"}
           className="min-h-14 w-full text-base"
-          disabled={st?.status === "sending" || busy}
+          disabled={busy}
           onClick={() => setCamera(t)}
         >
-          {filled || st?.status === "failed" ? retakeLabel : label}
+          {filled ? retakeLabel : label}
         </Button>
       </div>
     );
@@ -413,16 +455,11 @@ export function InspectionForm({
     setMessage(null);
     setBusy(true);
     try {
-      const r = await confirmKnownDamageAction({
-        inspectionId: insp.id,
-        clientSubmissionId: idFor("known"),
-      });
-      if (r.ok) {
-        setKnownReviewed(true);
-        setStep("checklist");
-      } else setMessage({ ok: false, text: r.message });
+      await enqueue({ kind: "confirm_known" });
+      setKnownReviewed(true);
+      setStep("checklist");
     } catch {
-      setMessage({ ok: false, text: noConnection });
+      setMessage({ ok: false, text: notSaved });
     } finally {
       setBusy(false);
     }
@@ -465,9 +502,9 @@ export function InspectionForm({
   );
 
   // ---- finished (just now, or when the page is opened later)
-  if (done || insp?.status === "submitted") {
-    const late = done ? done.late : insp!.late_flag;
-    const safety = done ? done.safety : insp!.safety_defect_flag;
+  if (insp?.status === "submitted") {
+    const late = insp.late_flag;
+    const safety = insp.safety_defect_flag;
     return (
       <div className="flex flex-col gap-4" data-testid="inspection-submitted">
         {header}
@@ -512,6 +549,25 @@ export function InspectionForm({
               : "Your shift is over. The allocation now waits for closure by your supervisor."}
           </p>
         ) : null}
+        {back}
+      </div>
+    );
+  }
+
+  // ---- sent to the phone's queue: the server has not confirmed it yet (or the answer is on its way)
+  if (insp && draft && (ov.submitQueued || submitConfirmed)) {
+    return (
+      <div className="flex flex-col gap-4" data-testid="inspection-queued">
+        {header}
+        {banner}
+        <Alert role="status" data-testid="queued-notice">
+          {submitConfirmed
+            ? "Submitted. Updating…"
+            : sync.online
+              ? "Saved on this phone — sending now."
+              : "Saved on this phone — it will be sent as soon as you have a connection. You can close the app."}
+        </Alert>
+        <ScopeStatusLine profileId={profileId} scope={scope} />
         {back}
       </div>
     );
@@ -631,7 +687,9 @@ export function InspectionForm({
             ? "Saving…"
             : saveState === "failed"
               ? "Not saved"
-              : "Saved"}
+              : ov.waiting > 0
+                ? "Saved on this phone"
+                : "Saved"}
         </span>
       </div>
 
@@ -649,31 +707,7 @@ export function InspectionForm({
             size="lg"
             className="min-h-14 w-full text-base"
             disabled={busy}
-            onClick={async () => {
-              setConfirmed(true);
-              // persist right away: the next screen depends on it
-              setBusy(true);
-              try {
-                const r = await saveAnswersAction({
-                  inspectionId: insp.id,
-                  responses: payload,
-                  vehicleConfirmed: true,
-                  clientSubmissionId: idFor("confirm"),
-                });
-                if (r.ok) {
-                  lastSaved.current = JSON.stringify([payload, true]);
-                  setStep("damage");
-                } else {
-                  setConfirmed(false);
-                  setMessage({ ok: false, text: r.message });
-                }
-              } catch {
-                setConfirmed(false);
-                setMessage({ ok: false, text: noConnection });
-              } finally {
-                setBusy(false);
-              }
-            }}
+            onClick={() => void confirmVehicle()}
           >
             This is the vehicle I am inspecting
           </Button>
@@ -686,12 +720,28 @@ export function InspectionForm({
             This is the damage already recorded for this vehicle. Check it
             against the vehicle before you go on.
           </p>
-          {data.known_damage.length === 0 ? (
+          {data.known_damage.length === 0 && ov.damageQueued.length === 0 ? (
             <p className="rounded-lg border p-3" data-testid="no-known-damage">
               No damage recorded yet
             </p>
-          ) : (
+          ) : null}
+          {data.known_damage.length > 0 || ov.damageQueued.length > 0 ? (
             <ul className="flex flex-col gap-2" aria-label="Known damage">
+              {ov.damageQueued.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex flex-col gap-1 rounded-lg border p-3"
+                  data-testid="pending-damage-item"
+                >
+                  <p className="flex flex-wrap items-center gap-2 font-medium">
+                    {d.zoneLabel}
+                    <Badge variant="outline">{severityLabel(d.severity)}</Badge>
+                    <Badge variant="warning">Reported now</Badge>
+                    <Badge variant="outline">Saved on this phone</Badge>
+                  </p>
+                  <p className="text-sm">{d.description}</p>
+                </li>
+              ))}
               {data.known_damage.map((d) => (
                 <li
                   key={d.id}
@@ -716,10 +766,13 @@ export function InspectionForm({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
           {reporting ? (
             <DamageReporter
-              inspectionId={insp.id}
+              queue={{
+                enqueue: (payload, blobs) =>
+                  enqueue(payload, blobs).then(() => undefined),
+              }}
               noticeAcknowledged={noticeOk}
               onNoticeAcknowledged={() => setNoticeOk(true)}
               onCancel={() => setReporting(false)}
@@ -729,7 +782,6 @@ export function InspectionForm({
                   ok: true,
                   text: "Damage reported. It is in the list above.",
                 });
-                router.refresh();
               }}
             />
           ) : (
@@ -919,20 +971,26 @@ export function InspectionForm({
 
       {step === "review" ? (
         <div className="flex flex-col gap-4" data-testid="review-step">
-          {data.new_damage.length > 0 ? (
+          {data.new_damage.length + ov.damageQueued.length > 0 ? (
             <section
               className="flex flex-col gap-2 rounded-lg border p-3"
               data-testid="review-new-damage"
             >
               <p className="font-medium">
-                New damage reported in this inspection ({data.new_damage.length}
-                )
+                New damage reported in this inspection (
+                {data.new_damage.length + ov.damageQueued.length})
               </p>
               <ul className="flex flex-col gap-1 text-sm">
                 {data.new_damage.map((d) => (
                   <li key={d.id}>
                     {d.zone_label} · {severityLabel(d.severity)} —{" "}
                     {d.description}
+                  </li>
+                ))}
+                {ov.damageQueued.map((d) => (
+                  <li key={d.id}>
+                    {d.zoneLabel} · {severityLabel(d.severity)} —{" "}
+                    {d.description} (saved on this phone)
                   </li>
                 ))}
               </ul>
@@ -981,7 +1039,7 @@ export function InspectionForm({
             disabled={busy || blockers.length > 0}
             onClick={submit}
           >
-            {busy ? "Submitting…" : "Submit inspection"}
+            {busy ? "Saving…" : "Submit inspection"}
           </Button>
         </div>
       ) : null}
@@ -1014,7 +1072,7 @@ export function InspectionForm({
           }
           noticeAcknowledged={noticeOk}
           onNoticeAcknowledged={() => setNoticeOk(true)}
-          onUse={(c) => onUse(camera, c)}
+          onUse={(c) => void onUse(camera, c)}
           onClose={() => setCamera(null)}
         />
       ) : null}

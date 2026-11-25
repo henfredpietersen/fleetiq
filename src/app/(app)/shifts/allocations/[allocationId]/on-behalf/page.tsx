@@ -11,13 +11,14 @@ import { uuidField } from "@/modules/fleet-vehicles/domain/vehicle-schema";
 import { getMyInspection } from "@/modules/inspections-damage/server/inspection-service";
 import { InspectionForm } from "@/modules/inspections-damage/ui/inspection-form";
 import { cameraNoticeAcknowledged } from "@/modules/evidence-storage/server/notice-query";
+import { SyncBar } from "@/modules/inspections-damage/offline/ui/sync-bar";
 
 type Params = Promise<{ allocationId: string }>;
 
 // DEC-09: the supervisor completes the POST-shift inspection on the driver's behalf. Same stepped form, with a permanent banner.
 // my_inspection answers only the allocation's driver and the completer of an on-behalf post-shift inspection; anyone else gets not found.
 async function Content({ params }: { params: Params }) {
-  await requireSession("full");
+  const ctx = await requireSession("full");
   await connection();
   const { allocationId } = await params;
   if (!uuidField.safeParse(allocationId).success) notFound();
@@ -37,12 +38,16 @@ async function Content({ params }: { params: Params }) {
       </Alert>
     );
   return (
-    <InspectionForm
-      allocationId={allocationId}
-      data={r.inspection}
-      noticeAcknowledged={await cameraNoticeAcknowledged(db)}
-      mode="on_behalf"
-    />
+    <>
+      <SyncBar profileId={ctx.userId} />
+      <InspectionForm
+        allocationId={allocationId}
+        data={r.inspection}
+        noticeAcknowledged={await cameraNoticeAcknowledged(db)}
+        mode="on_behalf"
+        profileId={ctx.userId}
+      />
+    </>
   );
 }
 

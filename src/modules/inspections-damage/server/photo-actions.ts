@@ -7,8 +7,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireSession } from "@/modules/identity-access/server/session";
 import { createEvidenceDeps } from "@/modules/evidence-storage/server/factory";
-import { requestUploadSlot } from "@/modules/evidence-storage/server/request-upload";
-import { photoSlotSchema, parseInput } from "../domain/inspection-schema";
+import { requestInspectionPhotoSlot } from "./slot-service";
 import * as service from "./inspection-service";
 import type { InspectionReply } from "./inspection-actions";
 
@@ -18,26 +17,9 @@ async function db() {
 }
 
 export async function requestPhotoSlotAction(input: unknown) {
-  const p = parseInput(photoSlotSchema, input);
-  if (!p.ok) return { ok: false as const, message: p.message };
-  const b = await service.inspectionBranch(await db(), p.value.inspectionId);
-  if (!b.ok) return { ok: false as const, message: b.message };
+  await requireSession("full");
   const { db: user, config } = await createEvidenceDeps();
-  const r = await requestUploadSlot(
-    { db: user, config },
-    {
-      purpose: p.value.kind === "odometer" ? "odometer" : "inspection",
-      branchId: b.branchId,
-      captureSource: "in_app_camera",
-      mimeType: "image/jpeg",
-      sizeBytes: p.value.sizeBytes,
-      clientSubmissionId: p.value.clientSubmissionId,
-      deviceCaptureAt: p.value.deviceCaptureAt ?? null,
-      location: p.value.location ?? null,
-      capturedOffline: p.value.capturedOffline,
-      deviceKey: p.value.deviceKey ?? null,
-    },
-  );
+  const r = await requestInspectionPhotoSlot({ db: user, config }, input);
   return r.ok
     ? { ok: true as const, slot: r.slot }
     : { ok: false as const, message: r.message };

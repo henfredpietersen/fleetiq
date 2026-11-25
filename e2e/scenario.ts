@@ -23,7 +23,7 @@ export async function driverSignIn(page: Page, emp: string) {
 /** One driver with a verified licence, one vehicle, a shift that began `startedMinutesAgo` ago and ONE allocation in `status`. */
 export async function driverScenario(opts: {
   tag: string;
-  status: "pre_inspection_pending" | "in_use";
+  status: "planned" | "pre_inspection_pending" | "in_use";
   startedMinutesAgo?: number;
 }) {
   const run = Date.now().toString(36).toUpperCase();
@@ -131,8 +131,8 @@ export async function driverScenario(opts: {
       planned_end_at: end.toISOString(),
       status: opts.status,
       started_at: opts.status === "in_use" ? start.toISOString() : null,
-      opened_at: start.toISOString(),
-      opened_by: drv.id,
+      opened_at: opts.status === "planned" ? null : start.toISOString(),
+      opened_by: opts.status === "planned" ? null : drv.id,
       licence_class_check: "matched",
       client_submission_id: crypto.randomUUID(),
       created_by: boot.id,

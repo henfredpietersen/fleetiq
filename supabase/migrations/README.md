@@ -35,4 +35,4 @@ Tests: `supabase/tests/database/*.test.sql` (pgTAP, `supabase test db`). Types: 
 
 `supabase/seed.sql` loads synthetic data only (1 company, 2 branches, 10 vehicles `TESTnnn-GP`) on `supabase db reset`.
 
-Manual job run (no scheduler yet): `npm run job:evidence-cleanup` (needs the server-side env, see `.env.example`).
+Manual job run (no scheduler in migrations): `npm run job:evidence-cleanup` (hourly) and `npm run job:inspection-watch` (every 5 minutes; Phase 4D, see docs/CONTEXT.md) — both need the server-side env, see `.env.example`. Migrations 049–050 (Phase 4D): `inspection_due_status`, `inspection_watch_findings`, `run_inspection_watch`, `list_overdue_inspections`, `inspection_sync_conflicts`, `report_sync_conflict`, `resolve_sync_conflict`.

@@ -49,7 +49,8 @@ export async function beginInspection(
     p_captured_offline: p.value.capturedOffline,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
 }
@@ -65,7 +66,8 @@ export async function confirmKnownDamage(
     p_inspection_id: p.value.inspectionId,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
 }
@@ -87,7 +89,8 @@ export async function beginInspectionOnBehalf(
     p_captured_offline: p.value.capturedOffline,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
 }
@@ -108,7 +111,8 @@ export async function voidInspection(
     p_reason: p.value.reason,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
 }
@@ -130,7 +134,8 @@ export async function saveResponses(
     p_vehicle_confirmed: nul<boolean>(p.value.vehicleConfirmed),
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
 }
@@ -154,7 +159,8 @@ export async function submitInspection(
     p_captured_offline: p.value.capturedOffline,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   const row = data?.[0];
   if (!row) return unavailable;
   return {
@@ -177,7 +183,8 @@ export async function attachOdometerPhoto(
     p_evidence_file_id: p.value.evidenceFileId,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, photoId: data };
 }
@@ -196,7 +203,8 @@ export async function attachDefectPhoto(
     p_template_item_id: p.value.templateItemId,
     p_client_submission_id: p.value.clientSubmissionId,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, photoId: data };
 }
@@ -211,7 +219,8 @@ export async function inspectionBranch(
     .select("branch_id")
     .eq("id", inspectionId)
     .maybeSingle();
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) {
     return {
       ok: false,
@@ -232,7 +241,8 @@ export async function getMyInspection(
     p_allocation_id: p.value.allocationId,
     p_stage: p.value.stage,
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   const doc = myInspectionDoc.safeParse(data);
   if (!doc.success) return unavailable;
   return { ok: true, inspection: doc.data };
@@ -251,7 +261,8 @@ export async function listInspections(
     p_branch_id: nul<string>(p.value.branchId),
     p_limit: nul<number>(p.value.limit),
   });
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   return {
     ok: true,
     rows: (data ?? []).map((r) => ({
@@ -344,7 +355,8 @@ export async function getInspectionDetail(
     )
     .eq("id", inspectionId)
     .maybeSingle();
-  if (error) return { ok: false, message: inspectionDbMessage(error) };
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!i) {
     return {
       ok: false,
