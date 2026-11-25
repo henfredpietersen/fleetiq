@@ -4185,18 +4185,6 @@ export type Database = {
           vehicle_registration: string;
         }[];
       };
-      mark_damage_repaired: {
-        Args: {
-          p_client_submission_id: string;
-          p_item_id: string;
-          p_note: string;
-        };
-        Returns: string;
-      };
-      mark_evidence_slots_object_removed: {
-        Args: { p_ids: string[] };
-        Returns: number;
-      };
       list_overdue_inspections: {
         Args: { p_branch_id?: string };
         Returns: {
@@ -4218,6 +4206,18 @@ export type Database = {
           vehicle_fleet_number: string;
           vehicle_registration: string;
         }[];
+      };
+      mark_damage_repaired: {
+        Args: {
+          p_client_submission_id: string;
+          p_item_id: string;
+          p_note: string;
+        };
+        Returns: string;
+      };
+      mark_evidence_slots_object_removed: {
+        Args: { p_ids: string[] };
+        Returns: number;
       };
       my_allocations: {
         Args: { p_from: string; p_to: string };
@@ -4494,11 +4494,7 @@ export type Database = {
         };
       };
       resolve_sync_conflict: {
-        Args: {
-          p_client_submission_id: string;
-          p_id: string;
-          p_note: string;
-        };
+        Args: { p_client_submission_id: string; p_id: string; p_note: string };
         Returns: string;
       };
       reverse_service_verification: {
