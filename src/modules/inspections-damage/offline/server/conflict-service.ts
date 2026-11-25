@@ -27,11 +27,12 @@ export async function reportSyncConflict(
   if (!p.ok) return p;
   const { data, error } = await db.rpc("report_sync_conflict", {
     p_allocation_id: p.value.allocationId,
-    p_inspection_id: p.value.inspectionId as string,
+    // null, never undefined: an omitted argument is dropped from the request and the function has no default for it
+    p_inspection_id: (p.value.inspectionId ?? null) as string,
     p_function_name: p.value.functionName,
     p_refusal_code: p.value.refusalCode,
     p_refusal_message: p.value.refusalMessage,
-    p_device_time: p.value.deviceTime as string,
+    p_device_time: (p.value.deviceTime ?? null) as string,
     p_client_submission_id: p.value.clientSubmissionId,
   });
   if (error)

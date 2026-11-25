@@ -91,6 +91,38 @@ describe("POST /api/inspection-sync — what the phone is told", () => {
     );
     expect(r.status).toBe(503);
   });
+  it("report_conflict sends explicit nulls for the optional arguments (an omitted one would not match the function)", async () => {
+    let args: Record<string, unknown> = {};
+    const f = fakeClient({
+      rpc: {
+        report_sync_conflict: (a) => {
+          args = a;
+          return { data: "conf-1" };
+        },
+      },
+    });
+    await handleSync(
+      {
+        userId: U,
+        db: f.client,
+        evidence: async () => {
+          throw new Error("x");
+        },
+      },
+      {
+        op: "report_conflict",
+        profileId: U,
+        allocationId: A,
+        inspectionId: null,
+        functionName: "begin_inspection",
+        refusalCode: "55000",
+        refusalMessage: "Cancelled.",
+        clientSubmissionId: CS,
+      },
+    );
+    expect(args).toHaveProperty("p_inspection_id", null);
+    expect(args).toHaveProperty("p_device_time", null);
+  });
   it("report_conflict stores the refusal only", async () => {
     let args: Record<string, unknown> = {};
     const f = fakeClient({
