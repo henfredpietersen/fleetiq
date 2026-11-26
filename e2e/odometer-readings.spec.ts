@@ -84,7 +84,10 @@ async function completePre(
   await enterReading(dp, km);
   await expect(dp.getByTestId("odometer-step")).not.toContainText(/ocr/i);
   await next(dp);
-  await expect(dp.getByTestId("review-reading")).toContainText(String(km));
+  // the page groups digits for reading ("3 000 km"): match the digits, allowing a separator
+  await expect(dp.getByTestId("review-reading")).toContainText(
+    new RegExp(String(km).replace(/\B(?=(\d{3})+(?!\d))/g, "\\D?")),
+  );
   await expect(dp.getByTestId("review-step")).toContainText(
     "Everything is in place",
   );
