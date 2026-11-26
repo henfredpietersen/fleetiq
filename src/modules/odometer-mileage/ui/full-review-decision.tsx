@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ export function FullReviewDecision({
   canDecide: boolean;
   blockedReason: string | null;
 }) {
-  const router = useRouter();
   const [decision, setDecision] = useState<Decision>("accept");
   const [km, setKm] = useState("");
   const [reason, setReason] = useState("");
@@ -37,6 +36,18 @@ export function FullReviewDecision({
   );
   const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
   const [busy, run] = useTransition();
+  const [done, setDone] = useState(false);
+  if (done)
+    return (
+      <div className="flex flex-col gap-3" data-testid="decision-done">
+        <Alert variant="success" role="status" data-testid="decision-message">
+          {message?.text}
+        </Alert>
+        <Link href="/odometer/review?tab=full" className="underline">
+          Back to the full review list
+        </Link>
+      </div>
+    );
   if (!canDecide)
     return (
       <Alert role="status" data-testid="cannot-decide">
@@ -63,10 +74,8 @@ export function FullReviewDecision({
               clientSubmissionId: submissionId,
             });
             setMessage({ ok: r.ok, text: r.message });
-            if (r.ok) {
-              setSubmissionId(crypto.randomUUID());
-              router.refresh();
-            }
+            // no page refresh: the reading has left the queue, so a refreshed page would replace this confirmation
+            if (r.ok) setDone(true);
           } catch {
             setMessage({
               ok: false,

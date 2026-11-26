@@ -329,7 +329,8 @@ test("(b) a post-shift reading lower than the pre-shift reading goes to full rev
   expect(appr!.decided_by).toBe(sup.id);
   // the driver still sees the value they typed, now accepted
   await dp.goto(`/my-allocations/${s.allocationId}/inspection/post_shift`);
-  await expect(dp.getByTestId("reading-status")).toContainText(/1\D?900/);
+  await expect(dp.getByTestId("inspection-submitted")).toBeVisible(SLOW);
+  await expect(dp.getByTestId("reading-status")).toContainText(/1\D?900/, SLOW);
   await expect(dp.getByTestId("reading-status")).toContainText(
     "Accepted",
     SLOW,
