@@ -43,7 +43,7 @@ async function Content({ params }: { params: Promise<{ readingId: string }> }) {
   if (!row)
     return (
       <Alert data-testid="already-decided">
-        This reading is no longer waiting for review ({r.detail.status}).{" "}
+        This reading is no longer waiting for review: it is {r.detail.status}.{" "}
         <Link href="/odometer/review?tab=full" className="underline">
           Back to the list
         </Link>

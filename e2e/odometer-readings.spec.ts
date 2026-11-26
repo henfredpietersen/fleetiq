@@ -44,6 +44,31 @@ type Scenario = Awaited<ReturnType<typeof driverScenario>>;
 const next = (p: Page) =>
   p.getByRole("button", { name: "Next", exact: true }).click();
 
+/**
+ * Chromium's fake camera repeats the same frames, and the duplicate-image check (correctly) compares every odometer photo's file hash
+ * with the company's other photos. Test-only: change a few pixels just before the app encodes the JPEG so each photo is unique.
+ */
+async function uniquePhotos(page: Page) {
+  await page.addInitScript(() => {
+    const orig = HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob = function (...args) {
+      const g = this.getContext("2d");
+      if (g) {
+        for (let i = 0; i < 6; i++) {
+          g.fillStyle = `rgb(${(Math.random() * 255) | 0},${(Math.random() * 255) | 0},${(Math.random() * 255) | 0})`;
+          g.fillRect(
+            (Math.random() * (this.width - 8)) | 0,
+            (Math.random() * (this.height - 8)) | 0,
+            8,
+            8,
+          );
+        }
+      }
+      return orig.apply(this, args);
+    };
+  });
+}
+
 /** The driver: open the pre-shift form, answer everything "fine", photo, reading, review, submit. Returns the open phone. */
 async function completePre(
   browser: Browser,
@@ -53,6 +78,7 @@ async function completePre(
 ): Promise<{ ctx: BrowserContext; dp: Page }> {
   const ctx = await browser.newContext(phone);
   const dp = await ctx.newPage();
+  await uniquePhotos(dp);
   await driverSignIn(dp, s.emp);
   await dp.goto("/my-allocations");
   await dp
@@ -294,10 +320,12 @@ test("(b) a post-shift reading lower than the pre-shift reading goes to full rev
   await sp.getByLabel("Reading shown in the photo (km)").fill("2005");
   await sp.getByLabel(/^Reason \(required\)/).fill("The photo shows 2005 km");
   await sp.getByRole("button", { name: "Save decision" }).click();
-  await expect(sp.getByTestId("decision-message")).toContainText(
-    "The reading was accepted.",
-    SLOW,
-  );
+  // the save revalidates the page: the reading has left the queue, so the page may show its own "already decided" notice instead
+  await expect(
+    sp.locator(
+      '[data-testid="decision-message"], [data-testid="already-decided"]',
+    ),
+  ).toContainText(/accepted/i, SLOW);
 
   const done = await readingOf(s, "post_shift");
   expect(done).toMatchObject({
