@@ -1,6 +1,6 @@
 // What still stands between the driver and Submit (PRD §5.7). ONE place in TypeScript, mirroring the checks inside the SQL
 // function public.submit_inspection() (migrations 039/040/043/047), in the SAME ORDER and with the SAME messages and codes
-// (IN001–IN007), which stays the final word: the database re-checks everything and its own refusal is shown as is.
+// (IN001–IN007, IN015), which stays the final word: the database re-checks everything and its own refusal is shown as is.
 // Submit is enabled only when this list is empty, so the button never promises something the server would refuse.
 import type { ResponseType } from "./inspection-rules";
 
@@ -24,9 +24,19 @@ export type ReadinessInput = {
   itemsWithPhoto: ReadonlySet<string>;
   /** A current odometer photo is attached. */
   odometerPhoto: boolean;
+  /** 5A: the driver entered the reading shown in the photo (DEC-05, blind entry). */
+  readingEntered: boolean;
 };
 export type Blocker = {
-  code: "IN001" | "IN002" | "IN003" | "IN004" | "IN005" | "IN006" | "IN007";
+  code:
+    | "IN001"
+    | "IN002"
+    | "IN003"
+    | "IN004"
+    | "IN005"
+    | "IN006"
+    | "IN007"
+    | "IN015";
   message: string;
   /** Checklist item the blocker is about (not set for the vehicle and odometer blockers). */
   itemId?: string;
@@ -111,6 +121,13 @@ export function submitBlockers(i: ReadinessInput): Blocker[] {
       code: "IN006",
       message:
         "The odometer photo is required: take a photo of the odometer before you submit.",
+    });
+  }
+  if (!i.readingEntered) {
+    out.push({
+      code: "IN015",
+      message:
+        "Enter the odometer reading shown in your photo before you submit.",
     });
   }
   return out;

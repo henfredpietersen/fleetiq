@@ -1,0 +1,736 @@
+{
+  "description": "Shared test vectors for odometer_evaluate_checks (migration 053) and evaluateChecks (validation.ts). Inputs are lifetime km. The pgTAP file phase5a_validation_vectors.test.sql is generated from this file by scripts/gen-odometer-validation-test.mjs.",
+  "cases": [
+    {
+      "name": "pre: nothing to compare with -> all pass, quick check",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "decreasing: higher than the latest accepted passes",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": 900,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "decreasing: equal to the latest accepted passes",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "decreasing: one lower than the latest accepted fails -> full review",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 999,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "fail",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "decreasing: no accepted reading but an earlier one is unaccepted -> waiting (not failed) -> quick check",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": true,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "waiting",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "decreasing: an accepted reading wins over an earlier unaccepted one (pass)",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1100,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": true,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "decreasing: an accepted reading wins over an earlier unaccepted one (fail)",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 900,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": true,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "fail",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "implausible: not configured while max_km_per_allocation is null (never pass)",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1200,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": {
+          "lifetime_km": 1000,
+          "accepted": true
+        },
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "implausible_distance": "not_configured",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "implausible: exactly the maximum passes",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1500,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": {
+          "lifetime_km": 1000,
+          "accepted": true
+        },
+        "previous_post": null,
+        "max_km_per_allocation": 500,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "implausible_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check",
+        "values": {
+          "implausible_distance": {
+            "distance_km": 500,
+            "pre_basis": "accepted"
+          }
+        }
+      }
+    },
+    {
+      "name": "implausible: one over the maximum fails -> full review",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1501,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": {
+          "lifetime_km": 1000,
+          "accepted": true
+        },
+        "previous_post": null,
+        "max_km_per_allocation": 500,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "implausible_distance": "fail",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full",
+        "values": {
+          "implausible_distance": {
+            "distance_km": 501,
+            "pre_basis": "accepted"
+          }
+        }
+      }
+    },
+    {
+      "name": "implausible: an unaccepted pre reading is used by its driver value and the result says so",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1700,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": true,
+        "pre_reading": {
+          "lifetime_km": 1000,
+          "accepted": false
+        },
+        "previous_post": null,
+        "max_km_per_allocation": 500,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "waiting",
+          "implausible_distance": "fail",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full",
+        "values": {
+          "implausible_distance": {
+            "distance_km": 700,
+            "pre_basis": "driver"
+          }
+        }
+      }
+    },
+    {
+      "name": "implausible: configured but no pre reading -> waiting",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": 500,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "implausible_distance": "waiting",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "implausible: a post reading lower than the pre reading is not an implausible distance (decreasing catches it)",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 900,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": {
+          "lifetime_km": 1000,
+          "accepted": true
+        },
+        "previous_post": null,
+        "max_km_per_allocation": 500,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "fail",
+          "implausible_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "unaccounted: no previous allocation -> pass",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "unaccounted: exactly the tolerance (5 km) passes",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 3005,
+        "latest_accepted_lifetime_km": 3000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": 3000,
+          "accepted": true
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check",
+        "values": {
+          "unaccounted_distance": {
+            "gap_km": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "unaccounted: 6 km fails -> full review",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 3006,
+        "latest_accepted_lifetime_km": 3000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": 3000,
+          "accepted": true
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "fail",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full",
+        "values": {
+          "unaccounted_distance": {
+            "gap_km": 6
+          }
+        }
+      }
+    },
+    {
+      "name": "unaccounted: a custom tolerance of 10 km passes at 10",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 3010,
+        "latest_accepted_lifetime_km": 3000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": 3000,
+          "accepted": true
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 10,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check",
+        "values": {
+          "unaccounted_distance": {
+            "gap_km": 10
+          }
+        }
+      }
+    },
+    {
+      "name": "unaccounted: the previous post-shift reading is not accepted yet -> waiting (not failed)",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 3500,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": true,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": null,
+          "accepted": false
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "waiting",
+          "unaccounted_distance": "waiting",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check"
+      }
+    },
+    {
+      "name": "unaccounted: a lower reading than the previous post-shift is not an unaccounted gap",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 2990,
+        "latest_accepted_lifetime_km": 3000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": 3000,
+          "accepted": true
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "fail",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "duplicate image fails -> full review",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": true,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "fail",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "gallery / file source fails (cannot happen with the in-app camera, DEC-04)",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "gallery",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "fail",
+          "late_inspection": "pass"
+        },
+        "route": "full",
+        "values": {
+          "gallery_upload": {
+            "capture_source": "gallery"
+          }
+        }
+      }
+    },
+    {
+      "name": "in-app camera: gallery_upload is recorded as pass",
+      "input": {
+        "stage": "post_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "implausible_distance": "not_configured",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "quick_check",
+        "values": {
+          "gallery_upload": {
+            "capture_source": "in_app_camera"
+          }
+        }
+      }
+    },
+    {
+      "name": "late inspection fails -> full review",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 1000,
+        "latest_accepted_lifetime_km": null,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": true
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "fail"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "several failures: still full review, each failed check listed",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 900,
+        "latest_accepted_lifetime_km": 1000,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": null,
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": true,
+        "capture_source": "in_app_camera",
+        "late_flag": true
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "fail",
+          "unaccounted_distance": "pass",
+          "duplicate_image": "fail",
+          "gallery_upload": "pass",
+          "late_inspection": "fail"
+        },
+        "route": "full"
+      }
+    },
+    {
+      "name": "lifetime values (a replaced odometer segment) compare as lifetime km",
+      "input": {
+        "stage": "pre_shift",
+        "driver_lifetime_km": 50120,
+        "latest_accepted_lifetime_km": 50100,
+        "earlier_unaccepted_exists": false,
+        "pre_reading": null,
+        "previous_post": {
+          "lifetime_km": 50100,
+          "accepted": true
+        },
+        "max_km_per_allocation": null,
+        "unaccounted_tolerance_km": 5,
+        "duplicate_image": false,
+        "capture_source": "in_app_camera",
+        "late_flag": false
+      },
+      "expect": {
+        "results": {
+          "decreasing_reading": "pass",
+          "unaccounted_distance": "fail",
+          "duplicate_image": "pass",
+          "gallery_upload": "pass",
+          "late_inspection": "pass"
+        },
+        "route": "full",
+        "values": {
+          "unaccounted_distance": {
+            "gap_km": 20
+          }
+        }
+      }
+    }
+  ]
+}

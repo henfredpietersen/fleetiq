@@ -4,6 +4,7 @@ import {
   branchStaff,
   driverScenario,
   driverSignIn,
+  enterReading,
   staffSignIn,
   takeCameraPhoto,
 } from "./scenario";
@@ -127,6 +128,7 @@ test("driver cannot finish; supervisor voids the draft and completes the post-sh
     sp.getByRole("button", { name: "Take odometer photo" }),
     { acknowledge: true },
   );
+  await enterReading(sp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     sp.getByTestId("odometer-step").getByText("Attached", { exact: true }),
   ).toBeVisible();

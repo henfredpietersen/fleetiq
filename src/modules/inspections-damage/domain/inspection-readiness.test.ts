@@ -14,9 +14,10 @@ const input = (c: (typeof fixture.cases)[number]): ReadinessInput => ({
   answers: c.answers as ReadinessInput["answers"],
   itemsWithPhoto: new Set(c.photos),
   odometerPhoto: c.odometer,
+  readingEntered: (c as { reading?: boolean }).reading ?? true,
 });
 
-describe("submit readiness matches the server rules (IN001-IN007)", () => {
+describe("submit readiness matches the server rules (IN001-IN007, IN015)", () => {
   for (const c of fixture.cases) {
     it(c.name, () => {
       const codes = submitBlockers(input(c)).map((b) => b.code);

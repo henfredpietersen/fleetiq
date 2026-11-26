@@ -120,6 +120,7 @@ export function describeItems(items: QueueItem[]): string[] {
     out.push(
       `${n("report_damage")} damage ${n("report_damage") === 1 ? "report" : "reports"}`,
     );
+  if (n("reading")) out.push("your odometer reading");
   if (n("submit")) out.push("the submit");
   return out;
 }

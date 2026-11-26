@@ -1795,6 +1795,647 @@ export type Database = {
           },
         ];
       };
+      odometer_exceptions: {
+        Row: {
+          allocation_id: string | null;
+          approval_id: string | null;
+          assigned_to: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at: string;
+          description: string;
+          driver_id: string | null;
+          exception_type: string;
+          id: string;
+          inspection_id: string | null;
+          odometer_reading_id: string | null;
+          resolution_summary: string | null;
+          resolved_at: string | null;
+          severity: string;
+          status: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id?: string | null;
+          approval_id?: string | null;
+          assigned_to?: string | null;
+          branch_id: string;
+          company_id: string;
+          created_at?: string;
+          description: string;
+          driver_id?: string | null;
+          exception_type: string;
+          id?: string;
+          inspection_id?: string | null;
+          odometer_reading_id?: string | null;
+          resolution_summary?: string | null;
+          resolved_at?: string | null;
+          severity: string;
+          status?: string;
+          vehicle_id: string;
+        };
+        Update: {
+          allocation_id?: string | null;
+          approval_id?: string | null;
+          assigned_to?: string | null;
+          branch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          description?: string;
+          driver_id?: string | null;
+          exception_type?: string;
+          id?: string;
+          inspection_id?: string | null;
+          odometer_reading_id?: string | null;
+          resolution_summary?: string | null;
+          resolved_at?: string | null;
+          severity?: string;
+          status?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_exceptions_allocation_id_company_id_fkey";
+            columns: ["allocation_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_approval_id_company_id_fkey";
+            columns: ["approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_assigned_to_company_id_fkey";
+            columns: ["assigned_to", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_driver_id_company_id_fkey";
+            columns: ["driver_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "drivers";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_inspection_id_company_id_fkey";
+            columns: ["inspection_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_odometer_reading_id_company_id_fkey";
+            columns: ["odometer_reading_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_readings";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_exceptions_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_reading_events: {
+        Row: {
+          actor_id: string | null;
+          approval_id: string | null;
+          branch_id: string;
+          company_id: string;
+          event_type: string;
+          id: string;
+          metadata: NonNullable<Json>;
+          new_value: Json | null;
+          occurred_at: string;
+          odometer_reading_id: string;
+          previous_value: Json | null;
+          reason: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id?: string | null;
+          approval_id?: string | null;
+          branch_id: string;
+          company_id: string;
+          event_type: string;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          new_value?: Json | null;
+          occurred_at?: string;
+          odometer_reading_id: string;
+          previous_value?: Json | null;
+          reason?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          approval_id?: string | null;
+          branch_id?: string;
+          company_id?: string;
+          event_type?: string;
+          id?: string;
+          metadata?: NonNullable<Json>;
+          new_value?: Json | null;
+          occurred_at?: string;
+          odometer_reading_id?: string;
+          previous_value?: Json | null;
+          reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_reading_events_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_reading_events_approval_id_company_id_fkey";
+            columns: ["approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_reading_events_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_reading_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_reading_events_odometer_reading_id_company_id_fkey";
+            columns: ["odometer_reading_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_readings";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_readings: {
+        Row: {
+          acceptance_method: string | null;
+          accepted_at: string | null;
+          accepted_by: string | null;
+          accepted_lifetime_km: number | null;
+          accepted_reading_km: number | null;
+          allocation_id: string;
+          approval_id: string | null;
+          branch_id: string;
+          captured_offline: boolean;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          device_entered_at: string | null;
+          driver_id: string;
+          driver_profile_id: string;
+          driver_reading_km: number | null;
+          entered_by: string;
+          exception_summary: string | null;
+          full_review_note: string | null;
+          full_review_requested_by: string | null;
+          id: string;
+          inspection_id: string;
+          inspection_stage: string;
+          ocr_reading_km: number | null;
+          ocr_result_id: string | null;
+          odometer_evidence_id: string | null;
+          reading_status: string;
+          review_kind: string | null;
+          review_status: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          row_version: number;
+          segment_id: string;
+          shift_id: string;
+          submitted_at: string;
+          supersedes_reading_id: string | null;
+          updated_at: string;
+          validated_at: string | null;
+          validation: Json | null;
+          validation_settings_id: string | null;
+          validation_settings_version: number | null;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acceptance_method?: string | null;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          accepted_lifetime_km?: number | null;
+          accepted_reading_km?: number | null;
+          allocation_id: string;
+          approval_id?: string | null;
+          branch_id: string;
+          captured_offline?: boolean;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          device_entered_at?: string | null;
+          driver_id: string;
+          driver_profile_id: string;
+          driver_reading_km?: number | null;
+          entered_by: string;
+          exception_summary?: string | null;
+          full_review_note?: string | null;
+          full_review_requested_by?: string | null;
+          id?: string;
+          inspection_id: string;
+          inspection_stage: string;
+          ocr_reading_km?: number | null;
+          ocr_result_id?: string | null;
+          odometer_evidence_id?: string | null;
+          reading_status?: string;
+          review_kind?: string | null;
+          review_status?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          row_version?: number;
+          segment_id: string;
+          shift_id: string;
+          submitted_at?: string;
+          supersedes_reading_id?: string | null;
+          updated_at?: string;
+          validated_at?: string | null;
+          validation?: Json | null;
+          validation_settings_id?: string | null;
+          validation_settings_version?: number | null;
+          vehicle_id: string;
+        };
+        Update: {
+          acceptance_method?: string | null;
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          accepted_lifetime_km?: number | null;
+          accepted_reading_km?: number | null;
+          allocation_id?: string;
+          approval_id?: string | null;
+          branch_id?: string;
+          captured_offline?: boolean;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          device_entered_at?: string | null;
+          driver_id?: string;
+          driver_profile_id?: string;
+          driver_reading_km?: number | null;
+          entered_by?: string;
+          exception_summary?: string | null;
+          full_review_note?: string | null;
+          full_review_requested_by?: string | null;
+          id?: string;
+          inspection_id?: string;
+          inspection_stage?: string;
+          ocr_reading_km?: number | null;
+          ocr_result_id?: string | null;
+          odometer_evidence_id?: string | null;
+          reading_status?: string;
+          review_kind?: string | null;
+          review_status?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          row_version?: number;
+          segment_id?: string;
+          shift_id?: string;
+          submitted_at?: string;
+          supersedes_reading_id?: string | null;
+          updated_at?: string;
+          validated_at?: string | null;
+          validation?: Json | null;
+          validation_settings_id?: string | null;
+          validation_settings_version?: number | null;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_readings_accepted_by_company_id_fkey";
+            columns: ["accepted_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_allocation_id_vehicle_id_driver_id_shift_fkey";
+            columns: [
+              "allocation_id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+            isOneToOne: false;
+            referencedRelation: "vehicle_allocations";
+            referencedColumns: [
+              "id",
+              "vehicle_id",
+              "driver_id",
+              "shift_id",
+              "branch_id",
+            ];
+          },
+          {
+            foreignKeyName: "odometer_readings_approval_id_company_id_fkey";
+            columns: ["approval_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "approvals";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_branch_id_company_id_fkey";
+            columns: ["branch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_driver_profile_id_company_id_fkey";
+            columns: ["driver_profile_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_entered_by_company_id_fkey";
+            columns: ["entered_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_full_review_requested_by_company_id_fkey";
+            columns: ["full_review_requested_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_inspection_id_allocation_id_inspection_s_fkey";
+            columns: ["inspection_id", "allocation_id", "inspection_stage"];
+            isOneToOne: false;
+            referencedRelation: "inspections";
+            referencedColumns: ["id", "allocation_id", "inspection_stage"];
+          },
+          {
+            foreignKeyName: "odometer_readings_odometer_evidence_id_company_id_fkey";
+            columns: ["odometer_evidence_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_evidence";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_reviewed_by_company_id_fkey";
+            columns: ["reviewed_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_segment_id_vehicle_id_fkey";
+            columns: ["segment_id", "vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_segments";
+            referencedColumns: ["id", "vehicle_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_supersedes_reading_id_company_id_fkey";
+            columns: ["supersedes_reading_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_readings";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_readings_validation_settings_id_company_id_fkey";
+            columns: ["validation_settings_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_validation_settings";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_requests: {
+        Row: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at: string;
+          function_name: string;
+          id: string;
+          odometer_reading_id: string | null;
+          request_hash: string;
+          result: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          client_submission_id: string;
+          company_id: string;
+          created_at?: string;
+          function_name: string;
+          id?: string;
+          odometer_reading_id?: string | null;
+          request_hash: string;
+          result: NonNullable<Json>;
+        };
+        Update: {
+          actor_id?: string;
+          client_submission_id?: string;
+          company_id?: string;
+          created_at?: string;
+          function_name?: string;
+          id?: string;
+          odometer_reading_id?: string | null;
+          request_hash?: string;
+          result?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_requests_actor_id_company_id_fkey";
+            columns: ["actor_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "odometer_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_requests_odometer_reading_id_company_id_fkey";
+            columns: ["odometer_reading_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_readings";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_segments: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          created_by_adjustment_id: string | null;
+          ends_at: string | null;
+          id: string;
+          offset_km: number;
+          segment_number: number;
+          starts_at: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          created_by_adjustment_id?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          offset_km?: number;
+          segment_number: number;
+          starts_at: string;
+          vehicle_id: string;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          created_by_adjustment_id?: string | null;
+          ends_at?: string | null;
+          id?: string;
+          offset_km?: number;
+          segment_number?: number;
+          starts_at?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_segments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_segments_vehicle_id_company_id_fkey";
+            columns: ["vehicle_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      odometer_validation_settings: {
+        Row: {
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          max_km_per_allocation: number | null;
+          ocr_driver_tolerance_km: number;
+          ocr_min_confidence: number | null;
+          post_shift_late_minutes: number;
+          pre_shift_late_minutes: number;
+          reason: string | null;
+          stale_reading_days: number;
+          unaccounted_tolerance_km: number;
+          vehicle_category: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_submission_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          effective_from: string;
+          effective_to?: string | null;
+          id?: string;
+          max_km_per_allocation?: number | null;
+          ocr_driver_tolerance_km?: number;
+          ocr_min_confidence?: number | null;
+          post_shift_late_minutes?: number;
+          pre_shift_late_minutes?: number;
+          reason?: string | null;
+          stale_reading_days?: number;
+          unaccounted_tolerance_km?: number;
+          vehicle_category?: string | null;
+          version: number;
+        };
+        Update: {
+          client_submission_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          effective_to?: string | null;
+          id?: string;
+          max_km_per_allocation?: number | null;
+          ocr_driver_tolerance_km?: number;
+          ocr_min_confidence?: number | null;
+          post_shift_late_minutes?: number;
+          pre_shift_late_minutes?: number;
+          reason?: string | null;
+          stale_reading_days?: number;
+          unaccounted_tolerance_km?: number;
+          vehicle_category?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "odometer_validation_settings_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "odometer_validation_settings_created_by_company_id_fkey";
+            columns: ["created_by", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       permissions: {
         Row: {
           description: string | null;
@@ -3243,6 +3884,13 @@ export type Database = {
             referencedColumns: ["id", "company_id"];
           },
           {
+            foreignKeyName: "vehicles_current_reading_fk";
+            columns: ["current_odometer_reading_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "odometer_readings";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
             foreignKeyName: "vehicles_department_id_company_id_fkey";
             columns: ["department_id", "company_id"];
             isOneToOne: false;
@@ -3733,6 +4381,34 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      company_validation_settings: {
+        Args: { p_at?: string; p_company_id: string };
+        Returns: {
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          max_km_per_allocation: number | null;
+          ocr_driver_tolerance_km: number;
+          ocr_min_confidence: number | null;
+          post_shift_late_minutes: number;
+          pre_shift_late_minutes: number;
+          reason: string | null;
+          stale_reading_days: number;
+          unaccounted_tolerance_km: number;
+          vehicle_category: string | null;
+          version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "odometer_validation_settings";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       complete_background_job: {
         Args: { p_id: string; p_result?: Json; p_worker: string };
         Returns: boolean;
@@ -4185,6 +4861,37 @@ export type Database = {
           vehicle_registration: string;
         }[];
       };
+      list_odometer_review: {
+        Args: { p_branch_id?: string; p_limit?: number; p_queue: string };
+        Returns: {
+          allocation_id: string;
+          blocked_reason: string;
+          branch_id: string;
+          branch_name: string;
+          can_decide: boolean;
+          captured_offline: boolean;
+          checks: Json;
+          driver_name: string;
+          driver_reading_km: number;
+          evidence_file_id: string;
+          failed_checks: string[];
+          fleet_number: string;
+          full_review_note: string;
+          inspection_id: string;
+          inspection_stage: string;
+          late_flag: boolean;
+          planned_end_at: string;
+          planned_start_at: string;
+          previous_accepted_at: string;
+          previous_accepted_km: number;
+          reading_id: string;
+          registration: string;
+          review_kind: string;
+          submitted_at: string;
+          validated_at: string;
+          vehicle_id: string;
+        }[];
+      };
       list_overdue_inspections: {
         Args: { p_branch_id?: string };
         Returns: {
@@ -4244,6 +4951,139 @@ export type Database = {
         Args: { p_allocation_id: string; p_stage: string };
         Returns: Json;
       };
+      odometer_accept: {
+        Args: {
+          p_accepted_km: number;
+          p_actor: string;
+          p_approval_id: string;
+          p_metadata?: Json;
+          p_method: string;
+          p_reading_id: string;
+          p_reason: string;
+          p_review_kind: string;
+        };
+        Returns: undefined;
+      };
+      odometer_auto_accept_allowed: {
+        Args: { p_reading_id: string };
+        Returns: boolean;
+      };
+      odometer_can_read: { Args: { p_branch_id: string }; Returns: boolean };
+      odometer_check_severity: { Args: { p_key: string }; Returns: string };
+      odometer_evaluate_checks: { Args: { p: Json }; Returns: Json };
+      odometer_fail: {
+        Args: { p_detail?: string; p_message: string; p_sqlstate: string };
+        Returns: undefined;
+      };
+      odometer_fail_code: { Args: { p_code: string }; Returns: undefined };
+      odometer_ledger_record: {
+        Args: {
+          p_actor: string;
+          p_company: string;
+          p_csid: string;
+          p_function: string;
+          p_hash: string;
+          p_reading: string;
+          p_result: Json;
+        };
+        Returns: undefined;
+      };
+      odometer_ledger_replay: {
+        Args: {
+          p_actor: string;
+          p_company: string;
+          p_csid: string;
+          p_function: string;
+          p_hash: string;
+        };
+        Returns: Json;
+      };
+      odometer_lifetime_km: {
+        Args: { p_displayed_km: number; p_segment_id: string };
+        Returns: number;
+      };
+      odometer_log_event: {
+        Args: {
+          p_actor: string;
+          p_approval: string;
+          p_metadata: Json;
+          p_new: Json;
+          p_previous: Json;
+          p_reading: Omit<
+            Database["public"]["Tables"]["odometer_readings"]["Row"],
+            Database["public"]["Tables"]["odometer_readings"]["ComputedFields"]
+          >;
+          p_reason: string;
+          p_type: string;
+        };
+        Returns: undefined;
+      };
+      odometer_messages: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          code: string;
+          message: string;
+        }[];
+      };
+      odometer_reject: {
+        Args: {
+          p_actor: string;
+          p_approval_id: string;
+          p_metadata?: Json;
+          p_reading_id: string;
+          p_reason: string;
+          p_reviewer: string;
+        };
+        Returns: undefined;
+      };
+      odometer_resolve_exceptions: {
+        Args: {
+          p_approval_id: string;
+          p_reading_id: string;
+          p_status: string;
+          p_summary: string;
+        };
+        Returns: number;
+      };
+      odometer_revalidate_later: {
+        Args: { p_reading_id: string };
+        Returns: undefined;
+      };
+      odometer_review_counts: {
+        Args: { p_branch_id?: string };
+        Returns: {
+          full_review: number;
+          quick_check: number;
+        }[];
+      };
+      odometer_review_detail: { Args: { p_reading_id: string }; Returns: Json };
+      odometer_reviewer_blocked: {
+        Args: {
+          p_uid: string;
+          r: Omit<
+            Database["public"]["Tables"]["odometer_readings"]["Row"],
+            Database["public"]["Tables"]["odometer_readings"]["ComputedFields"]
+          >;
+        };
+        Returns: boolean;
+      };
+      odometer_stage_rank: { Args: { p_stage: string }; Returns: number };
+      odometer_submit_reading: {
+        Args: { p_inspection_id: string };
+        Returns: undefined;
+      };
+      odometer_validate: {
+        Args: { p_reading_id: string; p_trigger?: string };
+        Returns: Json;
+      };
+      odometer_void_for_inspection: {
+        Args: { p_actor: string; p_inspection_id: string; p_reason: string };
+        Returns: undefined;
+      };
+      quick_check_accept: {
+        Args: { p_client_submission_id: string; p_items: Json };
+        Returns: Json;
+      };
       record_driver_licence: {
         Args: {
           p_client_submission_id: string;
@@ -4255,6 +5095,16 @@ export type Database = {
           p_licence_number: string;
           p_prdp_expiry_date: string;
           p_prdp_required: boolean;
+        };
+        Returns: string;
+      };
+      record_driver_reading: {
+        Args: {
+          p_captured_offline: boolean;
+          p_client_submission_id: string;
+          p_device_time: string;
+          p_inspection_id: string;
+          p_reading_km: number;
         };
         Returns: string;
       };
@@ -4510,6 +5360,16 @@ export type Database = {
         };
         Returns: string;
       };
+      review_reading: {
+        Args: {
+          p_accepted_km: number;
+          p_client_submission_id: string;
+          p_decision: string;
+          p_reading_id: string;
+          p_reason: string;
+        };
+        Returns: Json;
+      };
       run_inspection_watch: {
         Args: { p_company_id: string; p_now?: string };
         Returns: Json;
@@ -4526,6 +5386,14 @@ export type Database = {
       seed_starter_inspection_template: {
         Args: { p_company_id: string };
         Returns: string;
+      };
+      send_to_full_review: {
+        Args: {
+          p_client_submission_id: string;
+          p_note: string;
+          p_reading_id: string;
+        };
+        Returns: Json;
       };
       service_config_lookup: {
         Args: { p_at: string; p_vehicle_id: string };
@@ -4602,6 +5470,21 @@ export type Database = {
       set_driver_status: {
         Args: { p_driver_id: string; p_reason: string; p_status: string };
         Returns: undefined;
+      };
+      set_validation_settings: {
+        Args: {
+          p_client_submission_id: string;
+          p_max_km_per_allocation: number;
+          p_ocr_driver_tolerance_km: number;
+          p_ocr_min_confidence: number;
+          p_post_shift_late_minutes: number;
+          p_pre_shift_late_minutes: number;
+          p_reason: string;
+          p_stale_reading_days: number;
+          p_unaccounted_tolerance_km: number;
+          p_vehicle_category: string;
+        };
+        Returns: string;
       };
       set_vehicle_required_licence_code: {
         Args: { p_code: string; p_reason: string; p_vehicle_id: string };
@@ -4685,6 +5568,34 @@ export type Database = {
         Returns: boolean;
       };
       user_requires_mfa: { Args: { p_user: string }; Returns: boolean };
+      validation_settings_for: {
+        Args: { p_at?: string; p_vehicle_id: string };
+        Returns: {
+          client_submission_id: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          effective_to: string | null;
+          id: string;
+          max_km_per_allocation: number | null;
+          ocr_driver_tolerance_km: number;
+          ocr_min_confidence: number | null;
+          post_shift_late_minutes: number;
+          pre_shift_late_minutes: number;
+          reason: string | null;
+          stale_reading_days: number;
+          unaccounted_tolerance_km: number;
+          vehicle_category: string | null;
+          version: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "odometer_validation_settings";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       vehicle_service_status_rows: {
         Args: Record<PropertyKey, never>;
         Returns: {

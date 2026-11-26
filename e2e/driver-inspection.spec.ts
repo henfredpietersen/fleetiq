@@ -4,6 +4,7 @@ import {
   answerChecklist,
   driverScenario,
   driverSignIn,
+  enterReading,
   staffSignIn,
   takeCameraPhoto,
 } from "./scenario";
@@ -102,6 +103,7 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     dp.getByTestId("odometer-step").getByText("Attached"),
   ).toBeVisible();
@@ -217,6 +219,7 @@ test("register + issue the phone, pre-shift with a defect, submit, end shift, po
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     dp.getByTestId("odometer-step").getByText("Attached"),
   ).toBeVisible();

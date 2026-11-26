@@ -19,6 +19,7 @@ export const SYNC_OPS = [
   "attach_odometer",
   "attach_defect",
   "report_damage",
+  "record_reading",
   "submit",
   "report_conflict",
   "conflict_status",

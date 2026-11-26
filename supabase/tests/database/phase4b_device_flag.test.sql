@@ -80,6 +80,7 @@ begin
   perform public.save_inspection_responses(v, tests.answers(stage), true, tests.csid(label || stage || 's'));
   perform public.confirm_known_damage_reviewed(v, tests.csid(label || stage || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-fo-' || label || '-' || case stage when 'pre_shift' then 'pre' else 'post' end), tests.csid(label || stage || 'o'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 create function tests.submit(label text, stage text default 'pre_shift', c text default null) returns text language sql as $$
@@ -90,6 +91,7 @@ begin
   perform public.save_inspection_responses(tests.ins(label, 'post_shift'),
     (select jsonb_agg(e) from jsonb_array_elements(tests.answers('post_shift')) e where e ->> 'template_item_id' <> tests.item('post_incident')::text), true, tests.csid(label || 'rest'));
   perform public.attach_odometer_photo(tests.ins(label, 'post_shift'), tests.id('f-fo-' || label || '-post'), tests.csid(label || 'resto'));
+  perform public.record_driver_reading(tests.ins(label, 'post_shift'), 1000, null, false, gen_random_uuid());
   perform public.confirm_known_damage_reviewed(tests.ins(label, 'post_shift'), tests.csid(label || 'restk'));
 end $$;
 create function tests.n(q text) returns integer language plpgsql as $$
@@ -134,6 +136,7 @@ begin
   perform public.save_inspection_responses(v, tests.answers('pre_shift'), true, tests.csid(label || 's'));
   perform public.confirm_known_damage_reviewed(v, tests.csid(label || 'k'));
   perform public.attach_odometer_photo(v, tests.id('f-' || filelabel), tests.csid(label || 'o'));
+  perform public.record_driver_reading(v, 1000, null, false, gen_random_uuid());
   return v;
 end $$;
 create function tests.devk(n text) returns uuid language sql immutable as $$ select md5('device-' || n)::uuid $$;
@@ -188,6 +191,7 @@ select tests.act_as('u-rtk'); select tests.prepf('rtk', 'rtk1');
 select tests.reset();
 select tests.act_as('u-rtk');
 select public.attach_odometer_photo(tests.ins('rtk'), tests.id('f-rtk2'), tests.csid('rtk-retake'));
+select public.record_driver_reading(tests.ins('rtk'), 1000, null, false, gen_random_uuid());
 select is(tests.submit('rtk'), null, 'a retaken odometer photo (new device) then submit succeeds');
 select tests.reset();
 select is(tests.flag('iss'), 'issued_device', 'stored: issued_device');

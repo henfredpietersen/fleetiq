@@ -10,6 +10,7 @@ import {
   listInspectionsSchema,
   myInspectionSchema,
   parseInput,
+  recordReadingSchema,
   saveSchema,
   submitSchema,
 } from "../domain/inspection-schema";
@@ -115,6 +116,29 @@ export async function voidInspection(
     return { ok: false, message: inspectionDbMessage(error), code: error.code };
   if (!data) return unavailable;
   return { ok: true, inspectionId: data };
+}
+
+/**
+ * 5A (DEC-05): the driver types the reading shown in their odometer photo, blind (no OCR value exists or is ever sent). Draft only, the person
+ * completing the inspection only (the on-behalf supervisor uses the same call); idempotent on clientSubmissionId (DEC-06).
+ */
+export async function recordDriverReading(
+  db: Db,
+  raw: unknown,
+): Promise<Outcome<{ readingId: string }>> {
+  const p = parseInput(recordReadingSchema, raw);
+  if (!p.ok) return p;
+  const { data, error } = await db.rpc("record_driver_reading", {
+    p_inspection_id: p.value.inspectionId,
+    p_reading_km: p.value.readingKm,
+    p_device_time: nul<string>(p.value.deviceTime),
+    p_captured_offline: p.value.capturedOffline,
+    p_client_submission_id: p.value.clientSubmissionId,
+  });
+  if (error)
+    return { ok: false, message: inspectionDbMessage(error), code: error.code };
+  if (!data) return unavailable;
+  return { ok: true, readingId: data };
 }
 
 export async function saveResponses(

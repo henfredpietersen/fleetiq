@@ -28,6 +28,7 @@ export type SyncOp =
   | "attach_odometer"
   | "attach_defect"
   | "report_damage"
+  | "record_reading"
   | "submit"
   | "report_conflict"
   | "conflict_status"
@@ -82,6 +83,8 @@ export function functionNameOf(item: QueueItem): string {
         : "attach_inspection_photo";
     case "report_damage":
       return "report_damage";
+    case "reading":
+      return "record_driver_reading";
     case "submit":
       return "submit_inspection";
   }
@@ -314,6 +317,18 @@ export class SyncRunner {
         item,
         await this.call("confirm_known", {
           inspectionId,
+          clientSubmissionId: item.csid,
+        }),
+      );
+    }
+    if (p.kind === "reading") {
+      return this.finish(
+        item,
+        await this.call("record_reading", {
+          inspectionId,
+          readingKm: p.km,
+          deviceTime: item.deviceTime,
+          capturedOffline: item.capturedOffline,
           clientSubmissionId: item.csid,
         }),
       );

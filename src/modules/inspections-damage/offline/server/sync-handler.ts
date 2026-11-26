@@ -128,6 +128,10 @@ export async function handleSync(
         const r = await service.confirmKnownDamage(db, body);
         return r.ok ? ok() : refuse(r);
       }
+      case "record_reading": {
+        const r = await service.recordDriverReading(db, body);
+        return r.ok ? ok() : refuse(r);
+      }
       case "submit": {
         const r = await service.submitInspection(db, body);
         return r.ok

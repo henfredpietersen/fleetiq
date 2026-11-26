@@ -168,3 +168,72 @@ describe("POST /api/inspection-sync — what the phone is told", () => {
     ]);
   });
 });
+
+describe("POST /api/inspection-sync — the driver's reading (5A, DEC-05, DEC-06)", () => {
+  const INS = "00000000-0000-4000-8000-0000000000b1";
+  const reading = {
+    op: "record_reading",
+    profileId: U,
+    inspectionId: INS,
+    readingKm: 123456,
+    deviceTime: "2026-11-25T08:00:00.000Z",
+    capturedOffline: true,
+    clientSubmissionId: CS,
+  };
+  it("calls record_driver_reading as the signed-in user with the device context and the item's own client_submission_id", async () => {
+    const seen: Record<string, unknown>[] = [];
+    const r = await handleSync(
+      deps({
+        record_driver_reading: () => ({ data: "reading-1" }),
+      }),
+      reading,
+    );
+    expect(r).toEqual({ status: 200, body: { ok: true } });
+    const fake = fakeClient({
+      rpc: {
+        record_driver_reading: (a) => {
+          seen.push(a);
+          return { data: "reading-1" };
+        },
+      },
+    });
+    await handleSync({ ...deps({}), db: fake.client }, reading);
+    expect(seen[0]).toEqual({
+      p_inspection_id: INS,
+      p_reading_km: 123456,
+      p_device_time: "2026-11-25T08:00:00.000Z",
+      p_captured_offline: true,
+      p_client_submission_id: CS,
+    });
+  });
+  it("refuses a reading that is not whole km in range with 422 before the database is called", async () => {
+    for (const km of [-1, 1.5, 10_000_000, "12"]) {
+      const r = await handleSync(deps({}), { ...reading, readingKm: km });
+      expect(r.status).toBe(422);
+    }
+  });
+  it("a database refusal keeps its code and message (IN006 / 55000 / 42501 are conflicts, a down database is retried)", async () => {
+    for (const [code, status] of [
+      ["IN006", 409],
+      ["55000", 409],
+      ["42501", 403],
+      ["08006", 503],
+    ] as const) {
+      const r = await handleSync(
+        deps({
+          record_driver_reading: () => ({ error: { code, message: "x" } }),
+        }),
+        reading,
+      );
+      expect(r.status).toBe(status);
+      expect(r.body.code).toBe(code);
+    }
+  });
+  it("the answer carries no OCR value (DEC-05)", async () => {
+    const r = await handleSync(
+      deps({ record_driver_reading: () => ({ data: "reading-1" }) }),
+      reading,
+    );
+    expect(JSON.stringify(r)).not.toMatch(/ocr/i);
+  });
+});

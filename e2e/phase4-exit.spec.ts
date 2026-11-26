@@ -11,6 +11,7 @@ import {
   branchStaff,
   driverScenario,
   driverSignIn,
+  enterReading,
   staffSignIn,
   takeCameraPhoto,
 } from "./scenario";
@@ -197,6 +198,7 @@ test("(a) weak connection: start online, the whole pre-shift offline, send in or
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     dp.getByTestId("odometer-step").getByTestId("photo-queued"),
   ).toBeVisible();
@@ -263,6 +265,7 @@ test("(a) weak connection: start online, the whole pre-shift offline, send in or
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await next(dp);
   await expect(dp.getByTestId("review-step")).toContainText(
     "Everything is in place",
@@ -336,6 +339,7 @@ test("(b) flaky connection: toggles and an aborted request leave no duplicate ro
     dp.getByRole("button", { name: "Take odometer photo" }),
     { acknowledge: true },
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await expect(
     dp.getByTestId("odometer-step").getByTestId("photo-queued"),
   ).toBeVisible();
@@ -586,6 +590,7 @@ test("(d) detection: planned start + 31 min with no pre-shift inspection -> Miss
     dp.getByRole("button", { name: "Take odometer photo" }),
     { acknowledge: true },
   );
+  await enterReading(dp, 12345); // 5A: the driver types the reading shown in the photo (DEC-05)
   await next(dp);
   await dp.getByRole("button", { name: "Submit inspection" }).click();
   await expect(dp.getByTestId("inspection-submitted")).toBeVisible(SLOW);

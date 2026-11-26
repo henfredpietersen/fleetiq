@@ -42,6 +42,12 @@ export function AppShell({
           Staff users
         </Link>
         <Link
+          href="/settings/validation"
+          className="text-sm font-medium hover:underline"
+        >
+          Settings
+        </Link>
+        <Link
           href="/home"
           className="text-muted-foreground ml-auto text-sm hover:underline"
         >

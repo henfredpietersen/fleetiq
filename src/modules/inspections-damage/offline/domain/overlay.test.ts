@@ -23,6 +23,7 @@ const server: MyInspection = {
   ],
   photo_slots: [],
   odometer_photo_present: false,
+  reading: null,
   known_damage_reviewed: false,
   known_damage: [],
   new_damage: [],

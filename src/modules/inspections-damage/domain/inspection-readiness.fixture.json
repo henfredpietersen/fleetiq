@@ -41,7 +41,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": []
+      "expect": [],
+      "reading": true
     },
     {
       "name": "vehicle not confirmed",
@@ -59,7 +60,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN001"]
+      "expect": ["IN001"],
+      "reading": true
     },
     {
       "name": "nothing answered",
@@ -67,7 +69,8 @@
       "answers": {},
       "photos": [],
       "odometer": true,
-      "expect": ["IN002"]
+      "expect": ["IN002"],
+      "reading": true
     },
     {
       "name": "one item missing",
@@ -82,7 +85,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN002"]
+      "expect": ["IN002"],
+      "reading": true
     },
     {
       "name": "defect without comment or photo",
@@ -100,7 +104,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN003", "IN004"]
+      "expect": ["IN003", "IN004"],
+      "reading": true
     },
     {
       "name": "defect with a blank comment is still missing the comment",
@@ -119,7 +124,8 @@
       },
       "photos": ["tyres"],
       "odometer": true,
-      "expect": ["IN003"]
+      "expect": ["IN003"],
+      "reading": true
     },
     {
       "name": "defect with comment but no photo",
@@ -138,7 +144,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN004"]
+      "expect": ["IN004"],
+      "reading": true
     },
     {
       "name": "defect with comment and photo",
@@ -157,7 +164,8 @@
       },
       "photos": ["tyres"],
       "odometer": true,
-      "expect": []
+      "expect": [],
+      "reading": true
     },
     {
       "name": "Yes without details",
@@ -175,7 +183,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN005"]
+      "expect": ["IN005"],
+      "reading": true
     },
     {
       "name": "Yes with details",
@@ -194,7 +203,8 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": []
+      "expect": [],
+      "reading": true
     },
     {
       "name": "no odometer photo",
@@ -212,7 +222,8 @@
       },
       "photos": [],
       "odometer": false,
-      "expect": ["IN006"]
+      "expect": ["IN006"],
+      "reading": true
     },
     {
       "name": "everything wrong at once, in the server's order (IN007 follows IN001)",
@@ -228,7 +239,8 @@
       "photos": [],
       "odometer": false,
       "expect": ["IN001", "IN007", "IN002", "IN003", "IN004", "IN005", "IN006"],
-      "known": false
+      "known": false,
+      "reading": true
     },
     {
       "name": "known damage list not confirmed",
@@ -247,7 +259,46 @@
       },
       "photos": [],
       "odometer": true,
-      "expect": ["IN007"]
+      "expect": ["IN007"],
+      "reading": true
+    },
+    {
+      "name": "odometer photo taken but the reading is not entered (IN015, 5A)",
+      "confirmed": true,
+      "answers": {
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
+      },
+      "photos": [],
+      "odometer": true,
+      "expect": ["IN015"],
+      "reading": false
+    },
+    {
+      "name": "no photo and no reading: IN006 then IN015, in the server order",
+      "confirmed": true,
+      "answers": {
+        "tyres": {
+          "value": "ok"
+        },
+        "fuel": {
+          "value": "1/2"
+        },
+        "incident": {
+          "value": "no"
+        }
+      },
+      "photos": [],
+      "odometer": false,
+      "expect": ["IN006", "IN015"],
+      "reading": false
     }
   ]
 }
