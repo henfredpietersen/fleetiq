@@ -372,7 +372,7 @@ test("(c) the allocation's own driver, given supervisor rights in a fixture, can
   const direct = await own.rpc("review_reading", {
     p_reading_id: mine.id,
     p_decision: "accept",
-    p_accepted_km: null,
+    p_accepted_km: null as unknown as number,
     p_reason: "It is my own reading",
     p_client_submission_id: crypto.randomUUID(),
   });

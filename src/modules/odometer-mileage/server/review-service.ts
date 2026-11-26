@@ -200,8 +200,10 @@ export async function reviewReading(
   const { error } = await db.rpc("review_reading", {
     p_reading_id: p.value.readingId,
     p_decision: p.value.decision,
-    p_accepted_km:
-      p.value.decision === "accept_value" ? (p.value.acceptedKm ?? null) : null,
+    // null, never undefined: an omitted argument is dropped from the request (the generated type says number)
+    p_accepted_km: (p.value.decision === "accept_value"
+      ? (p.value.acceptedKm ?? null)
+      : null) as number,
     p_reason: p.value.reason,
     p_client_submission_id: p.value.clientSubmissionId,
   });
