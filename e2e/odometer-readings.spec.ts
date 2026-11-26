@@ -227,7 +227,7 @@ test("(a) pre-shift reading entered offline is sent; a different supervisor acce
     });
   }
   // the driver sees "Accepted" (never who accepted it)
-  await d1.dp.goto(`/my-allocations/${s1.allocationId}/inspection/pre_shift`);
+  await d1.dp.goto(`/my-allocations/${s1.allocationId}/inspection/pre-shift`);
   await expect(d1.dp.getByTestId("reading-status")).toContainText(
     "Accepted",
     SLOW,
@@ -356,7 +356,7 @@ test("(b) a post-shift reading lower than the pre-shift reading goes to full rev
   });
   expect(appr!.decided_by).toBe(sup.id);
   // the driver still sees the value they typed, now accepted
-  await dp.goto(`/my-allocations/${s.allocationId}/inspection/post_shift`);
+  await dp.goto(`/my-allocations/${s.allocationId}/inspection/post-shift`);
   await expect(dp.getByTestId("inspection-submitted")).toBeVisible(SLOW);
   await expect(dp.getByTestId("reading-status")).toContainText(/1\D?900/, SLOW);
   await expect(dp.getByTestId("reading-status")).toContainText(
