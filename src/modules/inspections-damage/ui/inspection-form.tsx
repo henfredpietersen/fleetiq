@@ -179,6 +179,8 @@ function FormBody({
       : "",
   );
   const [readingError, setReadingError] = useState<string | null>(null);
+  // the reading the server has confirmed since this form opened (the page data catches up after the refresh)
+  const [confirmedKm, setConfirmedKm] = useState<number | null>(null);
   // re-read the server's data once something was confirmed; with no connection that waits (a failed page refresh would reload the page)
   const refreshDue = useRef(false);
   const refresh = useCallback(() => {
@@ -207,6 +209,7 @@ function FormBody({
                 : `item:${p.target.templateItemId}`,
             ),
           );
+        if (p.kind === "reading") setConfirmedKm(p.km);
         if (p.kind === "submit") setSubmitConfirmed(true);
         if (
           p.kind === "begin" ||
@@ -308,6 +311,7 @@ function FormBody({
   const filledItem = (id: string) => defectQueued(id) || defectAttached(id);
   const odometerAttached = data.odometer_photo_present || attached.has("odo");
   const odometerDone = odometerAttached || ov.odometerQueued;
+  const readingKm = data.reading?.driver_reading_km ?? confirmedKm;
   const blockers: Blocker[] = submitBlockers({
     vehicleConfirmed: confirmed,
     knownDamageReviewed: knownReviewed,
@@ -326,7 +330,7 @@ function FormBody({
         .map((d) => d.template_item_id),
     ),
     odometerPhoto: odometerDone,
-    readingEntered: data.reading?.driver_reading_km != null,
+    readingEntered: readingKm != null,
   });
   const steps: Step[] = [
     "vehicle",
@@ -390,7 +394,7 @@ function FormBody({
       return false;
     }
     setReadingError(null);
-    if (data.reading?.driver_reading_km === p.km) return true;
+    if (readingKm === p.km) return true;
     try {
       await enqueue({ kind: "reading", km: p.km });
       return true;
@@ -1065,8 +1069,8 @@ function FormBody({
               Odometer reading you typed
             </p>
             <p className="text-2xl font-semibold">
-              {data.reading?.driver_reading_km != null
-                ? `${data.reading.driver_reading_km.toLocaleString("en-ZA")} km`
+              {readingKm != null
+                ? `${readingKm.toLocaleString("en-ZA")} km`
                 : "Not entered yet"}
             </p>
             <Button
