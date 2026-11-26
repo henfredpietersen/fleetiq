@@ -179,7 +179,7 @@ export async function staffSignIn(
 export async function takeCameraPhoto(
   page: Page,
   trigger: Locator,
-  opts: { acknowledge?: boolean } = {},
+  opts: { acknowledge?: boolean; settleMs?: number } = {},
 ) {
   await trigger.click();
   const cam = page.getByTestId("camera");
@@ -192,6 +192,9 @@ export async function takeCameraPhoto(
   }
   const shutter = cam.getByRole("button", { name: "Take photo" });
   await expect(shutter).toBeEnabled({ timeout: 20_000 });
+  // the fake camera draws a moving pattern: waiting a little makes this frame differ from every other photo in the run
+  // (the duplicate-image check compares the file hash with every odometer photo of the company)
+  if (opts.settleMs) await page.waitForTimeout(opts.settleMs);
   await shutter.click();
   await expect(cam.getByTestId("camera-review")).toBeVisible();
   await cam.getByRole("button", { name: "Use photo" }).click();

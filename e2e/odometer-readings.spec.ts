@@ -74,7 +74,7 @@ async function completePre(
   await takeCameraPhoto(
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
-    { acknowledge: true },
+    { acknowledge: true, settleMs: 700 + Math.floor(Math.random() * 1500) },
   );
   // DEC-05: a plain numeric field, blind; nothing on the page shows any machine-read value
   const field = dp.getByLabel("Odometer reading (km)");
@@ -224,6 +224,11 @@ test("(b) a post-shift reading lower than the pre-shift reading goes to full rev
   const sup = await branchStaff(s, "rc-sup", "supervisor");
   const d = await completePre(browser, s, 2000, { offline: false });
   const sp = await reviewer(browser, sup);
+  const preRow = await readingOf(s, "pre_shift");
+  expect(
+    preRow.review_kind,
+    `the pre-shift reading should be a quick check; failed checks: ${JSON.stringify((preRow.validation as { failed?: string[] } | null)?.failed)}`,
+  ).toBe("quick_check");
 
   // the pre-shift reading is accepted in the quick check
   await sp.goto(`/odometer/review?tab=quick_check&branch=${s.branchId}`);
@@ -253,6 +258,7 @@ test("(b) a post-shift reading lower than the pre-shift reading goes to full rev
   await takeCameraPhoto(
     dp,
     dp.getByRole("button", { name: "Take odometer photo" }),
+    { settleMs: 700 + Math.floor(Math.random() * 1500) },
   );
   await enterReading(dp, 1900);
   await next(dp);
