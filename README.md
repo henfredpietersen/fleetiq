@@ -2,7 +2,7 @@
 
 Internal fleet management and operational intelligence platform for a single South African company (50–200 vehicles, multi-branch, multi-shift). Mobile-first driver portal and desktop management app. Built on Next.js (App Router), TypeScript (strict), Tailwind, shadcn/ui and Supabase.
 
-**Status:** Phase 0 (setup) — no business features yet. Start with [docs/CONTEXT.md](docs/CONTEXT.md); open the full v1.4 docs in `docs/` only for a specific section. Open decisions: [docs/DECISIONS-STATUS.md](docs/DECISIONS-STATUS.md).
+**Status:** Phases 0–4 complete (foundation, registers, shifts and allocations, mobile inspections); Phase 5 (odometer readings and review) in progress. Start with [docs/CONTEXT.md](docs/CONTEXT.md); open the full v1.4 docs in `docs/` only for a specific section. Open decisions: [docs/DECISIONS-STATUS.md](docs/DECISIONS-STATUS.md).
 
 ## Setup
 
@@ -35,3 +35,7 @@ Locally, if the installed Playwright expects a different browser build than the 
 ## Branching
 
 `main` is protected by review. Work on short-lived branches (`chore/…`, `feat/…`, `fix/…`), open a PR to `main`; CI (typecheck, lint, unit tests, Playwright) must pass. One roadmap phase (PRD §9) per PR/session.
+
+## Copyright
+
+Copyright © 2026 Henfred Pietersen. All rights reserved. This repository is public for viewing only; no licence is granted to copy, modify, distribute or use it. See [LICENSE](LICENSE).
